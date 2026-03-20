@@ -2,7 +2,19 @@ from logging.config import fileConfig
 
 from alembic import context
 
-from app.adapters.outgoing.persistence.database import Base, engine
+from app.adapters.outgoing.persistence.database import Base
+
+# Lazily create engine from DATABASE_URL env var if present
+from sqlalchemy import create_engine
+import os
+
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    engine = create_engine(database_url)
+else:
+    # fallback to existing engine import for SQLite
+    from app.adapters.outgoing.persistence.database import engine
+
 
 # ✅ Import all models so Alembic can detect them
 from app.adapters.outgoing.persistence.models import *
