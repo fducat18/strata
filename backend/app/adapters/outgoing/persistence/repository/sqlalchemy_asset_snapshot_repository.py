@@ -1,6 +1,7 @@
 """
 SQLAlchemy AssetSnapshot Repository Implementation
 """
+from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -60,10 +61,21 @@ class SQLAlchemyAssetSnapshotRepository(IAssetSnapshotRepository):
             ).exists()
         ).scalar()
 
-    def get_snapshots(self, asset_id: UUID) -> List[AssetSnapshot]:
-        rows = self._session.query(AssetSnapshotModel).filter(
+    def get_snapshots(
+        self,
+        asset_id: UUID,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> List[AssetSnapshot]:
+        query = self._session.query(AssetSnapshotModel).filter(
             AssetSnapshotModel.asset_id == str(asset_id)
-        ).all()
+        )
+        if start_date:
+            query = query.filter(AssetSnapshotModel.observed_at >= start_date)
+        if end_date:
+            query = query.filter(AssetSnapshotModel.observed_at <= end_date)
+
+        rows = query.order_by(AssetSnapshotModel.observed_at.asc()).all()
         return [PersistenceMapper.asset_snapshot_to_domain(s) for s in rows]
 
     def get_latest_snapshot(self, asset_id: UUID) -> Optional[AssetSnapshot]:

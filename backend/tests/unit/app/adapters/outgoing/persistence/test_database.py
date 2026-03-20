@@ -1,6 +1,7 @@
 """Tests for database.py uncovered lines."""
 import importlib
 import os
+import sqlite3
 import pytest
 
 
@@ -62,3 +63,20 @@ def test_database_invalid_sqlite_raises_value_error():
         os.environ["DATABASE_URL"] = restore_url
         importlib.reload(db_module)
         os.environ.pop("DATABASE_URL", None)
+
+
+def test_configure_sqlite_connection_forces_delete_journal_mode(tmp_path):
+    from app.adapters.outgoing.persistence.database import _configure_sqlite_connection
+
+    db_path = tmp_path / "journal_mode_test.db"
+    connection = sqlite3.connect(db_path)
+    try:
+        original_mode = connection.execute("PRAGMA journal_mode=WAL;").fetchone()[0]
+        assert original_mode.lower() == "wal"
+
+        _configure_sqlite_connection(connection, None)
+
+        current_mode = connection.execute("PRAGMA journal_mode;").fetchone()[0]
+        assert current_mode.lower() == "delete"
+    finally:
+        connection.close()

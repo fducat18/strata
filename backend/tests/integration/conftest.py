@@ -7,7 +7,7 @@ The production database (strata.db) is never touched.
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.adapters.outgoing.persistence.database import Base
@@ -15,15 +15,14 @@ from app.adapters.outgoing.persistence.database import Base
 # Import all models so they're registered with Base before create_all
 import app.adapters.outgoing.persistence.models  # noqa: F401
 
-from app.adapters.incoming.api.dependencies.assets import get_db_session as assets_get_db_session
-from app.adapters.incoming.api.dependencies.portfolios import get_db_session as portfolios_get_db_session
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 
 from app.main import app as fastapi_app
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def integration_engine():
-    """Create an in-memory SQLite engine for the test session."""
+    """Create an isolated in-memory SQLite engine for each test."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -35,10 +34,21 @@ def integration_engine():
 
 
 @pytest.fixture(scope="function")
-def integration_session(integration_engine):
-    """Provide a transactional session that rolls back after each test."""
-    SessionFactory = sessionmaker(bind=integration_engine, autoflush=True, autocommit=False)
-    session = SessionFactory()
+def integration_session_factory(integration_engine):
+    """Session factory that mirrors production transaction settings."""
+    return sessionmaker(
+        bind=integration_engine,
+        autoflush=False,
+        autocommit=False,
+        expire_on_commit=False,
+        class_=Session,
+    )
+
+
+@pytest.fixture(scope="function")
+def integration_session(integration_session_factory):
+    """Provide a direct session for repository-style seeding in tests."""
+    session = integration_session_factory()
     try:
         yield session
     finally:
@@ -47,17 +57,20 @@ def integration_session(integration_engine):
 
 
 @pytest.fixture(scope="function")
-def integration_client(integration_session):
-    """TestClient with get_db_session overridden to use the in-memory DB."""
+def integration_client(integration_session_factory):
+    """TestClient with fresh per-request DB sessions against the in-memory DB."""
     def override_get_db():
+        session = integration_session_factory()
         try:
-            yield integration_session
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
         finally:
-            pass  # rollback handled by integration_session fixture
+            session.close()
 
-    # Override both independent get_db_session functions
-    fastapi_app.dependency_overrides[assets_get_db_session] = override_get_db
-    fastapi_app.dependency_overrides[portfolios_get_db_session] = override_get_db
+    fastapi_app.dependency_overrides[get_db_session] = override_get_db
     client = TestClient(fastapi_app)
     yield client
     fastapi_app.dependency_overrides.clear()
@@ -71,7 +84,7 @@ def seeded_asset_type(integration_session):
     unique_code = f"TEST_{str(uuid4()).replace('-', '')[:8].upper()}"
     asset_type = AssetTypeModel(id=str(uuid4()), code=unique_code, label="Test Asset Type")
     integration_session.add(asset_type)
-    integration_session.flush()
+    integration_session.commit()
     return asset_type
 
 

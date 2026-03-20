@@ -14,7 +14,7 @@ def test_get_all_portfolios(integration_client, seeded_portfolio):
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
-    assert len(data) >= 1
+    assert any(portfolio["id"] == seeded_portfolio["id"] for portfolio in data)
 
 
 def test_delete_portfolio_success(integration_client, seeded_portfolio):
@@ -40,7 +40,7 @@ def test_take_and_get_portfolio_snapshots(integration_client, seeded_portfolio):
     # Get snapshots
     resp = integration_client.get(f"/api/v1/portfolios/{portfolio_id}/snapshots")
     assert resp.status_code == 200
-    assert len(resp.json()) >= 1
+    assert any(snapshot["id"] == snap["id"] for snapshot in resp.json())
 
 
 def test_get_portfolio_snapshots_not_found(integration_client):
@@ -57,32 +57,36 @@ def test_get_all_assets(integration_client, seeded_asset_type, seeded_portfolio)
     asset_type_id = str(seeded_asset_type.id)
 
     # Create an asset first
-    integration_client.post("/api/v1/assets/", json={
+    create_resp = integration_client.post("/api/v1/assets/", json={
         "portfolio_id": portfolio_id,
         "asset_type_id": asset_type_id,
         "name": "Asset for get_all",
         "created_by": "user"
     })
+    assert create_resp.status_code == 201
+    asset_id = create_resp.json()["id"]
 
     resp = integration_client.get("/api/v1/assets/")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert any(asset["id"] == asset_id for asset in resp.json())
 
 
 def test_get_assets_by_portfolio(integration_client, seeded_asset_type, seeded_portfolio):
     portfolio_id = seeded_portfolio["id"]
     asset_type_id = str(seeded_asset_type.id)
 
-    integration_client.post("/api/v1/assets/", json={
+    create_resp = integration_client.post("/api/v1/assets/", json={
         "portfolio_id": portfolio_id,
         "asset_type_id": asset_type_id,
         "name": "Portfolio Asset",
         "created_by": "user"
     })
+    assert create_resp.status_code == 201
+    asset_id = create_resp.json()["id"]
 
     resp = integration_client.get(f"/api/v1/assets/?portfolio_id={portfolio_id}")
     assert resp.status_code == 200
-    assert len(resp.json()) >= 1
+    assert any(asset["id"] == asset_id for asset in resp.json())
 
 
 def test_get_assets_by_portfolio_not_found(integration_client):
@@ -112,8 +116,27 @@ def test_delete_asset_not_found(integration_client):
 
 
 def test_get_asset_snapshots_via_route(integration_client, seeded_asset_type, seeded_portfolio):
-    """Note: get_asset_snapshots route is covered via unit test with mock (source has known signature mismatch)."""
-    pass  # covered by unit test in test_route_coverage.py
+    portfolio_id = seeded_portfolio["id"]
+    asset_type_id = str(seeded_asset_type.id)
+
+    asset_resp = integration_client.post("/api/v1/assets/", json={
+        "portfolio_id": portfolio_id,
+        "asset_type_id": asset_type_id,
+        "name": "Snapshot Asset",
+        "created_by": "user",
+    })
+    assert asset_resp.status_code == 201
+    asset_id = asset_resp.json()["id"]
+
+    snapshot_resp = integration_client.post(f"/api/v1/assets/{asset_id}/snapshots", json={
+        "value": "123.45",
+    })
+    assert snapshot_resp.status_code == 201
+    snapshot_id = snapshot_resp.json()["id"]
+
+    resp = integration_client.get(f"/api/v1/assets/{asset_id}/snapshots")
+    assert resp.status_code == 200
+    assert any(snapshot["id"] == snapshot_id for snapshot in resp.json())
 
 
 # ---------------------------------------------------------------------------
@@ -121,10 +144,13 @@ def test_get_asset_snapshots_via_route(integration_client, seeded_asset_type, se
 # ---------------------------------------------------------------------------
 
 def test_get_all_tags(integration_client):
-    integration_client.post("/api/v1/tags/", json={"name": f"tag-{uuid4()}"})
+    tag_name = f"tag-{uuid4()}"
+    create_resp = integration_client.post("/api/v1/tags/", json={"name": tag_name})
+    assert create_resp.status_code == 201
+    tag_id = create_resp.json()["id"]
     resp = integration_client.get("/api/v1/tags/")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert any(tag["id"] == tag_id and tag["name"] == tag_name for tag in resp.json())
 
 
 def test_get_tag_by_id(integration_client):
@@ -156,10 +182,13 @@ def test_delete_tag_not_found(integration_client):
 # ---------------------------------------------------------------------------
 
 def test_get_all_categories(integration_client):
-    integration_client.post("/api/v1/categories/", json={"name": f"cat-{str(uuid4())[:8]}"})
+    category_name = f"cat-{str(uuid4())[:8]}"
+    create_resp = integration_client.post("/api/v1/categories/", json={"name": category_name})
+    assert create_resp.status_code == 201
+    category_id = create_resp.json()["id"]
     resp = integration_client.get("/api/v1/categories/")
     assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
+    assert any(category["id"] == category_id and category["name"] == category_name for category in resp.json())
 
 
 def test_get_category_by_id(integration_client):
@@ -982,23 +1011,8 @@ class TestAssetTypeRepository:
 
 
 class TestPortfolioSnapshotRepository:
-    """Tests for SQLAlchemyPortfolioSnapshotRepository.
-    
-    Since the class doesn't implement get_latest_snapshot (abstract method),
-    we subclass it with a minimal stub to allow instantiation.
-    """
-
-    @staticmethod
-    def _make_repo(session):
-        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
-
-        class ConcreteRepo(SQLAlchemyPortfolioSnapshotRepository):
-            def get_latest_snapshot(self, portfolio_id):
-                return None
-
-        return ConcreteRepo(session)
     def test_save_and_find(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
         from app.domain.entities.portfolio_snapshot import PortfolioSnapshot
         snap_id = uuid4()
         portfolio_id = uuid4()
@@ -1008,7 +1022,7 @@ class TestPortfolioSnapshotRepository:
         repo_session.add(pm)
         repo_session.flush()
 
-        repo = self._make_repo(repo_session)
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         snap = PortfolioSnapshot(id=snap_id, portfolio_id=portfolio_id, value=Decimal("100"), observed_at=now)
         repo.save(snap)
 
@@ -1016,7 +1030,7 @@ class TestPortfolioSnapshotRepository:
         assert result is not None
 
     def test_save_update_existing(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
         from app.domain.entities.portfolio_snapshot import PortfolioSnapshot
         from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
         snap_id = uuid4()
@@ -1028,13 +1042,13 @@ class TestPortfolioSnapshotRepository:
         repo_session.add(sm)
         repo_session.flush()
 
-        repo = self._make_repo(repo_session)
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         snap = PortfolioSnapshot(id=snap_id, portfolio_id=uuid4(), value=Decimal("200"), observed_at=now)
         repo.save(snap)
 
     def test_find_all(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
-        repo = self._make_repo(repo_session)
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         # Save a snapshot first
         from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
         now = datetime.now(timezone.utc)
@@ -1048,7 +1062,7 @@ class TestPortfolioSnapshotRepository:
         assert len(result) >= 1
 
     def test_delete_success(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
         from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
         now = datetime.now(timezone.utc)
         sm = PortfolioSnapshotModel(
@@ -1058,16 +1072,16 @@ class TestPortfolioSnapshotRepository:
         repo_session.add(sm)
         repo_session.flush()
 
-        repo = self._make_repo(repo_session)
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         assert repo.delete(sm.id) is True
 
     def test_delete_not_found(self, repo_session):
-        pass  # import handled by _make_repo
-        repo = self._make_repo(repo_session)
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         assert repo.delete(str(uuid4())) is False
 
     def test_exists_true(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
         from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
         now = datetime.now(timezone.utc)
         sm = PortfolioSnapshotModel(
@@ -1077,16 +1091,16 @@ class TestPortfolioSnapshotRepository:
         repo_session.add(sm)
         repo_session.flush()
 
-        repo = self._make_repo(repo_session)
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         assert repo.exists(sm.id) is True
 
     def test_exists_false(self, repo_session):
-        pass  # import handled by _make_repo
-        repo = self._make_repo(repo_session)
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         assert repo.exists(str(uuid4())) is False
 
     def test_get_snapshots(self, repo_session, seeded_data):
-        pass  # import handled by _make_repo
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
         from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
         now = datetime.now(timezone.utc)
         sm = PortfolioSnapshotModel(
@@ -1096,13 +1110,42 @@ class TestPortfolioSnapshotRepository:
         repo_session.add(sm)
         repo_session.flush()
 
-        repo = self._make_repo(repo_session)
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         result = repo.get_snapshots(seeded_data["portfolio"].id)
         assert len(result) >= 1
 
+    def test_get_latest_snapshot(self, repo_session, seeded_data):
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        from app.adapters.outgoing.persistence.models.portfolio_snapshot import PortfolioSnapshotModel
+
+        older = PortfolioSnapshotModel(
+            id=str(uuid4()),
+            portfolio_id=seeded_data["portfolio"].id,
+            value=Decimal("100"),
+            observed_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        )
+        newer = PortfolioSnapshotModel(
+            id=str(uuid4()),
+            portfolio_id=seeded_data["portfolio"].id,
+            value=Decimal("200"),
+            observed_at=datetime(2024, 1, 2, tzinfo=timezone.utc),
+        )
+        repo_session.add_all([older, newer])
+        repo_session.flush()
+
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
+        result = repo.get_latest_snapshot(seeded_data["portfolio"].id)
+        assert result is not None
+        assert str(result.id) == newer.id
+
+    def test_get_latest_snapshot_not_found(self, repo_session):
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
+        assert repo.get_latest_snapshot(str(uuid4())) is None
+
     def test_find_by_id_not_found(self, repo_session):
-        pass  # import handled by _make_repo
-        repo = self._make_repo(repo_session)
+        from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_snapshot_repository import SQLAlchemyPortfolioSnapshotRepository
+        repo = SQLAlchemyPortfolioSnapshotRepository(repo_session)
         assert repo.find_by_id(str(uuid4())) is None
 
 

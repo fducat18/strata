@@ -3,7 +3,6 @@ from app.adapters.incoming.api.dependencies import portfolios as portfolios_deps
 
 def test_portfolios_module_exports():
     expected = [
-        'get_db_session',
         'get_portfolio_repository',
         'create_portfolio_use_case',
         'get_portfolio_use_case',
@@ -17,4 +16,3 @@ def test_portfolios_module_exports():
 def test_get_portfolio_repository_returns_object():
     repo = portfolios_deps.get_portfolio_repository()
     assert repo is not None
-

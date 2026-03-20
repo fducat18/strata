@@ -8,8 +8,9 @@ from app.application.use_cases.tag.get_tag import GetTagUseCase
 from app.application.use_cases.tag.delete_tag import DeleteTagUseCase
 from app.application.use_cases.tag.add_tag_to_asset import AddTagToAssetUseCase
 from app.application.use_cases.tag.remove_tag_from_asset import RemoveTagFromAssetUseCase
+from app.adapters.incoming.api.dependencies.assets import get_asset_repository
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 from app.domain.ports.repository import IAssetRepository, ITagRepository
-from app.adapters.incoming.api.dependencies.assets import get_db_session, get_asset_repository
 from app.adapters.outgoing.persistence.repository.sqlalchemy_tag_repository import SQLAlchemyTagRepository
 
 

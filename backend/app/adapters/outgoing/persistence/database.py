@@ -7,7 +7,7 @@ import os
 import logging
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 
@@ -84,6 +84,19 @@ _connect_args: Optional[dict] = (
 engine = create_engine(DATABASE_URL, connect_args=_connect_args or {})
 
 
+def _configure_sqlite_connection(dbapi_connection, _connection_record) -> None:
+    """Force classic rollback-journal mode for SQLite connections."""
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA journal_mode=DELETE;")
+    finally:
+        cursor.close()
+
+
+if DATABASE_URL.startswith("sqlite"):
+    event.listen(engine, "connect", _configure_sqlite_connection)
+
+
 # -------------------------------------------------------------------
 # Base class for models
 # -------------------------------------------------------------------
@@ -115,4 +128,3 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-

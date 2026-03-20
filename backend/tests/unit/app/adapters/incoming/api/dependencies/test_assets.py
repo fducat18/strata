@@ -3,7 +3,6 @@ from app.adapters.incoming.api.dependencies import assets as assets_deps
 
 def test_assets_module_exports():
     expected = [
-        'get_db_session',
         'get_asset_repository',
         'get_asset_type_repository',
         'get_all_assets_use_case',
@@ -19,4 +18,3 @@ def test_assets_module_exports():
 def test_get_asset_repository_returns_object():
     repo = assets_deps.get_asset_repository()
     assert repo is not None
-
