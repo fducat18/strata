@@ -8,8 +8,9 @@ from app.application.use_cases.category.get_category import GetCategoryUseCase
 from app.application.use_cases.category.delete_category import DeleteCategoryUseCase
 from app.application.use_cases.category.add_asset_to_category import AddAssetToCategoryUseCase
 from app.application.use_cases.category.remove_asset_from_category import RemoveAssetFromCategoryUseCase
+from app.adapters.incoming.api.dependencies.assets import get_asset_repository
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 from app.domain.ports.repository import IAssetRepository, ICategoryRepository
-from app.adapters.incoming.api.dependencies.assets import get_db_session, get_asset_repository
 from app.adapters.outgoing.persistence.repository.sqlalchemy_category_repository import SQLAlchemyCategoryRepository
 
 

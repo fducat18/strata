@@ -1,9 +1,7 @@
 """
-Asset-related dependency providers: DB session, repositories and asset use-cases.
+Asset-related dependency providers: repositories and asset use-cases.
 Single-responsibility: this module only exposes asset-related DI providers.
 """
-from typing import Generator
-
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -15,23 +13,10 @@ from app.application.use_cases.asset.delete_asset import DeleteAssetUseCase
 from app.application.use_cases.asset.dispose_asset import DisposeAssetUseCase
 from app.application.use_cases.asset.get_assets_by_portfolio import GetAssetsByPortfolioUseCase
 from app.domain.ports.repository import IAssetRepository, IAssetTypeRepository, IPortfolioRepository
-from app.adapters.outgoing.persistence.database import SessionLocal
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 from app.adapters.outgoing.persistence.repository.sqlalchemy_asset_repository import SQLAlchemyAssetRepository
 from app.adapters.outgoing.persistence.repository.sqlalchemy_asset_type_repository import SQLAlchemyAssetTypeRepository
 from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_repository import SQLAlchemyPortfolioRepository
-
-
-# Dependency to get a DB session
-def get_db_session() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
 
 
 def _get_portfolio_repository(db: Session = Depends(get_db_session)) -> IPortfolioRepository:
@@ -95,7 +80,6 @@ def get_assets_by_portfolio_use_case(
 
 
 __all__ = [
-    'get_db_session',
     'get_asset_repository',
     'get_asset_type_repository',
     'get_all_assets_use_case',

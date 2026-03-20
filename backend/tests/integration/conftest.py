@@ -15,8 +15,7 @@ from app.adapters.outgoing.persistence.database import Base
 # Import all models so they're registered with Base before create_all
 import app.adapters.outgoing.persistence.models  # noqa: F401
 
-from app.adapters.incoming.api.dependencies.assets import get_db_session as assets_get_db_session
-from app.adapters.incoming.api.dependencies.portfolios import get_db_session as portfolios_get_db_session
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 
 from app.main import app as fastapi_app
 
@@ -71,9 +70,7 @@ def integration_client(integration_session_factory):
         finally:
             session.close()
 
-    # Override both independent get_db_session functions
-    fastapi_app.dependency_overrides[assets_get_db_session] = override_get_db
-    fastapi_app.dependency_overrides[portfolios_get_db_session] = override_get_db
+    fastapi_app.dependency_overrides[get_db_session] = override_get_db
     client = TestClient(fastapi_app)
     yield client
     fastapi_app.dependency_overrides.clear()

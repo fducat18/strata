@@ -1,9 +1,7 @@
 """
-Portfolio-related dependency providers: DB session, repository and portfolio use-cases.
+Portfolio-related dependency providers: repository and portfolio use-cases.
 Single-responsibility: this module only exposes portfolio-related DI providers.
 """
-from typing import Generator
-
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -15,21 +13,8 @@ from app.application.use_cases.portfolio.take_portfolio_snapshot import TakePort
 from app.application.use_cases.portfolio.get_portfolio_snapshots import GetPortfolioSnapshotsUseCase
 from app.application.use_cases.portfolio.update_portfolio import UpdatePortfolioUseCase
 from app.domain.ports.repository import IPortfolioRepository
-from app.adapters.outgoing.persistence.database import SessionLocal
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
 from app.adapters.outgoing.persistence.repository.sqlalchemy_portfolio_repository import SQLAlchemyPortfolioRepository
-
-
-# Dependency to get a DB session
-def get_db_session() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
 
 
 # Repository provider for portfolios
@@ -81,7 +66,6 @@ def update_portfolio_use_case(
 
 
 __all__ = [
-    'get_db_session',
     'get_portfolio_repository',
     'create_portfolio_use_case',
     'get_portfolio_use_case',

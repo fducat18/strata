@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.application.use_cases.asset_snapshot.create_asset_snapshot import CreateAssetSnapshotUseCase
 from app.application.use_cases.asset_snapshot.get_asset_snapshots import GetAssetSnapshotsUseCase
+from app.adapters.incoming.api.dependencies.db_session import get_db_session
+from app.adapters.incoming.api.dependencies.assets import get_asset_repository
 from app.domain.ports.repository import IAssetRepository, IAssetSnapshotRepository
-from app.adapters.incoming.api.dependencies.assets import get_db_session, get_asset_repository
 from app.adapters.outgoing.persistence.repository.sqlalchemy_asset_snapshot_repository import SQLAlchemyAssetSnapshotRepository
 
 
