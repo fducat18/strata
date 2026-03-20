@@ -12,6 +12,10 @@ def test_create_and_assign_tag(integration_client, seeded_asset_type, seeded_por
     assert resp.status_code == 201
     tag_id = resp.json()["id"]
 
+    resp = integration_client.get("/api/v1/tags/")
+    assert resp.status_code == 200
+    assert any(tag["id"] == tag_id for tag in resp.json())
+
     # Create asset
     resp = integration_client.post("/api/v1/assets/", json={
         "portfolio_id": portfolio_id,

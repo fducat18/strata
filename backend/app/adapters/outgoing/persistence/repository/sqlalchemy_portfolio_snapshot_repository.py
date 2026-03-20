@@ -1,6 +1,7 @@
 """
 SQLAlchemy PortfolioSnapshot Repository Implementation
 """
+from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -60,8 +61,25 @@ class SQLAlchemyPortfolioSnapshotRepository(IPortfolioSnapshotRepository):
             ).exists()
         ).scalar()
 
-    def get_snapshots(self, portfolio_id: UUID) -> List[PortfolioSnapshot]:
-        rows = self._session.query(PortfolioSnapshotModel).filter(
+    def get_snapshots(
+        self,
+        portfolio_id: UUID,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> List[PortfolioSnapshot]:
+        query = self._session.query(PortfolioSnapshotModel).filter(
             PortfolioSnapshotModel.portfolio_id == str(portfolio_id)
-        ).all()
+        )
+        if start_date:
+            query = query.filter(PortfolioSnapshotModel.observed_at >= start_date)
+        if end_date:
+            query = query.filter(PortfolioSnapshotModel.observed_at <= end_date)
+
+        rows = query.order_by(PortfolioSnapshotModel.observed_at.asc()).all()
         return [PersistenceMapper.portfolio_snapshot_to_domain(s) for s in rows]
+
+    def get_latest_snapshot(self, portfolio_id: UUID) -> Optional[PortfolioSnapshot]:
+        orm_obj = self._session.query(PortfolioSnapshotModel).filter(
+            PortfolioSnapshotModel.portfolio_id == str(portfolio_id)
+        ).order_by(PortfolioSnapshotModel.observed_at.desc()).first()
+        return PersistenceMapper.portfolio_snapshot_to_domain(orm_obj) if orm_obj else None

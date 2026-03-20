@@ -31,7 +31,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
         else:
             orm_obj = PersistenceMapper.portfolio_to_orm(entity)
             self._session.add(orm_obj)
-        self._session.commit()
+        self._session.flush()
         return entity
 
     def find_by_id(self, entity_id: str) -> Optional[Portfolio]:
@@ -55,7 +55,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
         ).first()
         if orm_obj:
             self._session.delete(orm_obj)
-            self._session.commit()
+            self._session.flush()
             return True
         return False
 
@@ -114,7 +114,7 @@ class SQLAlchemyPortfolioRepository(IPortfolioRepository):
     def save_snapshot(self, snapshot: PortfolioSnapshot) -> None:
         orm_obj = PersistenceMapper.portfolio_snapshot_to_orm(snapshot)
         self._session.add(orm_obj)
-        self._session.commit()
+        self._session.flush()
 
     def count_assets(self, portfolio_id: str) -> int:
         portfolio_id = str(portfolio_id)
