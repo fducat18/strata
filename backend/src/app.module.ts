@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+
 import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
-import { PrismaService } from './infrastructure/prisma/prisma.service.js';
 
 import { IAssetRepository } from './domain/ports/asset.repository.port.js';
 import { IPortfolioRepository } from './domain/ports/portfolio.repository.port.js';
@@ -24,40 +26,78 @@ import { CategoryService } from './application/services/category.service.js';
 import { TagService } from './application/services/tag.service.js';
 import { AssetTypeService } from './application/services/asset-type.service.js';
 import { AssetSnapshotService } from './application/services/asset-snapshot.service.js';
+import { BackupService } from './application/services/backup/index.js';
+
+import {
+  AddCategoryToAssetUseCase,
+  AddTagToAssetUseCase,
+  RemoveCategoryFromAssetUseCase,
+  RemoveTagFromAssetUseCase,
+} from './application/use-cases/asset-associations/index.js';
 
 import { AssetController } from './presentation/controllers/asset.controller.js';
 import { PortfolioController } from './presentation/controllers/portfolio.controller.js';
 import { CategoryController } from './presentation/controllers/category.controller.js';
 import { TagController } from './presentation/controllers/tag.controller.js';
 import { AssetTypeController } from './presentation/controllers/asset-type.controller.js';
+import { HealthController } from './presentation/controllers/health.controller.js';
+import { AdminController } from './presentation/controllers/admin.controller.js';
+
+import {
+  DomainExceptionFilter,
+  PrismaExceptionFilter,
+} from './presentation/filters/index.js';
+import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware.js';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+  ],
   controllers: [
     AssetController,
     PortfolioController,
     CategoryController,
     TagController,
     AssetTypeController,
+    HealthController,
+    AdminController,
   ],
   providers: [
-    // Repository bindings (port → implementation)
     { provide: IAssetRepository, useClass: PrismaAssetRepository },
     { provide: IPortfolioRepository, useClass: PrismaPortfolioRepository },
     { provide: ICategoryRepository, useClass: PrismaCategoryRepository },
     { provide: ITagRepository, useClass: PrismaTagRepository },
     { provide: IAssetTypeRepository, useClass: PrismaAssetTypeRepository },
-    { provide: IAssetSnapshotRepository, useClass: PrismaAssetSnapshotRepository },
-    { provide: IPortfolioSnapshotRepository, useClass: PrismaPortfolioSnapshotRepository },
+    {
+      provide: IAssetSnapshotRepository,
+      useClass: PrismaAssetSnapshotRepository,
+    },
+    {
+      provide: IPortfolioSnapshotRepository,
+      useClass: PrismaPortfolioSnapshotRepository,
+    },
 
-    // Application services
     AssetService,
     PortfolioService,
     CategoryService,
     TagService,
     AssetTypeService,
     AssetSnapshotService,
+    BackupService,
+
+    AddTagToAssetUseCase,
+    RemoveTagFromAssetUseCase,
+    AddCategoryToAssetUseCase,
+    RemoveCategoryFromAssetUseCase,
+
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],
 })
-export class AppModule {}
-
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}
