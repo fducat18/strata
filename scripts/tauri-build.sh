@@ -28,12 +28,11 @@ PUBLIC_API_URL="$API_URL" npm run build
 
 echo "▸ Building Tauri app …"
 cd "$REPO_ROOT"
-npx tauri build
+npx tauri build --bundles app
 
 echo ""
 echo "✅ Build complete!"
-echo "   .app → src-tauri/target/release/bundle/macos/"
-echo "   .dmg → src-tauri/target/release/bundle/dmg/"
+echo "   .app → src-tauri/target/release/bundle/macos/Strata.app"
 echo ""
 echo "⚠️  The app is unsigned. To open:"
-echo "   xattr -cr /path/to/Strata.app"
+echo "   xattr -cr src-tauri/target/release/bundle/macos/Strata.app"

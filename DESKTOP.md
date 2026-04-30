@@ -67,7 +67,6 @@ Or use the convenience script:
 
 Output:
 - `.app` → `src-tauri/target/release/bundle/macos/Strata.app`
-- `.dmg` → `src-tauri/target/release/bundle/dmg/Strata_0.1.0_aarch64.dmg`
 
 ### ⚠️ Unsigned App (Gatekeeper)
 
