@@ -19,6 +19,17 @@ const currentPath = Astro.url.pathname;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body class="min-h-screen bg-background text-foreground antialiased">
+    <!--
+      We use client:load for the full AppShell because Strata is an interactive
+      financial dashboard — every page requires React state (queries, mutations,
+      modals, charts). Astro acts as the router / SSR shell only; static-first
+      rendering provides no UX benefit here. Individual page components inside
+      <slot /> also use client:load for the same reason.
+
+      Header, sidebar, and theme toggle live inside AppShell and share its
+      hydration boundary, so splitting them into client:idle or client:visible
+      would add complexity with no measurable gain.
+    -->
     <AppShell currentPath={currentPath} client:load>
       <slot />
     </AppShell>
