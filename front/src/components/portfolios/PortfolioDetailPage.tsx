@@ -71,7 +71,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/portfolios" className="text-muted-foreground hover:text-foreground">
+        <a href="/portfolios" className="text-muted-foreground hover:text-foreground" aria-label="Back to portfolios">
           <ArrowLeft className="h-5 w-5" />
         </a>
         <div className="flex-1">
@@ -85,7 +85,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4" /> Edit
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDelete}>
+          <Button variant="outline" size="sm" onClick={handleDelete} aria-label="Delete portfolio">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

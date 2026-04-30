@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "net.ducatillon.strata",
   "build": {
-    "frontendDist": "../front/dist/client",
+    "frontendDist": "frontend-dist",
     "devUrl": "http://localhost:4321",
     "beforeBuildCommand": "",
     "beforeDevCommand": ""
@@ -38,12 +38,6 @@
     ],
     "macOS": {
       "minimumSystemVersion": "13.0"
-    },
-    "resources": [
-      "../backend/dist/**",
-      "../backend/node_modules/**",
-      "../backend/prisma/**",
-      "../backend/package.json"
-    ]
+    }
   }
 }

@@ -96,7 +96,7 @@ export function AssetDetailPage({ assetId }: Props) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <a href="/assets" className="text-muted-foreground hover:text-foreground">
+        <a href="/assets" className="text-muted-foreground hover:text-foreground" aria-label="Back to assets">
           <ArrowLeft className="h-5 w-5" />
         </a>
         <div className="flex-1">
@@ -121,7 +121,7 @@ export function AssetDetailPage({ assetId }: Props) {
               <Ban className="h-4 w-4" /> Dispose
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleDelete}>
+          <Button variant="outline" size="sm" onClick={handleDelete} aria-label="Delete asset">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -168,6 +168,7 @@ export function AssetDetailPage({ assetId }: Props) {
                   <button
                     onClick={() => removeTagMutation.mutate({ assetId, tagId: tag.id })}
                     className="ml-1 hover:text-destructive cursor-pointer"
+                    aria-label={`Remove tag ${tag.name}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -184,6 +185,7 @@ export function AssetDetailPage({ assetId }: Props) {
                     key={tag.id}
                     onClick={() => addTagMutation.mutate({ assetId, tagId: tag.id })}
                     className="inline-flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                    aria-label={`Add tag ${tag.name}`}
                   >
                     <Plus className="h-3 w-3" /> {tag.name}
                   </button>
@@ -206,6 +208,7 @@ export function AssetDetailPage({ assetId }: Props) {
                   <button
                     onClick={() => removeCategoryMutation.mutate({ assetId, categoryId: cat.id })}
                     className="ml-1 hover:text-destructive cursor-pointer"
+                    aria-label={`Remove category ${cat.name}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -222,6 +225,7 @@ export function AssetDetailPage({ assetId }: Props) {
                     key={cat.id}
                     onClick={() => addCategoryMutation.mutate({ assetId, categoryId: cat.id })}
                     className="inline-flex items-center gap-1 rounded-md border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                    aria-label={`Add category ${cat.name}`}
                   >
                     <Plus className="h-3 w-3" /> {cat.name}
                   </button>
@@ -271,12 +275,12 @@ export function AssetDetailPage({ assetId }: Props) {
         <DialogHeader><DialogTitle>Edit Asset</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
-            <Input value={editName} onChange={e => setEditName(e.target.value)} className="mt-1" />
+            <label htmlFor="asset-edit-name" className="text-sm font-medium">Name</label>
+            <Input id="asset-edit-name" value={editName} onChange={e => setEditName(e.target.value)} className="mt-1" />
           </div>
           <div>
-            <label className="text-sm font-medium">Quantity</label>
-            <Input type="number" step="any" value={editQuantity} onChange={e => setEditQuantity(e.target.value)} className="mt-1" />
+            <label htmlFor="asset-edit-quantity" className="text-sm font-medium">Quantity</label>
+            <Input id="asset-edit-quantity" type="number" step="any" value={editQuantity} onChange={e => setEditQuantity(e.target.value)} className="mt-1" />
           </div>
         </div>
         <DialogFooter>
@@ -289,8 +293,8 @@ export function AssetDetailPage({ assetId }: Props) {
       <Dialog open={showSnapshot} onClose={() => setShowSnapshot(false)}>
         <DialogHeader><DialogTitle>Record Snapshot</DialogTitle></DialogHeader>
         <div>
-          <label className="text-sm font-medium">Current Value</label>
-          <Input type="number" step="0.01" value={snapshotValue} onChange={e => setSnapshotValue(e.target.value)} placeholder="e.g. 25000.00" className="mt-1" />
+          <label htmlFor="asset-snapshot-value" className="text-sm font-medium">Current Value</label>
+          <Input id="asset-snapshot-value" type="number" step="0.01" value={snapshotValue} onChange={e => setSnapshotValue(e.target.value)} placeholder="e.g. 25000.00" className="mt-1" />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setShowSnapshot(false)}>Cancel</Button>

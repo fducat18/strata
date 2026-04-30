@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useTags, useCreateTag, useDeleteTag } from '@/lib/hooks';
 import {
   Button, Card, CardHeader, CardTitle, CardContent,
@@ -7,12 +10,26 @@ import {
 } from '@/components/ui';
 import { Plus, Tags as TagsIcon, Trash2 } from 'lucide-react';
 
+const tagSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(50),
+});
+type TagFormData = z.infer<typeof tagSchema>;
+
 export function TagsPage() {
   const { data: tags, isLoading, isError, refetch } = useTags();
   const createMutation = useCreateTag();
   const deleteMutation = useDeleteTag();
   const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<TagFormData>({
+    resolver: zodResolver(tagSchema),
+    mode: 'onChange',
+  });
 
   if (isLoading) return <Loading />;
   if (isError) {
@@ -25,10 +42,14 @@ export function TagsPage() {
     );
   }
 
-  const handleCreate = async () => {
-    if (!newName.trim()) return;
-    await createMutation.mutateAsync({ name: newName.trim() });
-    setNewName('');
+  const handleCreate = handleSubmit(async (data) => {
+    await createMutation.mutateAsync(data);
+    reset();
+    setShowCreate(false);
+  });
+
+  const handleClose = () => {
+    reset();
     setShowCreate(false);
   };
 
@@ -65,6 +86,7 @@ export function TagsPage() {
                     onClick={() => handleDelete(tag.id)}
                     className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
                     title="Delete tag"
+                    aria-label={`Delete tag ${tag.name}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -82,17 +104,20 @@ export function TagsPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)}>
+      <Dialog open={showCreate} onClose={handleClose}>
         <DialogHeader>
           <DialogTitle>Create Tag</DialogTitle>
         </DialogHeader>
         <div>
-          <label className="text-sm font-medium">Name</label>
-          <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. high-yield" className="mt-1" />
+          <label htmlFor="tag-name" className="text-sm font-medium">Name</label>
+          <Input id="tag-name" {...register('name')} placeholder="e.g. high-yield" className="mt-1" />
+          {errors.name && (
+            <p role="alert" className="text-sm text-destructive mt-1">{errors.name.message}</p>
+          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={!newName.trim() || createMutation.isPending}>
+          <Button variant="outline" onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleCreate} disabled={!isValid || createMutation.isPending}>
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>

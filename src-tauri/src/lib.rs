@@ -7,7 +7,7 @@
 // 4. Provide IPC commands for backup/restore and revealing the data folder
 
 use std::process::{Child, Command};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use tauri::{Emitter, Manager};
@@ -183,7 +183,9 @@ fn get_backend_url() -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Shared handle so we can kill the backend on exit
-    let backend_child: Mutex<Option<Child>> = Mutex::new(None);
+    let backend_child: Arc<Mutex<Option<Child>>> = Arc::new(Mutex::new(None));
+    let child_for_setup = Arc::clone(&backend_child);
+    let child_for_exit = Arc::clone(&backend_child);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -214,7 +216,7 @@ pub fn run() {
 
             // ── E2: Spawn the backend ──
             let child = spawn_backend(&backend_path, &database_url);
-            *backend_child.lock().unwrap() = Some(child);
+            *child_for_setup.lock().unwrap() = Some(child);
 
             // ── Health-poll in a background thread, then emit event ──
             let handle = app.handle().clone();
@@ -233,7 +235,7 @@ pub fn run() {
         .on_window_event(move |_window, event| {
             // Kill the backend when the app window is destroyed
             if let tauri::WindowEvent::Destroyed = event {
-                if let Ok(mut guard) = backend_child.lock() {
+                if let Ok(mut guard) = child_for_exit.lock() {
                     if let Some(ref mut child) = *guard {
                         log::info!("Shutting down backend (pid={})", child.id());
                         let _ = child.kill();

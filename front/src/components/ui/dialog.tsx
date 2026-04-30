@@ -27,7 +27,7 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
       <div className={cn('relative w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-lg', className)}>
-        <button onClick={onClose} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 cursor-pointer">
+        <button onClick={onClose} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 cursor-pointer" aria-label="Close dialog">
           <X className="h-4 w-4" />
         </button>
         {children}

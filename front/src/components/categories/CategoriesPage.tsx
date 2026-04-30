@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useCategories, useCreateCategory, useDeleteCategory } from '@/lib/hooks';
 import {
   Button, Card, CardHeader, CardTitle, CardContent,
@@ -7,6 +10,12 @@ import {
 } from '@/components/ui';
 import { Plus, FolderTree, Trash2, ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import type { Category } from '@/lib/types';
+
+const categorySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  parentId: z.string().optional(),
+});
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 function buildTree(categories: Category[]): Category[] {
   const map = new Map<string, Category & { children: Category[] }>();
@@ -41,7 +50,11 @@ function TreeNode({ category, onDelete, level }: TreeNodeProps) {
         style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
       >
         {hasChildren ? (
-          <button onClick={() => setExpanded(!expanded)} className="cursor-pointer">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="cursor-pointer"
+            aria-label={expanded ? 'Collapse subcategories' : 'Expand subcategories'}
+          >
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
         ) : (
@@ -57,6 +70,7 @@ function TreeNode({ category, onDelete, level }: TreeNodeProps) {
           onClick={() => onDelete(category.id)}
           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
           title="Delete category"
+          aria-label={`Delete category ${category.name}`}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -77,23 +91,33 @@ export function CategoriesPage() {
   const createMutation = useCreateCategory();
   const deleteMutation = useDeleteCategory();
   const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newParentId, setNewParentId] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CategoryFormData>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: { name: '', parentId: '' },
+  });
 
   if (isLoading) return <Loading />;
 
   const tree = buildTree(categories || []);
 
-  const handleCreate = async () => {
-    if (!newName.trim()) return;
-    await createMutation.mutateAsync({
-      name: newName.trim(),
-      parentId: newParentId || undefined,
-    });
-    setNewName('');
-    setNewParentId('');
+  const onCloseDialog = () => {
     setShowCreate(false);
+    reset();
   };
+
+  const handleCreate = handleSubmit(async (data) => {
+    await createMutation.mutateAsync({
+      name: data.name.trim(),
+      parentId: data.parentId || undefined,
+    });
+    onCloseDialog();
+  });
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this category?')) {
@@ -132,29 +156,30 @@ export function CategoriesPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={showCreate} onClose={() => setShowCreate(false)}>
+      <Dialog open={showCreate} onClose={onCloseDialog}>
         <DialogHeader>
           <DialogTitle>Create Category</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
-            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Real Estate" className="mt-1" />
+            <label htmlFor="category-name" className="text-sm font-medium">Name</label>
+            <Input id="category-name" {...register('name')} placeholder="e.g. Real Estate" className="mt-1" />
+            {errors.name && <p role="alert" className="text-sm text-destructive mt-1">{errors.name.message}</p>}
           </div>
           <div>
-            <label className="text-sm font-medium">Parent Category (optional)</label>
-            <Select value={newParentId} onChange={e => setNewParentId(e.target.value)} className="mt-1">
+            <label htmlFor="category-parent" className="text-sm font-medium">Parent Category (optional)</label>
+            <Select id="category-parent" {...register('parentId')} className="mt-1">
               <option value="">None (top-level)</option>
               {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={!newName.trim() || createMutation.isPending}>
-            {createMutation.isPending ? 'Creating...' : 'Create'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onCloseDialog}>Cancel</Button>
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </form>
       </Dialog>
     </div>
   );
