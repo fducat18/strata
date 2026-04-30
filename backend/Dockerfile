@@ -1,3 +1,4 @@
+# ----- builder -----
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
@@ -9,14 +10,20 @@ COPY src ./src
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:20-alpine
+# ----- runtime -----
+FROM node:20-alpine AS runtime
 WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
-COPY .env* ./
-RUN mkdir -p .data
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+RUN mkdir -p .data && chown -R node:node /app
+USER node
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/api/v1/health > /dev/null || exit 1
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

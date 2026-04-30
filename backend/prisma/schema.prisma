@@ -55,6 +55,7 @@ model Category {
   children Category[]           @relation("CategoryHierarchy")
   assets   CategoriesOnAssets[]
 
+  @@index([parentId])
   @@map("categories")
 }
 

@@ -14,12 +14,19 @@ describe('Asset', () => {
     updatedAt: new Date('2024-01-01'),
   };
 
-  function makeAsset(overrides: Partial<ConstructorParameters<typeof Asset>> extends never ? never : Record<string, unknown> = {}, snapshots: AssetSnapshot[] = []): Asset {
+  function makeAsset(
+    overrides: Partial<ConstructorParameters<typeof Asset>> extends never
+      ? never
+      : Record<string, unknown> = {},
+    snapshots: AssetSnapshot[] = [],
+  ): Asset {
     return new Asset(
       base.id,
       base.name,
       base.quantity,
-      overrides.disposed !== undefined ? overrides.disposed as boolean : base.disposed,
+      overrides.disposed !== undefined
+        ? (overrides.disposed as boolean)
+        : base.disposed,
       base.portfolioId,
       base.assetTypeId,
       base.createdAt,
@@ -38,9 +45,27 @@ describe('Asset', () => {
 
     it('returns latest snapshot value by observedAt date', () => {
       const snapshots: AssetSnapshot[] = [
-        new AssetSnapshot('s1', 'a1', new Decimal('100'), new Date('2024-01-01'), new Date('2024-01-01')),
-        new AssetSnapshot('s2', 'a1', new Decimal('250'), new Date('2024-06-01'), new Date('2024-06-01')),
-        new AssetSnapshot('s3', 'a1', new Decimal('150'), new Date('2024-03-01'), new Date('2024-03-01')),
+        new AssetSnapshot(
+          's1',
+          'a1',
+          new Decimal('100'),
+          new Date('2024-01-01'),
+          new Date('2024-01-01'),
+        ),
+        new AssetSnapshot(
+          's2',
+          'a1',
+          new Decimal('250'),
+          new Date('2024-06-01'),
+          new Date('2024-06-01'),
+        ),
+        new AssetSnapshot(
+          's3',
+          'a1',
+          new Decimal('150'),
+          new Date('2024-03-01'),
+          new Date('2024-03-01'),
+        ),
       ];
       const asset = makeAsset({}, snapshots);
       expect(asset.currentValue()!.equals(new Decimal('250'))).toBe(true);
@@ -48,7 +73,13 @@ describe('Asset', () => {
 
     it('returns the single snapshot value when only one exists', () => {
       const snapshots = [
-        new AssetSnapshot('s1', 'a1', new Decimal('42.50'), new Date('2024-01-15'), new Date('2024-01-15')),
+        new AssetSnapshot(
+          's1',
+          'a1',
+          new Decimal('42.50'),
+          new Date('2024-01-15'),
+          new Date('2024-01-15'),
+        ),
       ];
       const asset = makeAsset({}, snapshots);
       expect(asset.currentValue()!.equals(new Decimal('42.50'))).toBe(true);

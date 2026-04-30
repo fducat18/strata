@@ -24,10 +24,16 @@ describe('Portfolio', () => {
       new Date('2024-06-01'),
     );
     return new Asset(
-      id, `Asset ${id}`, new Decimal('1'), false,
-      'p1', 'at1',
-      new Date('2024-01-01'), new Date('2024-01-01'),
-      null, null,
+      id,
+      `Asset ${id}`,
+      new Decimal('1'),
+      false,
+      'p1',
+      'at1',
+      new Date('2024-01-01'),
+      new Date('2024-01-01'),
+      null,
+      null,
       [snapshot],
     );
   }
@@ -48,13 +54,22 @@ describe('Portfolio', () => {
     it('skips assets with no snapshots', () => {
       const assetWithSnapshot = makeAssetWithSnapshot('a1', '500');
       const assetWithoutSnapshot = new Asset(
-        'a2', 'No Snapshot', new Decimal('1'), false,
-        'p1', 'at1',
-        new Date('2024-01-01'), new Date('2024-01-01'),
-        null, null,
+        'a2',
+        'No Snapshot',
+        new Decimal('1'),
+        false,
+        'p1',
+        'at1',
+        new Date('2024-01-01'),
+        new Date('2024-01-01'),
+        null,
+        null,
         [],
       );
-      const portfolio = makePortfolio([assetWithSnapshot, assetWithoutSnapshot]);
+      const portfolio = makePortfolio([
+        assetWithSnapshot,
+        assetWithoutSnapshot,
+      ]);
       expect(portfolio.totalValue().equals(new Decimal('500'))).toBe(true);
     });
   });

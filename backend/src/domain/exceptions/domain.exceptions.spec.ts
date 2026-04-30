@@ -19,11 +19,14 @@ describe('Domain Exceptions', () => {
     ['CategoryHasChildrenException', CategoryHasChildrenException],
   ];
 
-  it.each(cases)('%s has correct name and message', (expectedName, ExceptionClass) => {
-    const msg = `Test message for ${expectedName}`;
-    const error = new ExceptionClass(msg);
-    expect(error).toBeInstanceOf(Error);
-    expect(error.name).toBe(expectedName);
-    expect(error.message).toBe(msg);
-  });
+  it.each(cases)(
+    '%s has correct name and message',
+    (expectedName, ExceptionClass) => {
+      const msg = `Test message for ${expectedName}`;
+      const error = new ExceptionClass(msg);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.name).toBe(expectedName);
+      expect(error.message).toBe(msg);
+    },
+  );
 });
