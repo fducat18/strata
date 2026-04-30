@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function PortfolioDetailPage({ portfolioId }: Props) {
-  const { data: portfolio, isLoading } = usePortfolio(portfolioId);
+  const { data: portfolio, isLoading, isError, refetch } = usePortfolio(portfolioId);
   const { data: assets } = useAssets(portfolioId);
   const { data: snapshots } = usePortfolioSnapshots(portfolioId);
   const snapshotMutation = useTakePortfolioSnapshot();
@@ -28,6 +28,15 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const [editName, setEditName] = useState('');
 
   if (isLoading) return <Loading />;
+  if (isError) {
+    return (
+      <EmptyState
+        title="Could not load portfolio"
+        description="There was a problem fetching this portfolio."
+        action={<Button onClick={() => refetch()}>Retry</Button>}
+      />
+    );
+  }
   if (!portfolio) return <EmptyState title="Portfolio not found" />;
 
   const activeAssets = assets?.filter(a => !a.disposed) || [];
@@ -160,8 +169,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       <Dialog open={showEdit} onClose={() => setShowEdit(false)}>
         <DialogHeader><DialogTitle>Edit Portfolio</DialogTitle></DialogHeader>
         <div>
-          <label className="text-sm font-medium">Name</label>
-          <Input value={editName} onChange={e => setEditName(e.target.value)} className="mt-1" />
+          <label htmlFor="portfolio-edit-name" className="text-sm font-medium">Name</label>
+          <Input id="portfolio-edit-name" value={editName} onChange={e => setEditName(e.target.value)} className="mt-1" />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setShowEdit(false)}>Cancel</Button>

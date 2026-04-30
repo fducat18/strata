@@ -9,7 +9,7 @@ import { Plus, Briefcase, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 export function PortfolioListPage() {
-  const { data: portfolios, isLoading } = usePortfolios();
+  const { data: portfolios, isLoading, isError, refetch } = usePortfolios();
   const createMutation = useCreatePortfolio();
   const deleteMutation = useDeletePortfolio();
   const [showCreate, setShowCreate] = useState(false);
@@ -17,6 +17,15 @@ export function PortfolioListPage() {
   const [currency, setCurrency] = useState('EUR');
 
   if (isLoading) return <Loading />;
+  if (isError) {
+    return (
+      <EmptyState
+        title="Could not load portfolios"
+        description="There was a problem fetching portfolios."
+        action={<Button onClick={() => refetch()}>Retry</Button>}
+      />
+    );
+  }
 
   const handleCreate = async () => {
     if (!name.trim()) return;

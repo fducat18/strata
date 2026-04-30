@@ -12,7 +12,7 @@ import { Plus, Package, Search, X } from 'lucide-react';
 import { formatQuantity, getAssetTypeIcon } from '@/lib/utils';
 
 export function AssetListPage() {
-  const { data: assets, isLoading } = useAssets();
+  const { data: assets, isLoading, isError, refetch } = useAssets();
   const { data: assetTypes } = useAssetTypes();
   const { data: portfolios } = usePortfolios();
   const { data: categories } = useCategories();
@@ -32,6 +32,15 @@ export function AssetListPage() {
   const [newQuantity, setNewQuantity] = useState('');
 
   if (isLoading) return <Loading />;
+  if (isError) {
+    return (
+      <EmptyState
+        title="Could not load assets"
+        description="There was a problem fetching assets."
+        action={<Button onClick={() => refetch()}>Retry</Button>}
+      />
+    );
+  }
 
   let filtered = assets || [];
   if (!showDisposed) filtered = filtered.filter(a => !a.disposed);
@@ -83,13 +92,14 @@ export function AssetListPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-9"
+                aria-label="Search assets"
               />
             </div>
-            <Select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-48">
+            <Select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-48" aria-label="Filter by asset type">
               <option value="">All Types</option>
               {assetTypes?.map(t => <option key={t.id} value={t.code}>{t.label}</option>)}
             </Select>
-            <Select value={filterPortfolio} onChange={e => setFilterPortfolio(e.target.value)} className="w-48">
+            <Select value={filterPortfolio} onChange={e => setFilterPortfolio(e.target.value)} className="w-48" aria-label="Filter by portfolio">
               <option value="">All Portfolios</option>
               {portfolios?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Select>
@@ -174,26 +184,26 @@ export function AssetListPage() {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Name</label>
-            <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Bitcoin" className="mt-1" />
+            <label htmlFor="asset-name" className="text-sm font-medium">Name</label>
+            <Input id="asset-name" value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Bitcoin" className="mt-1" />
           </div>
           <div>
-            <label className="text-sm font-medium">Portfolio</label>
-            <Select value={newPortfolioId} onChange={e => setNewPortfolioId(e.target.value)} className="mt-1">
+            <label htmlFor="asset-portfolio" className="text-sm font-medium">Portfolio</label>
+            <Select id="asset-portfolio" value={newPortfolioId} onChange={e => setNewPortfolioId(e.target.value)} className="mt-1">
               <option value="">Select portfolio...</option>
               {portfolios?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium">Asset Type</label>
-            <Select value={newAssetTypeId} onChange={e => setNewAssetTypeId(e.target.value)} className="mt-1">
+            <label htmlFor="asset-type" className="text-sm font-medium">Asset Type</label>
+            <Select id="asset-type" value={newAssetTypeId} onChange={e => setNewAssetTypeId(e.target.value)} className="mt-1">
               <option value="">Select type...</option>
               {assetTypes?.map(t => <option key={t.id} value={t.id}>{getAssetTypeIcon(t.code)} {t.label}</option>)}
             </Select>
           </div>
           <div>
-            <label className="text-sm font-medium">Quantity (optional)</label>
-            <Input type="number" step="any" value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="e.g. 1.5" className="mt-1" />
+            <label htmlFor="asset-quantity" className="text-sm font-medium">Quantity (optional)</label>
+            <Input id="asset-quantity" type="number" step="any" value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="e.g. 1.5" className="mt-1" />
           </div>
         </div>
         <DialogFooter>

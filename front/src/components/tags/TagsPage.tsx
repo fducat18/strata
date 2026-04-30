@@ -8,13 +8,22 @@ import {
 import { Plus, Tags as TagsIcon, Trash2 } from 'lucide-react';
 
 export function TagsPage() {
-  const { data: tags, isLoading } = useTags();
+  const { data: tags, isLoading, isError, refetch } = useTags();
   const createMutation = useCreateTag();
   const deleteMutation = useDeleteTag();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
 
   if (isLoading) return <Loading />;
+  if (isError) {
+    return (
+      <EmptyState
+        title="Could not load tags"
+        description="There was a problem fetching tags."
+        action={<Button onClick={() => refetch()}>Retry</Button>}
+      />
+    );
+  }
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
