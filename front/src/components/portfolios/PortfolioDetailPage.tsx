@@ -11,6 +11,7 @@ import {
 } from '@/components/ui';
 import { Camera, Edit, Trash2, ArrowLeft, Package } from 'lucide-react';
 import { formatCurrency, formatDate, formatDateTime, getAssetTypeIcon } from '@/lib/utils';
+import { toDecimal } from '@/lib/format';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -43,7 +44,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   const chartData = (snapshots || [])
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-    .map(s => ({ date: formatDate(s.observedAt), value: parseFloat(s.value) }));
+    .map(s => ({ date: formatDate(s.observedAt), value: toDecimal(s.value)?.toNumber() ?? 0 }));
 
   const handleEdit = () => {
     setEditName(portfolio.name);

@@ -15,6 +15,7 @@ import {
   ArrowLeft, Edit, Trash2, Ban, Camera, Plus, X, Tag, FolderTree,
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatDateTime, formatQuantity, getAssetTypeIcon } from '@/lib/utils';
+import { toDecimal } from '@/lib/format';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -46,7 +47,7 @@ export function AssetDetailPage({ assetId }: Props) {
 
   const chartData = (snapshots || [])
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-    .map(s => ({ date: formatDate(s.observedAt), value: parseFloat(s.value) }));
+    .map(s => ({ date: formatDate(s.observedAt), value: toDecimal(s.value)?.toNumber() ?? 0 }));
 
   const assetTagIds = new Set(asset.tags?.map(t => t.id) || []);
   const assetCatIds = new Set(asset.categories?.map(c => c.id) || []);

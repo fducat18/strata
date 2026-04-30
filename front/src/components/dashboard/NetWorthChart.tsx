@@ -2,6 +2,7 @@ import { usePortfolioSnapshots } from '@/lib/hooks';
 import type { Portfolio } from '@/lib/types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { toDecimal } from '@/lib/format';
 
 interface Props {
   portfolios: Portfolio[];
@@ -20,7 +21,7 @@ export function NetWorthChart({ portfolios }: Props) {
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
     .map(s => ({
       date: formatDate(s.observedAt),
-      value: parseFloat(s.value),
+      value: toDecimal(s.value)?.toNumber() ?? 0,
     }));
 
   return (

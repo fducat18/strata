@@ -1,0 +1,19 @@
+{
+  "name": "strata",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strata — universal asset-tracking & net-worth dashboard",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/francoiducat/strata.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1"
+  }
+}
