@@ -27,9 +27,8 @@ export class PrismaCategoryRepository extends ICategoryRepository {
       data.parent
         ? new Category(data.parent.id, data.parent.name, data.parent.parentId)
         : null,
-      data.children?.map(
-        (c: any) => new Category(c.id, c.name, c.parentId),
-      ) ?? [],
+      data.children?.map((c: any) => new Category(c.id, c.name, c.parentId)) ??
+        [],
     );
   }
 

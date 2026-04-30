@@ -48,9 +48,16 @@ describe('AssetService', () => {
   const samplePortfolio = new Portfolio('p1', 'Portfolio', 'EUR', now, now);
   const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks');
   const sampleAsset = new Asset(
-    'a1', 'My Asset', new Decimal('10'), false,
-    'p1', 'at1', now, now,
-    sampleAssetType, samplePortfolio,
+    'a1',
+    'My Asset',
+    new Decimal('10'),
+    false,
+    'p1',
+    'at1',
+    now,
+    now,
+    sampleAssetType,
+    samplePortfolio,
   );
 
   beforeEach(async () => {
@@ -72,7 +79,11 @@ describe('AssetService', () => {
     it('throws PortfolioNotFoundException when portfolio does not exist', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
       await expect(
-        service.create({ name: 'A', portfolioId: 'p-unknown', assetTypeId: 'at1' }),
+        service.create({
+          name: 'A',
+          portfolioId: 'p-unknown',
+          assetTypeId: 'at1',
+        }),
       ).rejects.toThrow(PortfolioNotFoundException);
     });
 
@@ -80,7 +91,11 @@ describe('AssetService', () => {
       mockPortfolioRepo.findById.mockResolvedValue(samplePortfolio);
       mockAssetTypeRepo.findById.mockResolvedValue(null);
       await expect(
-        service.create({ name: 'A', portfolioId: 'p1', assetTypeId: 'at-unknown' }),
+        service.create({
+          name: 'A',
+          portfolioId: 'p1',
+          assetTypeId: 'at-unknown',
+        }),
       ).rejects.toThrow(AssetTypeNotFoundException);
     });
 
@@ -100,7 +115,9 @@ describe('AssetService', () => {
   describe('findById', () => {
     it('throws AssetNotFoundException when not found', async () => {
       mockAssetRepo.findById.mockResolvedValue(null);
-      await expect(service.findById('unknown')).rejects.toThrow(AssetNotFoundException);
+      await expect(service.findById('unknown')).rejects.toThrow(
+        AssetNotFoundException,
+      );
     });
 
     it('returns asset when found', async () => {
@@ -121,7 +138,9 @@ describe('AssetService', () => {
   describe('findByPortfolio', () => {
     it('throws PortfolioNotFoundException when portfolio does not exist', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.findByPortfolio('p-unknown')).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.findByPortfolio('p-unknown')).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
 
     it('returns assets for valid portfolio', async () => {
@@ -135,7 +154,9 @@ describe('AssetService', () => {
   describe('update', () => {
     it('throws AssetNotFoundException when not found', async () => {
       mockAssetRepo.findById.mockResolvedValue(null);
-      await expect(service.update('unknown', { name: 'Updated' })).rejects.toThrow(AssetNotFoundException);
+      await expect(
+        service.update('unknown', { name: 'Updated' }),
+      ).rejects.toThrow(AssetNotFoundException);
     });
 
     it('throws AssetTypeNotFoundException when new asset type does not exist', async () => {
@@ -150,14 +171,18 @@ describe('AssetService', () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
       mockAssetRepo.update.mockResolvedValue(sampleAsset);
       await service.update('a1', { name: 'Updated' });
-      expect(mockAssetRepo.update).toHaveBeenCalledWith('a1', { name: 'Updated' });
+      expect(mockAssetRepo.update).toHaveBeenCalledWith('a1', {
+        name: 'Updated',
+      });
     });
   });
 
   describe('delete', () => {
     it('throws AssetNotFoundException when not found', async () => {
       mockAssetRepo.findById.mockResolvedValue(null);
-      await expect(service.delete('unknown')).rejects.toThrow(AssetNotFoundException);
+      await expect(service.delete('unknown')).rejects.toThrow(
+        AssetNotFoundException,
+      );
     });
 
     it('calls repository.delete when found', async () => {
@@ -171,7 +196,9 @@ describe('AssetService', () => {
   describe('dispose', () => {
     it('throws AssetNotFoundException when not found', async () => {
       mockAssetRepo.findById.mockResolvedValue(null);
-      await expect(service.dispose('unknown')).rejects.toThrow(AssetNotFoundException);
+      await expect(service.dispose('unknown')).rejects.toThrow(
+        AssetNotFoundException,
+      );
     });
 
     it('calls repository.dispose when found', async () => {

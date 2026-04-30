@@ -24,8 +24,7 @@ export class AssetSnapshotService {
 
   async findByAsset(assetId: string): Promise<AssetSnapshot[]> {
     const asset = await this.assetRepository.findById(assetId);
-    if (!asset)
-      throw new AssetNotFoundException(`Asset ${assetId} not found`);
+    if (!asset) throw new AssetNotFoundException(`Asset ${assetId} not found`);
 
     return this.assetSnapshotRepository.findByAsset(assetId);
   }

@@ -25,7 +25,13 @@ describe('PortfolioService', () => {
 
   const now = new Date();
   const samplePortfolio = new Portfolio('p1', 'My Portfolio', 'EUR', now, now);
-  const sampleSnapshot = new PortfolioSnapshot('s1', 'p1', new Decimal('1000'), now, now);
+  const sampleSnapshot = new PortfolioSnapshot(
+    's1',
+    'p1',
+    new Decimal('1000'),
+    now,
+    now,
+  );
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -44,8 +50,14 @@ describe('PortfolioService', () => {
   describe('create', () => {
     it('calls repository.save and returns portfolio', async () => {
       mockPortfolioRepo.save.mockResolvedValue(samplePortfolio);
-      const result = await service.create({ name: 'My Portfolio', baseCurrency: 'EUR' });
-      expect(mockPortfolioRepo.save).toHaveBeenCalledWith({ name: 'My Portfolio', baseCurrency: 'EUR' });
+      const result = await service.create({
+        name: 'My Portfolio',
+        baseCurrency: 'EUR',
+      });
+      expect(mockPortfolioRepo.save).toHaveBeenCalledWith({
+        name: 'My Portfolio',
+        baseCurrency: 'EUR',
+      });
       expect(result).toBe(samplePortfolio);
     });
   });
@@ -59,7 +71,9 @@ describe('PortfolioService', () => {
 
     it('throws PortfolioNotFoundException when not found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.findById('unknown')).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.findById('unknown')).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
   });
 
@@ -74,21 +88,27 @@ describe('PortfolioService', () => {
   describe('update', () => {
     it('throws PortfolioNotFoundException when not found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.update('unknown', { name: 'New' })).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.update('unknown', { name: 'New' })).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
 
     it('calls repository.update when found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(samplePortfolio);
       mockPortfolioRepo.update.mockResolvedValue(samplePortfolio);
       await service.update('p1', { name: 'Updated' });
-      expect(mockPortfolioRepo.update).toHaveBeenCalledWith('p1', { name: 'Updated' });
+      expect(mockPortfolioRepo.update).toHaveBeenCalledWith('p1', {
+        name: 'Updated',
+      });
     });
   });
 
   describe('delete', () => {
     it('throws PortfolioNotFoundException when not found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.delete('unknown')).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.delete('unknown')).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
 
     it('calls repository.delete when found', async () => {
@@ -102,7 +122,9 @@ describe('PortfolioService', () => {
   describe('takeSnapshot', () => {
     it('throws PortfolioNotFoundException when not found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.takeSnapshot('unknown')).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.takeSnapshot('unknown')).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
 
     it('saves snapshot with portfolio totalValue', async () => {
@@ -122,7 +144,9 @@ describe('PortfolioService', () => {
   describe('getSnapshots', () => {
     it('throws PortfolioNotFoundException when not found', async () => {
       mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.getSnapshots('unknown')).rejects.toThrow(PortfolioNotFoundException);
+      await expect(service.getSnapshots('unknown')).rejects.toThrow(
+        PortfolioNotFoundException,
+      );
     });
 
     it('returns snapshots for existing portfolio', async () => {

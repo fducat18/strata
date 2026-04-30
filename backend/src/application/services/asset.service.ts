@@ -48,8 +48,7 @@ export class AssetService {
   }
 
   async findByPortfolio(portfolioId: string): Promise<Asset[]> {
-    const portfolio =
-      await this.portfolioRepository.findById(portfolioId);
+    const portfolio = await this.portfolioRepository.findById(portfolioId);
     if (!portfolio)
       throw new PortfolioNotFoundException(
         `Portfolio ${portfolioId} not found`,

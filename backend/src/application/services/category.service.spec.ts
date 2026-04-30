@@ -68,13 +68,18 @@ describe('CategoryService', () => {
 
     it('throws CategoryNotFoundException when not found', async () => {
       mockCategoryRepo.findById.mockResolvedValue(null);
-      await expect(service.findById('unknown')).rejects.toThrow(CategoryNotFoundException);
+      await expect(service.findById('unknown')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
     });
   });
 
   describe('findAll', () => {
     it('returns all categories', async () => {
-      mockCategoryRepo.findAll.mockResolvedValue([sampleCategory, childCategory]);
+      mockCategoryRepo.findAll.mockResolvedValue([
+        sampleCategory,
+        childCategory,
+      ]);
       const result = await service.findAll();
       expect(result).toEqual([sampleCategory, childCategory]);
     });
@@ -83,7 +88,9 @@ describe('CategoryService', () => {
   describe('findChildren', () => {
     it('throws CategoryNotFoundException when parent not found', async () => {
       mockCategoryRepo.findById.mockResolvedValue(null);
-      await expect(service.findChildren('unknown')).rejects.toThrow(CategoryNotFoundException);
+      await expect(service.findChildren('unknown')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
     });
 
     it('returns children for existing category', async () => {
@@ -97,13 +104,17 @@ describe('CategoryService', () => {
   describe('delete', () => {
     it('throws CategoryNotFoundException when not found', async () => {
       mockCategoryRepo.findById.mockResolvedValue(null);
-      await expect(service.delete('unknown')).rejects.toThrow(CategoryNotFoundException);
+      await expect(service.delete('unknown')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
     });
 
     it('throws CategoryHasChildrenException when category has children', async () => {
       mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
       mockCategoryRepo.countChildren.mockResolvedValue(3);
-      await expect(service.delete('c1')).rejects.toThrow(CategoryHasChildrenException);
+      await expect(service.delete('c1')).rejects.toThrow(
+        CategoryHasChildrenException,
+      );
     });
 
     it('deletes category when no children', async () => {

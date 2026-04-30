@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -125,7 +126,8 @@ export class PrismaAssetRepository extends IAssetRepository {
   async update(id: string, data: UpdateAssetData): Promise<Asset> {
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
-    if (data.assetTypeId !== undefined) updateData.assetTypeId = data.assetTypeId;
+    if (data.assetTypeId !== undefined)
+      updateData.assetTypeId = data.assetTypeId;
     if (data.quantity !== undefined)
       updateData.quantity = new Decimal(data.quantity);
 
@@ -151,43 +153,74 @@ export class PrismaAssetRepository extends IAssetRepository {
   }
 
   async addCategory(assetId: string, categoryId: string): Promise<Asset> {
-    await this.prisma.categoriesOnAssets.create({
-      data: { assetId, categoryId },
+    return this.prisma.$transaction(async (tx) => {
+      await this.attachCategory(tx, assetId, categoryId);
+      return this.reloadAsset(tx, assetId);
     });
-    const result = await this.prisma.asset.findUniqueOrThrow({
-      where: { id: assetId },
-      include: this.includeRelations,
-    });
-    return this.mapToEntity(result);
   }
 
   async removeCategory(assetId: string, categoryId: string): Promise<Asset> {
-    await this.prisma.categoriesOnAssets.delete({
-      where: { assetId_categoryId: { assetId, categoryId } },
+    return this.prisma.$transaction(async (tx) => {
+      await this.detachCategory(tx, assetId, categoryId);
+      return this.reloadAsset(tx, assetId);
     });
-    const result = await this.prisma.asset.findUniqueOrThrow({
-      where: { id: assetId },
-      include: this.includeRelations,
-    });
-    return this.mapToEntity(result);
   }
 
   async addTag(assetId: string, tagId: string): Promise<Asset> {
-    await this.prisma.tagsOnAssets.create({
-      data: { assetId, tagId },
+    return this.prisma.$transaction(async (tx) => {
+      await this.attachTag(tx, assetId, tagId);
+      return this.reloadAsset(tx, assetId);
     });
-    const result = await this.prisma.asset.findUniqueOrThrow({
-      where: { id: assetId },
-      include: this.includeRelations,
-    });
-    return this.mapToEntity(result);
   }
 
   async removeTag(assetId: string, tagId: string): Promise<Asset> {
-    await this.prisma.tagsOnAssets.delete({
+    return this.prisma.$transaction(async (tx) => {
+      await this.detachTag(tx, assetId, tagId);
+      return this.reloadAsset(tx, assetId);
+    });
+  }
+
+  private async attachCategory(
+    tx: Prisma.TransactionClient,
+    assetId: string,
+    categoryId: string,
+  ): Promise<void> {
+    await tx.categoriesOnAssets.create({ data: { assetId, categoryId } });
+  }
+
+  private async detachCategory(
+    tx: Prisma.TransactionClient,
+    assetId: string,
+    categoryId: string,
+  ): Promise<void> {
+    await tx.categoriesOnAssets.delete({
+      where: { assetId_categoryId: { assetId, categoryId } },
+    });
+  }
+
+  private async attachTag(
+    tx: Prisma.TransactionClient,
+    assetId: string,
+    tagId: string,
+  ): Promise<void> {
+    await tx.tagsOnAssets.create({ data: { assetId, tagId } });
+  }
+
+  private async detachTag(
+    tx: Prisma.TransactionClient,
+    assetId: string,
+    tagId: string,
+  ): Promise<void> {
+    await tx.tagsOnAssets.delete({
       where: { assetId_tagId: { assetId, tagId } },
     });
-    const result = await this.prisma.asset.findUniqueOrThrow({
+  }
+
+  private async reloadAsset(
+    tx: Prisma.TransactionClient,
+    assetId: string,
+  ): Promise<Asset> {
+    const result = await tx.asset.findUniqueOrThrow({
       where: { id: assetId },
       include: this.includeRelations,
     });

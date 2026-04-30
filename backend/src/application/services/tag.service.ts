@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Tag } from '../../domain/entities/index.js';
-import { ITagRepository, type CreateTagData } from '../../domain/ports/index.js';
+import {
+  ITagRepository,
+  type CreateTagData,
+} from '../../domain/ports/index.js';
 import { TagNotFoundException } from '../../domain/exceptions/index.js';
 
 @Injectable()

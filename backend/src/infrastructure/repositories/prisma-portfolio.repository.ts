@@ -108,23 +108,12 @@ export class PrismaPortfolioRepository extends IPortfolioRepository {
 
   async save(data: CreatePortfolioData): Promise<Portfolio> {
     try {
-      const result = await this.prisma.portfolio.create({
-        data: {
-          name: data.name,
-          baseCurrency: data.baseCurrency,
-        },
-        include: this.includeRelations,
+      return await this.prisma.$transaction(async (tx) => {
+        const created = await this.createPortfolioRow(tx, data);
+        return this.reloadPortfolio(tx, created.id);
       });
-      return this.mapToEntity(result);
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new DuplicateNameException(
-          `Portfolio with name '${data.name}' already exists`,
-        );
-      }
+      this.translateUniqueViolation(error, data.name);
       throw error;
     }
   }
@@ -146,31 +135,63 @@ export class PrismaPortfolioRepository extends IPortfolioRepository {
 
   async update(id: string, data: UpdatePortfolioData): Promise<Portfolio> {
     try {
-      const updateData: Record<string, unknown> = {};
-      if (data.name !== undefined) updateData.name = data.name;
-      if (data.baseCurrency !== undefined)
-        updateData.baseCurrency = data.baseCurrency;
-
-      const result = await this.prisma.portfolio.update({
-        where: { id },
-        data: updateData,
-        include: this.includeRelations,
+      return await this.prisma.$transaction(async (tx) => {
+        await this.updatePortfolioRow(tx, id, data);
+        return this.reloadPortfolio(tx, id);
       });
-      return this.mapToEntity(result);
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new DuplicateNameException(
-          `Portfolio with name '${data.name}' already exists`,
-        );
-      }
+      this.translateUniqueViolation(error, data.name);
       throw error;
     }
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.portfolio.delete({ where: { id } });
+  }
+
+  private async createPortfolioRow(
+    tx: Prisma.TransactionClient,
+    data: CreatePortfolioData,
+  ) {
+    return tx.portfolio.create({
+      data: { name: data.name, baseCurrency: data.baseCurrency },
+    });
+  }
+
+  private async updatePortfolioRow(
+    tx: Prisma.TransactionClient,
+    id: string,
+    data: UpdatePortfolioData,
+  ): Promise<void> {
+    const updateData: Record<string, unknown> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.baseCurrency !== undefined)
+      updateData.baseCurrency = data.baseCurrency;
+    await tx.portfolio.update({ where: { id }, data: updateData });
+  }
+
+  private async reloadPortfolio(
+    tx: Prisma.TransactionClient,
+    id: string,
+  ): Promise<Portfolio> {
+    const result = await tx.portfolio.findUniqueOrThrow({
+      where: { id },
+      include: this.includeRelations,
+    });
+    return this.mapToEntity(result);
+  }
+
+  private translateUniqueViolation(
+    error: unknown,
+    name: string | undefined,
+  ): void {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new DuplicateNameException(
+        `Portfolio with name '${name ?? ''}' already exists`,
+      );
+    }
   }
 }

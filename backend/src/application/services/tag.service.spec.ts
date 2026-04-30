@@ -47,7 +47,9 @@ describe('TagService', () => {
 
     it('throws TagNotFoundException when not found', async () => {
       mockTagRepo.findById.mockResolvedValue(null);
-      await expect(service.findById('unknown')).rejects.toThrow(TagNotFoundException);
+      await expect(service.findById('unknown')).rejects.toThrow(
+        TagNotFoundException,
+      );
     });
   });
 
@@ -62,7 +64,9 @@ describe('TagService', () => {
   describe('delete', () => {
     it('throws TagNotFoundException when not found', async () => {
       mockTagRepo.findById.mockResolvedValue(null);
-      await expect(service.delete('unknown')).rejects.toThrow(TagNotFoundException);
+      await expect(service.delete('unknown')).rejects.toThrow(
+        TagNotFoundException,
+      );
     });
 
     it('calls repository.delete when found', async () => {
