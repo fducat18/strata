@@ -1,5 +1,8 @@
-export { CreateAssetDto, UpdateAssetDto } from './asset.dto.js';
-export { CreatePortfolioDto, UpdatePortfolioDto } from './portfolio.dto.js';
-export { CreateCategoryDto } from './category.dto.js';
-export { CreateTagDto } from './tag.dto.js';
-export { CreateAssetSnapshotDto } from './asset-snapshot.dto.js';
+export { CreateAssetDto, UpdateAssetDto } from './asset/index.js';
+export { CreatePortfolioDto, UpdatePortfolioDto } from './portfolio/index.js';
+export { CreateCategoryDto } from './category/index.js';
+export { CreateTagDto } from './tag/index.js';
+export { CreateAssetSnapshotDto } from './asset-snapshot/index.js';
+export { RestoreBackupDto } from './admin/index.js';
+export type { RestoreMode } from './admin/index.js';
+export { IsDecimalString } from './validators/is-decimal-string.validator.js';

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
+/** Payload to create a new Category. */
 export class CreateCategoryDto {
   @ApiProperty({ description: 'Name of the category' })
   @IsString()

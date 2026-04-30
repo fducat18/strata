@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsDecimalString } from '../validators/is-decimal-string.validator.js';
 
+/** Payload to create a new Asset under a Portfolio. */
 export class CreateAssetDto {
   @ApiProperty({ description: 'Name of the asset' })
   @IsString()
@@ -15,26 +17,11 @@ export class CreateAssetDto {
   @IsUUID()
   assetTypeId!: string;
 
-  @ApiPropertyOptional({ description: 'Quantity (decimal string)' })
+  @ApiPropertyOptional({
+    description: 'Quantity as decimal string (max 8 fractional digits)',
+    example: '0.12345678',
+  })
   @IsOptional()
-  @IsString()
+  @IsDecimalString({ maxFractionDigits: 8 })
   quantity?: string;
-}
-
-export class UpdateAssetDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  name?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  quantity?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  assetTypeId?: string;
 }
