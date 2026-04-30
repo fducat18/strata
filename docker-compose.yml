@@ -2,31 +2,49 @@ services:
   backend:
     build: ./backend
     container_name: strata-backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - DATABASE_URL=file:/app/.data/strata.db
     volumes:
+      # Bind-mount for local dev. If the non-root container user can't write,
+      # run: chmod 777 backend/.data (or chown to UID 1000).
       - ./backend/.data:/app/.data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     command: >
       sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"
 
   front:
-    build: ./front
+    build:
+      context: ./front
+      args:
+        PUBLIC_API_URL: http://backend:3000/api/v1
     container_name: strata-front
+    restart: unless-stopped
     ports:
       - "4321:4321"
     environment:
       - PUBLIC_API_URL=http://backend:3000/api/v1
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   docs:
-    image: strata-docs
     build:
       context: ./docs
     container_name: strata-docs
+    restart: unless-stopped
     ports:
       - "8001:8000"
-    volumes:
-      - ./docs:/site
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
