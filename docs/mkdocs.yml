@@ -41,6 +41,7 @@ nav:
       - Data Model: DataModel.md
       - Frontend: Frontend.md
       - Migrations: Migrations.md
+      - Backup: Backup.md
       - Validation: Validation.md
       - Mental Model: MentalModel.md
 
