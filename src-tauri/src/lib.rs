@@ -11,6 +11,7 @@ use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::Emitter;
 
 /// Port used by the embedded NestJS backend
@@ -225,6 +226,35 @@ pub fn run() {
                     .build(),
             )?;
 
+            // ── E5: macOS menu with "Reveal Data Folder" ──
+            let reveal_item = MenuItemBuilder::with_id("reveal-data", "Reveal Data Folder")
+                .build(app)?;
+            let file_menu = SubmenuBuilder::new(app, "File")
+                .item(&reveal_item)
+                .separator()
+                .close_window()
+                .build()?;
+            let app_menu = SubmenuBuilder::new(app, "Strata")
+                .about(None)
+                .separator()
+                .quit()
+                .build()?;
+            let edit_menu = SubmenuBuilder::new(app, "Edit")
+                .undo()
+                .redo()
+                .separator()
+                .cut()
+                .copy()
+                .paste()
+                .select_all()
+                .build()?;
+            let menu = MenuBuilder::new(app)
+                .item(&app_menu)
+                .item(&file_menu)
+                .item(&edit_menu)
+                .build()?;
+            app.set_menu(menu)?;
+
             // ── E3: Ensure data directory & DATABASE_URL ──
             let database_url = ensure_data_dir();
             log::info!("Database URL: {}", database_url);
@@ -270,6 +300,11 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![reveal_data_folder, get_backend_url])
+        .on_menu_event(|_app, event| {
+            if event.id().as_ref() == "reveal-data" {
+                reveal_data_folder();
+            }
+        })
         .on_window_event(move |_window, event| {
             if let tauri::WindowEvent::Destroyed = event {
                 if let Ok(mut s) = sidecars_for_exit.lock() {
