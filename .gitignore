@@ -1,12 +1,11 @@
 # Environment
-.venv/
 .env
+.env.local
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Node.js
+node_modules/
+dist/
+*.tsbuildinfo
 
 # Database
 *.db
@@ -18,15 +17,24 @@ backend/.data/
 .DS_Store
 Thumbs.db
 
+# IDE
 .idea/
+.vscode/settings.json
 
-# docs
+# Docs
 docs/.venv/
 docs/site/
-/backend/tests/coverage/.coverage
-/backend/tests/coverage/html/
-cov_annotate/
-backend/cov_annotate/
-backend/coverage.xml
-backend/tests/coverage/
-.vscode/settings.json
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Tauri
+src-tauri/target/
+
+# Misc
+*.log

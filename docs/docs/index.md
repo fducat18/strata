@@ -1,37 +1,47 @@
----
-hide:
-  - navigation
-  - toc
----
+# Strata Documentation
 
-# 🌳 Strata Documentation
+**Strata** — Collect. Track. Grow.
+
+A personal asset management application for tracking net worth across all asset types.
+
+---
 
 <div class="grid cards" markdown>
 
--   [:mobile_phone:{ .lg .middle } __Discover Strata App__](StrataApp.md)
+-   :material-rocket-launch: **Get Started**
 
-    ---
-    - [Overview](StrataApp.md)
-    - [Features](QuickStart.md)
-    - [Use cases](UseCases.md)
+    Set up Strata locally in minutes.
 
--   [:material-code-braces:{ .lg .middle } __Explore Developer Docs__](QuickStart.md)
+    [:octicons-arrow-right-24: Quick Start](QuickStart.md)
 
-    ---
+-   :material-chart-line: **Features**
 
-      - [Tech Stack](TechStack.md) 
-      - [Architecture overview](Architecture.md)
-      - [Alembic Migrations](Architecture.md)
+    Explore what Strata can do.
 
--   [:octicons-rocket-16:{ .lg .middle } __Quick start guide](QuickStart.md)
+    [:octicons-arrow-right-24: Features](Features.md)
 
-    ---
+-   :material-layers-outline: **Architecture**
 
-    - [Quick start guide](QuickStart.md)
-    - [Use cases](UseCases.md)
-    - [Database Model](DataModel.md)
+    Hexagonal architecture with NestJS.
+
+    [:octicons-arrow-right-24: Architecture](Architecture.md)
+
+-   :material-database: **Data Model**
+
+    Entity relationships and schema.
+
+    [:octicons-arrow-right-24: Data Model](DataModel.md)
+
+-   :material-monitor: **Frontend**
+
+    Astro + React UI guide.
+
+    [:octicons-arrow-right-24: Frontend](Frontend.md)
+
+-   :material-swap-horizontal: **Migrations**
+
+    Prisma Migrate workflow.
+
+    [:octicons-arrow-right-24: Migrations](Migrations.md)
+
 </div>
-
-
-## License
-GPL 3.0

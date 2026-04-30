@@ -1,1 +1,0 @@
-Interfaces for external services (e.g., email, payment)

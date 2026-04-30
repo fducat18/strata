@@ -1,0 +1,8 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { PortfolioListPage } from '../../components/portfolios';
+---
+
+<MainLayout title="Portfolios">
+  <PortfolioListPage client:load />
+</MainLayout>

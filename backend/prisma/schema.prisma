@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Portfolio {
+  id           String              @id @default(uuid())
+  name         String              @unique
+  baseCurrency String              @map("base_currency")
+  assets       Asset[]
+  snapshots    PortfolioSnapshot[]
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  @@map("portfolios")
+}
+
+model Asset {
+  id           String               @id @default(uuid())
+  name         String
+  quantity     Decimal?
+  disposed     Boolean              @default(false)
+  portfolioId  String               @map("portfolio_id")
+  assetTypeId  String               @map("asset_type_id")
+  portfolio    Portfolio            @relation(fields: [portfolioId], references: [id])
+  assetType    AssetType            @relation(fields: [assetTypeId], references: [id])
+  snapshots    AssetSnapshot[]
+  transactions Transaction[]
+  categories   CategoriesOnAssets[]
+  tags         TagsOnAssets[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+
+  @@map("assets")
+}
+
+model AssetType {
+  id     String  @id @default(uuid())
+  code   String  @unique
+  label  String
+  assets Asset[]
+
+  @@map("asset_types")
+}
+
+model Category {
+  id       String               @id @default(uuid())
+  name     String               @unique
+  parentId String?              @map("parent_id")
+  parent   Category?            @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[]           @relation("CategoryHierarchy")
+  assets   CategoriesOnAssets[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id     String         @id @default(uuid())
+  name   String         @unique
+  assets TagsOnAssets[]
+
+  @@map("tags")
+}
+
+model AssetSnapshot {
+  id         String   @id @default(uuid())
+  assetId    String   @map("asset_id")
+  value      Decimal
+  observedAt DateTime @map("observed_at")
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("asset_snapshots")
+}
+
+model PortfolioSnapshot {
+  id          String   @id @default(uuid())
+  portfolioId String   @map("portfolio_id")
+  value       Decimal
+  observedAt  DateTime @map("observed_at")
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("portfolio_snapshots")
+}
+
+model Transaction {
+  id         String   @id @default(uuid())
+  assetId    String   @map("asset_id")
+  type       String
+  unitPrice  Decimal  @map("unit_price")
+  quantity   Decimal
+  currency   String
+  occurredAt DateTime @map("occurred_at")
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("transactions")
+}
+
+model CategoriesOnAssets {
+  assetId    String   @map("asset_id")
+  categoryId String   @map("category_id")
+  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([assetId, categoryId])
+  @@map("asset_categories")
+}
+
+model TagsOnAssets {
+  assetId String @map("asset_id")
+  tagId   String @map("tag_id")
+  asset   Asset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([assetId, tagId])
+  @@map("asset_tags")
+}

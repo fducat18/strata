@@ -1,0 +1,43 @@
+{
+  "name": "@strata/front",
+  "version": "1.0.0",
+  "description": "Strata asset management frontend",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "astro check"
+  },
+  "type": "module",
+  "dependencies": {
+    "@astrojs/node": "^10.0.6",
+    "@astrojs/react": "^5.0.4",
+    "@tailwindcss/vite": "^4.2.4",
+    "@tanstack/react-query": "^5.100.6",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.1.10",
+    "axios": "^1.15.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "happy-dom": "^20.9.0",
+    "jsdom": "^27.0.1",
+    "vitest": "^3.2.4"
+  }
+}

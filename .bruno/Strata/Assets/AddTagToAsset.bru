@@ -1,0 +1,16 @@
+meta {
+  name: AddTagToAsset
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://localhost:3000/api/v1/assets/:id/tags/:tagId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+  tagId: {{tag_id}}
+}

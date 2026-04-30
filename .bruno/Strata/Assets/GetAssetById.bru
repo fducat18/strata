@@ -1,0 +1,15 @@
+meta {
+  name: GetAssetById
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:3000/api/v1/assets/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+}

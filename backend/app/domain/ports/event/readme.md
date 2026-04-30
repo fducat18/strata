@@ -1,1 +1,0 @@
-Interfaces for event publishing or message brokers

@@ -1,33 +1,22 @@
-FROM python:3.12-slim
-
-# Python runtime hygiene
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# System deps
-RUN apt-get update \
-    && apt-get install -y build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Poetry
-RUN pip install --no-cache-dir poetry
-RUN poetry config virtualenvs.create false
-
+FROM node:20-alpine AS builder
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+COPY tsconfig*.json nest-cli.json ./
+COPY src ./src
+RUN npx prisma generate
+RUN npm run build
 
-# Install dependencies first (cache-friendly)
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-interaction --no-ansi --no-root
-
-# Copy application
-COPY app ./app
-COPY alembic ./alembic
-COPY alembic/alembic.ini ./alembic.ini
-COPY .env .
-
-# SQLite runtime directory
-RUN mkdir -p /app/.data
-
-EXPOSE 8000
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./
+COPY .env* ./
+RUN mkdir -p .data
+EXPOSE 3000
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"]

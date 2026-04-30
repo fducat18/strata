@@ -39,9 +39,10 @@ nav:
       - Tech Stack: TechStack.md
       - Architecture: Architecture.md
       - Data Model: DataModel.md
-      - Mental Model: MentalModel.md
-      - Alembic: Alembic.md
+      - Frontend: Frontend.md
+      - Migrations: Migrations.md
       - Validation: Validation.md
+      - Mental Model: MentalModel.md
 
 markdown_extensions:
   - pymdownx.superfences:

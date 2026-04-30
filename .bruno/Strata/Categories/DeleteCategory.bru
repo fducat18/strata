@@ -1,0 +1,15 @@
+meta {
+  name: DeleteCategory
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:3000/api/v1/categories/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{category_id}}
+}

@@ -1,0 +1,22 @@
+meta {
+  name: CreateAssetSnapshot
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:3000/api/v1/assets/:id/snapshots
+  body: json
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+}
+
+body:json {
+  {
+    "value": "5000.00",
+    "observedAt": "2026-04-01T00:00:00Z"
+  }
+}

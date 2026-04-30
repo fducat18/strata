@@ -1,0 +1,20 @@
+meta {
+  name: CreateAsset
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/api/v1/assets
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "My Checking Account",
+    "portfolioId": "{{portfolio_id}}",
+    "assetTypeId": "{{asset_type_id}}",
+    "quantity": "1000"
+  }
+}

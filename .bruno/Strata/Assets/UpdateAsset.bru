@@ -1,0 +1,21 @@
+meta {
+  name: UpdateAsset
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:3000/api/v1/assets/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+}
+
+body:json {
+  {
+    "name": "Updated Asset"
+  }
+}

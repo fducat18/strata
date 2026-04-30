@@ -1,0 +1,16 @@
+meta {
+  name: RemoveTagFromAsset
+  type: http
+  seq: 11
+}
+
+delete {
+  url: http://localhost:3000/api/v1/assets/:id/tags/:tagId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+  tagId: {{tag_id}}
+}

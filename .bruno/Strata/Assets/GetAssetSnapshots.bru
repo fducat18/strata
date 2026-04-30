@@ -1,0 +1,15 @@
+meta {
+  name: GetAssetSnapshots
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:3000/api/v1/assets/:id/snapshots
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+}

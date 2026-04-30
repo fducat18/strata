@@ -1,0 +1,10 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { AssetDetailPage } from '../../components/assets';
+
+const { id } = Astro.params;
+---
+
+<MainLayout title="Asset Detail">
+  <AssetDetailPage assetId={id!} client:load />
+</MainLayout>

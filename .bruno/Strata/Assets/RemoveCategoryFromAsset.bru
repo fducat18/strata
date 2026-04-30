@@ -1,0 +1,16 @@
+meta {
+  name: RemoveCategoryFromAsset
+  type: http
+  seq: 13
+}
+
+delete {
+  url: http://localhost:3000/api/v1/assets/:id/categories/:categoryId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+  categoryId: {{category_id}}
+}

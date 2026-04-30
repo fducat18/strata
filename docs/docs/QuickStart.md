@@ -1,84 +1,79 @@
-# 🚀 Quick Start Guide
+# Quick Start
 
-Welcome to the Strata Developer Docs!
+## Prerequisites
 
-This guide helps you set up and run the backend, and gives you a fast overview of the core concepts.
+- **Node.js 20+** — [nodejs.org](https://nodejs.org/)
+- **npm** — comes with Node.js
+- **Docker** (optional) — for containerized development
 
-## Run Strata App 
-
-### Prerequisites
-
-- Docker & Docker Compose (recommended)
-- OR Python 3.12+ with Poetry
-
-#### Run with Docker(Option 1: Recommended)
+## Option 1: Docker (Recommended)
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/francoiducat/strata.git
 cd strata
-
-# Start the application with Docker Compose
-docker-compose up
-
-# Backend API available at: http://localhost:8000
-# MkDocs Documentation: http://localhost:8001
+docker-compose up --build
 ```
 
-The backend will automatically run database migrations on startup.
+| Service | URL |
+|---------|-----|
+| Backend API | http://localhost:3000/api/v1 |
+| Swagger UI | http://localhost:3000/swagger |
+| Frontend | http://localhost:4321 |
+| Docs | http://localhost:8001 |
 
-#### Run with Poetry (Option 2)
+## Option 2: Local Development
+
+### Backend
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd strata/backend
-
-# Install dependencies
-poetry install
-
-# Activate virtual environment
-poetry shell
-
-# Run persistence migrations
-poetry run alembic upgrade head
-
-# Start the FastAPI server
-poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd backend
+npm install
+npx prisma migrate deploy
+npx prisma db seed
+npm run start:dev
 ```
 
-## Access Points
+The API is available at `http://localhost:3000/api/v1` and Swagger UI at `http://localhost:3000/swagger`.
 
-- **Backend API:** http://localhost:8000
-- **API Documentation:** http://localhost:8000/swagger
-- **MkDocs Documentation:** http://localhost:8001 (if running with Docker)
-
-## Database & Migrations
-
-### SQLite 
-
-![image](https://sqlite.org/images/sqlite370_banner.svg){ width="75" loading=lazy}
-
-Strat App currently uses an SQLite database
-
-### Alembic
-
-Strat App uses [Alembic](Alembic.md) for database migrations.
-
-### Quick checks
-
-Verify resolved DB path:
+### Frontend
 
 ```bash
-docker-compose exec -T backend python -c "import os; print(os.path.join(os.getcwd(), '.data', 'strata.db'))"
+cd front
+npm install
+npm run dev
 ```
 
-Inspect tables:
+The frontend is available at `http://localhost:4321`.
+
+## Running Tests
+
+### Backend Tests
 
 ```bash
-docker-compose exec -T backend sqlite3 /app/.data/strata.db ".tables"
+cd backend
+npm test              # Unit tests (Jest)
+npm run test:e2e      # E2E tests (Supertest)
 ```
 
-## 🤝 Contributing
+### Frontend Tests
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+```bash
+cd front
+npm test              # Unit tests (Vitest)
+npm run test:e2e      # E2E tests (Playwright)
+```
+
+## Project Structure
+
+```
+strata/
+├── backend/           ← NestJS API (port 3000)
+├── front/             ← Astro + React UI (port 4321)
+├── docs/              ← MkDocs documentation
+├── .bruno/            ← Bruno API collection
+└── docker-compose.yml
+```
+
+## API Collection
+
+A complete [Bruno](https://www.usebruno.com/) API collection is available in `.bruno/Strata/` with requests for all endpoints.

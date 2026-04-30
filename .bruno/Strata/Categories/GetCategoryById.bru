@@ -1,0 +1,15 @@
+meta {
+  name: GetCategoryById
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:3000/api/v1/categories/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{category_id}}
+}

@@ -1,26 +1,43 @@
-# 🛠️ Tech Stack
+# Tech Stack
 
 ## Backend
 
-- Python 3.12+
-- FastAPI (API framework)
-- SQLAlchemy (ORM)
-- Alembic (migrations)
-- Pydantic (validation)
-- Uvicorn (ASGI server)
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Runtime | Node.js 20+ | Server runtime |
+| Framework | NestJS 11 | HTTP framework with DI |
+| Language | TypeScript 5 | Type-safe development |
+| ORM | Prisma | Database access & migrations |
+| Database | SQLite | Embedded relational database |
+| Validation | class-validator + class-transformer | DTO validation |
+| API Docs | @nestjs/swagger | OpenAPI/Swagger generation |
+| Testing | Jest + Supertest | Unit + E2E tests |
 
-## Database
+## Frontend
 
-- SQLite (default, easy setup)
-- PostgreSQL support available
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Framework | Astro 6 | Static-first web framework |
+| UI Library | React 19 | Interactive components |
+| Styling | Tailwind CSS 4 | Utility-first CSS |
+| Components | shadcn/ui-inspired | Accessible UI primitives |
+| Charts | Recharts | Data visualization |
+| Data Fetching | TanStack React Query | Server state management |
+| HTTP Client | Axios | API communication |
+| Testing | Vitest + Playwright | Unit + E2E tests |
 
 ## Infrastructure
 
-- Docker & Docker Compose
-- Poetry (dependency management)
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Containers | Docker + docker-compose | Development & deployment |
+| API Collection | Bruno | API testing |
+| Documentation | MkDocs Material | Developer docs |
+| CI/CD | GitHub Actions | Automated testing |
 
-## [Architecture](Architecture.md)
+## Architecture Principles
 
-- Hexagonal (Ports & Adapters)
-- Domain-Driven Design principles
-- Clean separation of concerns
+- **Hexagonal Architecture** (Ports & Adapters) — domain logic is isolated from frameworks
+- **Domain-Driven Design** — entities, value objects, repository interfaces
+- **Dependency Injection** — NestJS module system wires implementations to abstractions
+- **Layered Validation** — DTO → use case → domain → database
