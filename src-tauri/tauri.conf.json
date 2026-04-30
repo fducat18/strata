@@ -5,7 +5,6 @@
   "identifier": "net.ducatillon.strata",
   "build": {
     "frontendDist": "frontend-dist",
-    "devUrl": "http://localhost:4321",
     "beforeBuildCommand": "",
     "beforeDevCommand": ""
   },
