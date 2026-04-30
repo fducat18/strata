@@ -15,7 +15,10 @@ import { DomainExceptionFilter } from '../filters/index.js';
 import { CreatePortfolioDto, UpdatePortfolioDto } from '../dto/index.js';
 import { PortfolioResponseDto } from '../dto/responses/index.js';
 import { PortfolioSnapshotResponseDto } from '../dto/responses/index.js';
-import type { Portfolio, PortfolioSnapshot } from '../../domain/entities/index.js';
+import type {
+  Portfolio,
+  PortfolioSnapshot,
+} from '../../domain/entities/index.js';
 
 function mapPortfolioToResponse(portfolio: Portfolio): PortfolioResponseDto {
   const dto = new PortfolioResponseDto();
@@ -49,9 +52,7 @@ export class PortfolioController {
   @Post()
   @ApiOperation({ summary: 'Create a portfolio' })
   @ApiResponse({ status: 201, type: PortfolioResponseDto })
-  async create(
-    @Body() dto: CreatePortfolioDto,
-  ): Promise<PortfolioResponseDto> {
+  async create(@Body() dto: CreatePortfolioDto): Promise<PortfolioResponseDto> {
     const portfolio = await this.portfolioService.create({
       name: dto.name,
       baseCurrency: dto.baseCurrency,

@@ -33,9 +33,7 @@ export class CategoryController {
   @Post()
   @ApiOperation({ summary: 'Create a category' })
   @ApiResponse({ status: 201, type: CategoryResponseDto })
-  async create(
-    @Body() dto: CreateCategoryDto,
-  ): Promise<CategoryResponseDto> {
+  async create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     const category = await this.categoryService.create({
       name: dto.name,
       parentId: dto.parentId,
@@ -70,9 +68,7 @@ export class CategoryController {
   @Get(':id/children')
   @ApiOperation({ summary: 'Get children of a category' })
   @ApiResponse({ status: 200, type: [CategoryResponseDto] })
-  async findChildren(
-    @Param('id') id: string,
-  ): Promise<CategoryResponseDto[]> {
+  async findChildren(@Param('id') id: string): Promise<CategoryResponseDto[]> {
     const children = await this.categoryService.findChildren(id);
     return children.map(mapCategoryToResponse);
   }

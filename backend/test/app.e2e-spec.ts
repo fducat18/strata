@@ -1,57 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { execSync } from 'child_process';
-import { existsSync, unlinkSync } from 'fs';
-import { AppModule } from '../src/app.module.js';
-
-const TEST_DB_PATH = './test-e2e.db';
-const TEST_DB_URL = `file:${TEST_DB_PATH}`;
+import { createIsolatedE2EApp } from './helpers/e2e-setup.js';
 
 describe('Strata API (e2e)', () => {
   let app: INestApplication<App>;
+  let cleanup: () => Promise<void>;
 
   beforeAll(async () => {
-    // Clean any leftover test DB
-    if (existsSync(TEST_DB_PATH)) unlinkSync(TEST_DB_PATH);
-
-    // Set up test database
-    process.env.DATABASE_URL = TEST_DB_URL;
-
-    execSync('npx prisma migrate deploy', {
-      cwd: __dirname + '/..',
-      env: { ...process.env, DATABASE_URL: TEST_DB_URL },
-      stdio: 'pipe',
-    });
-
-    execSync('npx prisma db seed', {
-      cwd: __dirname + '/..',
-      env: { ...process.env, DATABASE_URL: TEST_DB_URL },
-      stdio: 'pipe',
-    });
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-    await app.init();
+    const ctx = await createIsolatedE2EApp({ seed: true, seedDemo: true });
+    app = ctx.app as INestApplication<App>;
+    cleanup = ctx.cleanup;
   }, 60_000);
 
   afterAll(async () => {
-    await app.close();
-    // Clean up test DB
-    for (const f of [TEST_DB_PATH, `${TEST_DB_PATH}-journal`]) {
-      if (existsSync(f)) unlinkSync(f);
-    }
+    await cleanup();
   });
 
   // ─── Portfolio lifecycle ───────────────────────────────────────────
@@ -374,18 +337,16 @@ describe('Strata API (e2e)', () => {
         .expect(400);
     });
 
-    it('POST /api/v1/portfolios with duplicate name → 409 or error', async () => {
+    it('POST /api/v1/portfolios with duplicate name → 409', async () => {
       const uniqueName = `Dup-Test-${Date.now()}`;
-      // Create first
       await request(app.getHttpServer())
         .post('/api/v1/portfolios')
         .send({ name: uniqueName, baseCurrency: 'EUR' })
         .expect(201);
-      // Try to create again with same name
-      const res = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/api/v1/portfolios')
-        .send({ name: uniqueName, baseCurrency: 'EUR' });
-      expect([409, 500]).toContain(res.status);
+        .send({ name: uniqueName, baseCurrency: 'EUR' })
+        .expect(409);
     });
 
     it('GET /api/v1/portfolios/nonexistent → 404', async () => {

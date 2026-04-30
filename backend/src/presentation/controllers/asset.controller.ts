@@ -1,81 +1,67 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  Logger,
+  Param,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
   Query,
-  HttpCode,
   UseFilters,
 } from '@nestjs/common';
 import {
-  ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
-import { AssetService } from '../../application/services/index.js';
-import { AssetSnapshotService } from '../../application/services/index.js';
-import { DomainExceptionFilter } from '../filters/index.js';
-import { CreateAssetDto, UpdateAssetDto } from '../dto/index.js';
-import { CreateAssetSnapshotDto } from '../dto/index.js';
-import { AssetResponseDto } from '../dto/responses/index.js';
-import { AssetSnapshotResponseDto } from '../dto/responses/index.js';
-import type { Asset } from '../../domain/entities/index.js';
-import type { AssetSnapshot } from '../../domain/entities/index.js';
-
-function mapAssetToResponse(asset: Asset): AssetResponseDto {
-  const dto = new AssetResponseDto();
-  dto.id = asset.id;
-  dto.name = asset.name;
-  dto.quantity = asset.quantity ? asset.quantity.toString() : null;
-  dto.disposed = asset.disposed;
-  dto.portfolioId = asset.portfolioId;
-  dto.assetTypeId = asset.assetTypeId;
-  dto.createdAt = asset.createdAt.toISOString();
-  dto.updatedAt = asset.updatedAt.toISOString();
-  dto.assetType = asset.assetType
-    ? { id: asset.assetType.id, code: asset.assetType.code, label: asset.assetType.label }
-    : null;
-  dto.portfolio = asset.portfolio
-    ? { id: asset.portfolio.id, name: asset.portfolio.name, baseCurrency: asset.portfolio.baseCurrency }
-    : null;
-  dto.categories = (asset.categories ?? []).map((c) => ({
-    id: c.id,
-    name: c.name,
-    parentId: c.parentId,
-  }));
-  dto.tags = (asset.tags ?? []).map((t) => ({
-    id: t.id,
-    name: t.name,
-  }));
-  return dto;
-}
-
-function mapSnapshotToResponse(snapshot: AssetSnapshot): AssetSnapshotResponseDto {
-  const dto = new AssetSnapshotResponseDto();
-  dto.id = snapshot.id;
-  dto.assetId = snapshot.assetId;
-  dto.value = snapshot.value.toString();
-  dto.observedAt = snapshot.observedAt.toISOString();
-  dto.createdAt = snapshot.createdAt.toISOString();
-  return dto;
-}
+import {
+  AssetService,
+  AssetSnapshotService,
+} from '../../application/services/index.js';
+import {
+  AddCategoryToAssetUseCase,
+  AddTagToAssetUseCase,
+  RemoveCategoryFromAssetUseCase,
+  RemoveTagFromAssetUseCase,
+} from '../../application/use-cases/asset-associations/index.js';
+import {
+  CreateAssetDto,
+  CreateAssetSnapshotDto,
+  UpdateAssetDto,
+} from '../dto/index.js';
+import {
+  AssetResponseDto,
+  AssetSnapshotResponseDto,
+} from '../dto/responses/index.js';
+import { DomainExceptionFilter, PrismaExceptionFilter } from '../filters/index.js';
+import {
+  mapAssetToResponse,
+  mapAssetSnapshotToResponse,
+} from './mappers/asset.mapper.js';
+import { ApiStandardErrors } from './api-standard-errors.decorator.js';
 
 @ApiTags('Assets')
 @Controller('api/v1/assets')
-@UseFilters(DomainExceptionFilter)
+@UseFilters(PrismaExceptionFilter, DomainExceptionFilter)
 export class AssetController {
+  private readonly logger = new Logger(AssetController.name);
+
   constructor(
     private readonly assetService: AssetService,
     private readonly assetSnapshotService: AssetSnapshotService,
+    private readonly addTag: AddTagToAssetUseCase,
+    private readonly removeTagUC: RemoveTagFromAssetUseCase,
+    private readonly addCategory: AddCategoryToAssetUseCase,
+    private readonly removeCategoryUC: RemoveCategoryFromAssetUseCase,
   ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create an asset' })
   @ApiResponse({ status: 201, type: AssetResponseDto })
+  @ApiStandardErrors([400, 404, 409, 500])
   async create(@Body() dto: CreateAssetDto): Promise<AssetResponseDto> {
     const asset = await this.assetService.create({
       name: dto.name,
@@ -87,14 +73,28 @@ export class AssetController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all assets' })
-  @ApiQuery({ name: 'portfolio_id', required: false })
+  @ApiOperation({ summary: 'List all assets, optionally filtered by portfolio' })
+  @ApiQuery({ name: 'portfolioId', required: false })
+  @ApiQuery({
+    name: 'portfolio_id',
+    required: false,
+    deprecated: true,
+    description: 'Deprecated alias for portfolioId — to be removed.',
+  })
   @ApiResponse({ status: 200, type: [AssetResponseDto] })
+  @ApiStandardErrors([500])
   async findAll(
-    @Query('portfolio_id') portfolioId?: string,
+    @Query('portfolioId') portfolioId?: string,
+    @Query('portfolio_id') portfolioIdLegacy?: string,
   ): Promise<AssetResponseDto[]> {
-    const assets = portfolioId
-      ? await this.assetService.findByPortfolio(portfolioId)
+    const id = portfolioId ?? portfolioIdLegacy;
+    if (portfolioIdLegacy && !portfolioId) {
+      this.logger.warn(
+        'Query parameter `portfolio_id` is deprecated; use `portfolioId` instead.',
+      );
+    }
+    const assets = id
+      ? await this.assetService.findByPortfolio(id)
       : await this.assetService.findAll();
     return assets.map(mapAssetToResponse);
   }
@@ -102,6 +102,7 @@ export class AssetController {
   @Get(':id')
   @ApiOperation({ summary: 'Get asset by ID' })
   @ApiResponse({ status: 200, type: AssetResponseDto })
+  @ApiStandardErrors([404, 500])
   async findById(@Param('id') id: string): Promise<AssetResponseDto> {
     const asset = await this.assetService.findById(id);
     return mapAssetToResponse(asset);
@@ -110,6 +111,7 @@ export class AssetController {
   @Put(':id')
   @ApiOperation({ summary: 'Update an asset' })
   @ApiResponse({ status: 200, type: AssetResponseDto })
+  @ApiStandardErrors([400, 404, 500])
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateAssetDto,
@@ -126,6 +128,7 @@ export class AssetController {
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete an asset' })
   @ApiResponse({ status: 204 })
+  @ApiStandardErrors([404, 500])
   async delete(@Param('id') id: string): Promise<void> {
     await this.assetService.delete(id);
   }
@@ -133,6 +136,7 @@ export class AssetController {
   @Put(':id/dispose')
   @ApiOperation({ summary: 'Dispose an asset' })
   @ApiResponse({ status: 200, type: AssetResponseDto })
+  @ApiStandardErrors([404, 500])
   async dispose(@Param('id') id: string): Promise<AssetResponseDto> {
     const asset = await this.assetService.dispose(id);
     return mapAssetToResponse(asset);
@@ -141,16 +145,18 @@ export class AssetController {
   @Get(':id/snapshots')
   @ApiOperation({ summary: 'Get snapshots for an asset' })
   @ApiResponse({ status: 200, type: [AssetSnapshotResponseDto] })
+  @ApiStandardErrors([404, 500])
   async getSnapshots(
     @Param('id') id: string,
   ): Promise<AssetSnapshotResponseDto[]> {
     const snapshots = await this.assetSnapshotService.findByAsset(id);
-    return snapshots.map(mapSnapshotToResponse);
+    return snapshots.map(mapAssetSnapshotToResponse);
   }
 
   @Post(':id/snapshots')
   @ApiOperation({ summary: 'Create a snapshot for an asset' })
   @ApiResponse({ status: 201, type: AssetSnapshotResponseDto })
+  @ApiStandardErrors([400, 404, 500])
   async createSnapshot(
     @Param('id') id: string,
     @Body() dto: CreateAssetSnapshotDto,
@@ -160,50 +166,54 @@ export class AssetController {
       value: dto.value,
       observedAt: new Date(dto.observedAt),
     });
-    return mapSnapshotToResponse(snapshot);
+    return mapAssetSnapshotToResponse(snapshot);
   }
 
   @Post(':id/tags/:tagId')
-  @ApiOperation({ summary: 'Add a tag to an asset' })
+  @ApiOperation({ summary: 'Attach a tag to an asset' })
   @ApiResponse({ status: 201, type: AssetResponseDto })
-  async addTag(
+  @ApiStandardErrors([404, 409, 500])
+  async addTagToAsset(
     @Param('id') id: string,
     @Param('tagId') tagId: string,
   ): Promise<AssetResponseDto> {
-    const asset = await this.assetService.addTag(id, tagId);
+    const asset = await this.addTag.execute(id, tagId);
     return mapAssetToResponse(asset);
   }
 
   @Delete(':id/tags/:tagId')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Remove a tag from an asset' })
+  @ApiOperation({ summary: 'Detach a tag from an asset' })
   @ApiResponse({ status: 204 })
-  async removeTag(
+  @ApiStandardErrors([404, 500])
+  async removeTagFromAsset(
     @Param('id') id: string,
     @Param('tagId') tagId: string,
   ): Promise<void> {
-    await this.assetService.removeTag(id, tagId);
+    await this.removeTagUC.execute(id, tagId);
   }
 
   @Post(':id/categories/:categoryId')
-  @ApiOperation({ summary: 'Add a category to an asset' })
+  @ApiOperation({ summary: 'Attach a category to an asset' })
   @ApiResponse({ status: 201, type: AssetResponseDto })
-  async addCategory(
+  @ApiStandardErrors([404, 409, 500])
+  async addCategoryToAsset(
     @Param('id') id: string,
     @Param('categoryId') categoryId: string,
   ): Promise<AssetResponseDto> {
-    const asset = await this.assetService.addCategory(id, categoryId);
+    const asset = await this.addCategory.execute(id, categoryId);
     return mapAssetToResponse(asset);
   }
 
   @Delete(':id/categories/:categoryId')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Remove a category from an asset' })
+  @ApiOperation({ summary: 'Detach a category from an asset' })
   @ApiResponse({ status: 204 })
-  async removeCategory(
+  @ApiStandardErrors([404, 500])
+  async removeCategoryFromAsset(
     @Param('id') id: string,
     @Param('categoryId') categoryId: string,
   ): Promise<void> {
-    await this.assetService.removeCategory(id, categoryId);
+    await this.removeCategoryUC.execute(id, categoryId);
   }
 }
