@@ -9,7 +9,7 @@ import {
   Loading, EmptyState,
 } from '@/components/ui';
 import { Plus, Package, Search, X } from 'lucide-react';
-import { formatQuantity, getAssetTypeIcon } from '@/lib/utils';
+import { formatQuantity, getAssetTypeIcon } from '@/lib/format';
 
 export function AssetListPage() {
   const { data: assets, isLoading, isError, refetch } = useAssets();

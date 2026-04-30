@@ -9,7 +9,8 @@ import {
   Input, Select, Loading, EmptyState,
 } from '@/components/ui';
 import { Plus, Briefcase, Trash2 } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/format';
+import { useLocale } from '@/stores/settingsStore';
 
 const portfolioSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -21,6 +22,7 @@ export function PortfolioListPage() {
   const { data: portfolios, isLoading, isError, refetch } = usePortfolios();
   const createMutation = useCreatePortfolio();
   const deleteMutation = useDeletePortfolio();
+  const locale = useLocale();
   const [showCreate, setShowCreate] = useState(false);
 
   const {
@@ -90,7 +92,7 @@ export function PortfolioListPage() {
                   </div>
                   <div className="flex items-center justify-between text-sm mt-1">
                     <span className="text-muted-foreground">Created</span>
-                    <span>{formatDate(p.createdAt)}</span>
+                    <span>{formatDate(p.createdAt, { locale })}</span>
                   </div>
                 </CardContent>
               </a>

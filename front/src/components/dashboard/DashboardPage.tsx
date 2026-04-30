@@ -1,6 +1,6 @@
 import { usePortfolios, useAssets } from '@/lib/hooks';
 import { Card, CardHeader, CardTitle, CardContent, Loading } from '@/components/ui';
-import { formatCurrency, getAssetTypeIcon } from '@/lib/utils';
+import { getAssetTypeIcon } from '@/lib/format';
 import { Briefcase, Package, TrendingUp } from 'lucide-react';
 import { NetWorthChart } from './NetWorthChart';
 import { AllocationChart } from './AllocationChart';

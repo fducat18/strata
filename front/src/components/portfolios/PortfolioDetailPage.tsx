@@ -10,8 +10,8 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@/components/ui';
 import { Camera, Edit, Trash2, ArrowLeft, Package } from 'lucide-react';
-import { formatCurrency, formatDate, formatDateTime, getAssetTypeIcon } from '@/lib/utils';
-import { toDecimal } from '@/lib/format';
+import { formatMoney, formatDate, formatDateTime, toDecimal, getAssetTypeIcon } from '@/lib/format';
+import { useLocale, useCurrency } from '@/stores/settingsStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -25,6 +25,8 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const snapshotMutation = useTakePortfolioSnapshot();
   const updateMutation = useUpdatePortfolio();
   const deleteMutation = useDeletePortfolio();
+  const locale = useLocale();
+  const currency = useCurrency();
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState('');
 
@@ -44,7 +46,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   const chartData = (snapshots || [])
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-    .map(s => ({ date: formatDate(s.observedAt), value: toDecimal(s.value)?.toNumber() ?? 0 }));
+    .map(s => ({ date: formatDate(s.observedAt, { locale }), value: toDecimal(s.value)?.toNumber() ?? 0 }));
 
   const handleEdit = () => {
     setEditName(portfolio.name);
@@ -76,7 +78,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         </a>
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{portfolio.name}</h1>
-          <p className="text-muted-foreground">{portfolio.baseCurrency} · Created {formatDate(portfolio.createdAt)}</p>
+          <p className="text-muted-foreground">{portfolio.baseCurrency} · Created {formatDate(portfolio.createdAt, { locale })}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleSnapshot} disabled={snapshotMutation.isPending}>
@@ -111,7 +113,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                 <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-fg)" />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border-color)', borderRadius: '0.375rem' }}
-                  formatter={(value) => [formatCurrency(value as number, portfolio.baseCurrency), 'Value']}
+                  formatter={(value) => [formatMoney(value as number, { currency: portfolio.baseCurrency, locale }), 'Value']}
                 />
                 <Area type="monotone" dataKey="value" stroke="var(--chart-1)" fillOpacity={1} fill="url(#portfolioGrad)" />
               </AreaChart>

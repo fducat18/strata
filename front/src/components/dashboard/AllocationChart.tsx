@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { getAssetTypeIcon } from '@/lib/utils';
+import { getAssetTypeIcon } from '@/lib/format';
 
 interface AllocationItem {
   code: string;

@@ -14,8 +14,8 @@ import {
 import {
   ArrowLeft, Edit, Trash2, Ban, Camera, Plus, X, Tag, FolderTree,
 } from 'lucide-react';
-import { formatCurrency, formatDate, formatDateTime, formatQuantity, getAssetTypeIcon } from '@/lib/utils';
-import { toDecimal } from '@/lib/format';
+import { formatMoney, formatDate, formatDateTime, formatQuantity, toDecimal, getAssetTypeIcon } from '@/lib/format';
+import { useLocale, useCurrency } from '@/stores/settingsStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -35,6 +35,8 @@ export function AssetDetailPage({ assetId }: Props) {
   const removeTagMutation = useRemoveTagFromAsset();
   const addCategoryMutation = useAddCategoryToAsset();
   const removeCategoryMutation = useRemoveCategoryFromAsset();
+  const locale = useLocale();
+  const currency = useCurrency();
 
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState('');
@@ -45,9 +47,10 @@ export function AssetDetailPage({ assetId }: Props) {
   if (isLoading) return <Loading />;
   if (!asset) return <EmptyState title="Asset not found" />;
 
+  const fmtOpts = { currency, locale };
   const chartData = (snapshots || [])
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-    .map(s => ({ date: formatDate(s.observedAt), value: toDecimal(s.value)?.toNumber() ?? 0 }));
+    .map(s => ({ date: formatDate(s.observedAt, { locale }), value: toDecimal(s.value)?.toNumber() ?? 0 }));
 
   const assetTagIds = new Set(asset.tags?.map(t => t.id) || []);
   const assetCatIds = new Set(asset.categories?.map(c => c.id) || []);
@@ -106,7 +109,7 @@ export function AssetDetailPage({ assetId }: Props) {
             {asset.disposed && <Badge variant="destructive">Disposed</Badge>}
           </div>
           <p className="text-muted-foreground">
-            {asset.assetType?.label} · Qty: {formatQuantity(asset.quantity)} · Created {formatDate(asset.createdAt)}
+            {asset.assetType?.label} · Qty: {formatQuantity(asset.quantity)} · Created {formatDate(asset.createdAt, { locale })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -145,7 +148,7 @@ export function AssetDetailPage({ assetId }: Props) {
                 <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-fg)" />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border-color)', borderRadius: '0.375rem' }}
-                  formatter={(value: number) => [formatCurrency(value), 'Value']}
+                  formatter={(value: number) => [formatMoney(value, fmtOpts), 'Value']}
                 />
                 <Area type="monotone" dataKey="value" stroke="var(--chart-2)" fillOpacity={1} fill="url(#assetGrad)" />
               </AreaChart>
@@ -258,8 +261,8 @@ export function AssetDetailPage({ assetId }: Props) {
                   .sort((a, b) => new Date(b.observedAt).getTime() - new Date(a.observedAt).getTime())
                   .map(s => (
                     <TableRow key={s.id}>
-                      <TableCell>{formatDateTime(s.observedAt)}</TableCell>
-                      <TableCell className="font-mono">{formatCurrency(s.value)}</TableCell>
+                      <TableCell>{formatDateTime(s.observedAt, locale)}</TableCell>
+                      <TableCell className="font-mono">{formatMoney(s.value, fmtOpts)}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>

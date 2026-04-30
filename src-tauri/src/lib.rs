@@ -1,19 +1,28 @@
 // Strata Desktop — Tauri entry point
 //
 // Responsibilities:
-// 1. Start the NestJS backend as a child process (sidecar)
-// 2. Wait until the backend is healthy before showing the window
-// 3. Stop the backend when the app quits
-// 4. Provide IPC commands for backup/restore and revealing the data folder
+// 1. Start the NestJS backend as a child process (port 3456)
+// 2. Start the Astro frontend server as a child process (port 4321)
+// 3. Wait until both servers are healthy before navigating to the frontend
+// 4. Stop both servers when the app quits
+// 5. Provide IPC commands for revealing the data folder
 
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 
 /// Port used by the embedded NestJS backend
 const BACKEND_PORT: u16 = 3456;
+/// Port used by the Astro frontend SSR server
+const FRONTEND_PORT: u16 = 4321;
+
+/// Holds both sidecar child processes so we can clean them up on exit
+struct SidecarProcesses {
+    backend: Option<Child>,
+    frontend: Option<Child>,
+}
 
 /// Where the SQLite database lives on macOS
 fn data_dir() -> std::path::PathBuf {
@@ -32,7 +41,6 @@ fn ensure_data_dir() -> String {
 
 /// Locate the `node` binary on the system
 fn find_node() -> String {
-    // Common Homebrew paths on Apple Silicon / Intel, plus system default
     for candidate in &[
         "/opt/homebrew/bin/node",
         "/usr/local/bin/node",
@@ -42,7 +50,6 @@ fn find_node() -> String {
             return candidate.to_string();
         }
     }
-    // Fall back to PATH lookup
     "node".to_string()
 }
 
@@ -60,26 +67,20 @@ fn find_npx() -> String {
     "npx".to_string()
 }
 
-/// Resolve the backend directory.
-/// In dev mode the repo layout is used; in production the resources are
-/// bundled inside the .app bundle.
-fn backend_dir(app: &tauri::App) -> std::path::PathBuf {
-    if cfg!(debug_assertions) {
-        // Dev mode — repo-root/backend/
-        let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        manifest.parent().unwrap().join("backend")
-    } else {
-        // Production — resources are copied into the bundle
-        app.path()
-            .resource_dir()
-            .expect("could not find resource dir")
-    }
+/// Resolve the repo root directory.
+/// In dev mode: use CARGO_MANIFEST_DIR parent.
+/// In production: use the resource directory inside the .app bundle.
+fn repo_root(_app: &tauri::App) -> std::path::PathBuf {
+    // For both dev and production, we use the repo layout.
+    // Production bundling is a future improvement.
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    manifest.parent().unwrap().to_path_buf()
 }
 
 /// Run `npx prisma migrate deploy` to ensure the DB schema is up to date.
 fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) {
     let npx = find_npx();
-    log::info!("Running prisma migrate deploy from {}", backend_path.display());
+    log::info!("Running prisma migrate deploy …");
     let status = Command::new(&npx)
         .args(["prisma", "migrate", "deploy"])
         .current_dir(backend_path)
@@ -98,7 +99,7 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) {
 /// Run `npx prisma db seed` to seed reference data.
 fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
     let npx = find_npx();
-    log::info!("Running prisma db seed from {}", backend_path.display());
+    log::info!("Running prisma db seed …");
     let status = Command::new(&npx)
         .args(["prisma", "db", "seed"])
         .current_dir(backend_path)
@@ -119,12 +120,7 @@ fn spawn_backend(backend_path: &std::path::Path, database_url: &str) -> Child {
     let node = find_node();
     let main_js = backend_path.join("dist").join("main.js");
 
-    log::info!(
-        "Starting backend: {} {} (cwd={})",
-        node,
-        main_js.display(),
-        backend_path.display()
-    );
+    log::info!("Starting backend: {} {}", node, main_js.display());
 
     Command::new(&node)
         .arg(&main_js)
@@ -140,27 +136,44 @@ fn spawn_backend(backend_path: &std::path::Path, database_url: &str) -> Child {
         .expect("failed to start NestJS backend — is Node.js installed?")
 }
 
-/// Poll the backend health endpoint until it responds 200 or we give up.
-fn wait_for_backend(max_attempts: u32) -> bool {
-    let url = format!("http://localhost:{}/api/v1/health", BACKEND_PORT);
+/// Spawn the Astro SSR frontend and return the child process handle.
+fn spawn_frontend(front_path: &std::path::Path) -> Child {
+    let node = find_node();
+    let entry = front_path.join("dist").join("server").join("entry.mjs");
+
+    log::info!("Starting frontend: {} {}", node, entry.display());
+
+    Command::new(&node)
+        .arg(&entry)
+        .current_dir(front_path)
+        .env("HOST", "0.0.0.0")
+        .env("PORT", FRONTEND_PORT.to_string())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .expect("failed to start Astro frontend — is Node.js installed?")
+}
+
+/// Poll an HTTP endpoint until it responds 200 or we give up.
+fn wait_for_server(url: &str, name: &str, max_attempts: u32) -> bool {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(2))
         .build()
         .unwrap();
 
     for attempt in 1..=max_attempts {
-        match client.get(&url).send() {
+        match client.get(url).send() {
             Ok(resp) if resp.status().is_success() => {
-                log::info!("Backend healthy after {} attempts", attempt);
+                log::info!("{} healthy after {} attempts", name, attempt);
                 return true;
             }
             _ => {
-                log::info!("Health check attempt {}/{} …", attempt, max_attempts);
+                log::info!("{} health check {}/{} …", name, attempt, max_attempts);
                 thread::sleep(Duration::from_millis(500));
             }
         }
     }
-    log::error!("Backend did not become healthy after {} attempts", max_attempts);
+    log::error!("{} did not become healthy after {} attempts", name, max_attempts);
     false
 }
 
@@ -174,24 +187,34 @@ fn reveal_data_folder() {
     }
 }
 
-/// Tauri IPC: get the backend base URL
+/// Tauri IPC: get the backend base URL (for the frontend to call the API)
 #[tauri::command]
 fn get_backend_url() -> String {
     format!("http://localhost:{}", BACKEND_PORT)
 }
 
+/// Kill a child process and wait for it to exit
+fn kill_child(name: &str, child: &mut Child) {
+    log::info!("Shutting down {} (pid={}) …", name, child.id());
+    let _ = child.kill();
+    let _ = child.wait();
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Shared handle so we can kill the backend on exit
-    let backend_child: Arc<Mutex<Option<Child>>> = Arc::new(Mutex::new(None));
-    let child_for_setup = Arc::clone(&backend_child);
-    let child_for_exit = Arc::clone(&backend_child);
+    // Shared handle so we can kill both sidecars on exit
+    let sidecars: Arc<Mutex<SidecarProcesses>> = Arc::new(Mutex::new(SidecarProcesses {
+        backend: None,
+        frontend: None,
+    }));
+    let sidecars_for_setup = Arc::clone(&sidecars);
+    let sidecars_for_exit = Arc::clone(&sidecars);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .setup(move |app| {
-            // Always enable logging in dev; in release only info+
+            // Logging
             app.handle().plugin(
                 tauri_plugin_log::Builder::default()
                     .level(if cfg!(debug_assertions) {
@@ -206,26 +229,41 @@ pub fn run() {
             let database_url = ensure_data_dir();
             log::info!("Database URL: {}", database_url);
 
-            // ── Resolve backend path ──
-            let backend_path = backend_dir(app);
+            // ── Resolve paths ──
+            let root = repo_root(app);
+            let backend_path = root.join("backend");
+            let front_path = root.join("front");
             log::info!("Backend path: {}", backend_path.display());
+            log::info!("Frontend path: {}", front_path.display());
 
             // ── Run Prisma migrations & seed ──
             run_prisma_migrate(&backend_path, &database_url);
             run_prisma_seed(&backend_path, &database_url);
 
-            // ── E2: Spawn the backend ──
-            let child = spawn_backend(&backend_path, &database_url);
-            *child_for_setup.lock().unwrap() = Some(child);
+            // ── E2: Spawn both sidecars ──
+            let backend = spawn_backend(&backend_path, &database_url);
+            let frontend = spawn_frontend(&front_path);
+            {
+                let mut s = sidecars_for_setup.lock().unwrap();
+                s.backend = Some(backend);
+                s.frontend = Some(frontend);
+            }
 
             // ── Health-poll in a background thread, then emit event ──
             let handle = app.handle().clone();
             thread::spawn(move || {
-                if wait_for_backend(30) {
+                let backend_url = format!("http://localhost:{}/api/v1/health", BACKEND_PORT);
+                let frontend_url = format!("http://localhost:{}/", FRONTEND_PORT);
+
+                let backend_ok = wait_for_server(&backend_url, "Backend", 30);
+                let frontend_ok = wait_for_server(&frontend_url, "Frontend", 30);
+
+                if backend_ok && frontend_ok {
+                    log::info!("All services ready — navigating to frontend");
                     let _ = handle.emit("backend-ready", true);
                 } else {
+                    log::error!("Some services failed to start");
                     let _ = handle.emit("backend-ready", false);
-                    log::error!("Backend failed to start — app may not function correctly");
                 }
             });
 
@@ -233,13 +271,13 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![reveal_data_folder, get_backend_url])
         .on_window_event(move |_window, event| {
-            // Kill the backend when the app window is destroyed
             if let tauri::WindowEvent::Destroyed = event {
-                if let Ok(mut guard) = child_for_exit.lock() {
-                    if let Some(ref mut child) = *guard {
-                        log::info!("Shutting down backend (pid={})", child.id());
-                        let _ = child.kill();
-                        let _ = child.wait();
+                if let Ok(mut s) = sidecars_for_exit.lock() {
+                    if let Some(ref mut child) = s.backend {
+                        kill_child("backend", child);
+                    }
+                    if let Some(ref mut child) = s.frontend {
+                        kill_child("frontend", child);
                     }
                 }
             }
