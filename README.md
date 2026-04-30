@@ -2,165 +2,58 @@
 
 [![CI](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml/badge.svg)](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml)
 [![codecov](https://codecov.io/gh/francoiducat/strata/graph/badge.svg)](https://codecov.io/gh/francoiducat/strata)
-![Python](https://img.shields.io/badge/python-3.12-blue.svg)
 [![Docs](https://img.shields.io/website?url=https%3A%2F%2Fstrata.ducatillon.net%2Fdocs%2F&label=docs)](https://strata.ducatillon.net/docs/)
 
-# Strata — backend
+# Strata — Collect. Track. Grow.
 
-Strata is a domain-driven FastAPI backend for organizing and managing assets (types, portfolios, snapshots, tags). This repository contains the backend application, migrations, tests and docs.
+Strata is a self-hosted personal asset manager that tracks your full net worth — bank accounts, investments, real estate, vehicles, collectibles, anything — across portfolios, snapshots, categories and tags. Backend is a NestJS + Prisma API over SQLite; frontend is an Astro + React + Tailwind UI; both ship in Docker so a fresh laptop is always one command away from a working install.
 
-## Quick links
-- Source: `backend/`
-- Docs: `docs/` (MkDocs)
-- **📚 Live Documentation:** https://strata.ducatillon.net/docs/ (deployed via GitHub Actions)
-- Migrations: `backend/alembic/`
-- Tests: `tests/unit/`
+📚 **Live documentation:** <https://strata.ducatillon.net/docs/>
 
-## Prerequisites
-- Python 3.12
-- Poetry (recommended for local development)
-- Docker & Docker Compose (for containerized runs)
+## Repository map
 
-## Choose your database — SQLite or Postgres?
+| Path | What lives here |
+|---|---|
+| [`backend/`](backend/) | NestJS 11 API, Prisma schema & migrations, Jest unit + e2e tests |
+| [`front/`](front/) | Astro 6 + React 19 + Tailwind v4 UI, Vitest + Playwright tests |
+| [`docs/`](docs/) | MkDocs Material site (deployed to <https://strata.ducatillon.net/docs/>) |
+| [`.bruno/Strata/`](.bruno/Strata/) | Bruno API collection — every endpoint, ready to run |
+| [`docker-compose.yml`](docker-compose.yml) | Backend + frontend + docs, ready to `up` |
+| `src-tauri/` | _(coming)_ Tauri desktop wrapper |
 
-Strata works with both **SQLite** and **Postgres**. Both are fully supported. Pick the one that fits your workflow and stick to it — running migrations or the app against different databases at different times is the most common source of confusion.
+## 5-minute quickstart (Docker)
 
-| | SQLite | Postgres |
-|---|---|---|
-| Setup | Zero config, single file | Requires Docker (or a running Postgres instance) |
-| Good for | Quick local dev, prototyping | Closer to production, multi-client access |
-| Persistence | `backend/.data/strata.db` | Docker volume `pgdata` |
-
-**To switch databases: edit one line in `backend/.env`.**
-
----
-
-## Option A — SQLite (default)
-
-### Running locally with Poetry
+Requires Docker Desktop (or Docker + Compose v2).
 
 ```bash
-cd backend
-poetry install
-mkdir -p .data
+git clone https://github.com/francoiducat/strata.git
+cd strata
+docker compose up --build
 ```
 
-Edit `backend/.env` and set:
+| Service | URL |
+|---|---|
+| Backend API | <http://localhost:3000/api/v1> |
+| Swagger UI | <http://localhost:3000/swagger> |
+| Frontend | <http://localhost:4321> |
+| Docs | <http://localhost:8001> |
 
-```dotenv
-DATABASE_URL=sqlite:////app/.data/strata.db
-```
+The SQLite database persists in `backend/.data/strata.db`. To start fresh, delete that file (or the whole directory) and bring the stack back up.
 
-Then run migrations and start the app:
+## Local development
 
-```bash
-poetry run alembic -c alembic/alembic.ini upgrade head
-poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+Each package has its own README with the full command table:
 
-### Running with Docker Compose (SQLite)
+- **Backend** — see [`backend/README.md`](backend/README.md)
+- **Frontend** — see [`front/README.md`](front/README.md)
+- **Docs site** — `cd docs && pip install mkdocs mkdocs-material pymdown-extensions && mkdocs serve`
 
-`backend/.env` already contains the SQLite URL by default. Start only the backend service (no Postgres container needed):
+For architecture, data model, migrations workflow and recovery procedures, read the [docs site](https://strata.ducatillon.net/docs/).
 
-```bash
-docker compose up -d backend
-```
+## API exploration
 
-Open the API docs at `http://127.0.0.1:8000/swagger`.
+Open the [Bruno](https://www.usebruno.com/) collection in `.bruno/Strata/` for a ready-to-run set of requests against `http://localhost:3000/api/v1`.
 
----
+## License
 
-## Option B — Postgres
-
-### Running with Docker Compose (Postgres)
-
-Edit `backend/.env` and set:
-
-```dotenv
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/strata
-```
-
-Then start both services:
-
-```bash
-docker compose up -d
-```
-
-Wait for Postgres to be healthy, then run migrations:
-
-```bash
-docker compose exec backend poetry run alembic -c alembic/alembic.ini upgrade head
-```
-
-### Running locally with Poetry (Postgres via Docker)
-
-Start the Postgres container, then run the app on the host:
-
-```bash
-docker compose up -d postgres
-```
-
-Edit `backend/.env` and set:
-
-```dotenv
-DATABASE_URL=postgresql://postgres:postgres@localhost:5434/strata
-```
-
-> Note: the Postgres service is exposed on host port `5434` (see `docker-compose.yml`).
-
-```bash
-cd backend
-poetry run alembic -c alembic/alembic.ini upgrade head
-poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
----
-
-## A note on `DATABASE_URL` and your shell
-
-The app reads `DATABASE_URL` in this order (first one wins):
-
-1. Exported shell variable (`export DATABASE_URL=...`) — affects all host commands.
-2. Docker Compose `environment` / `env_file` — affects containerised commands.
-3. `backend/.env` — the recommended place to set it.
-
-**If you see the wrong database being used**, check whether `DATABASE_URL` was previously exported in your shell by you or an automation tool:
-
-```bash
-printenv | grep DATABASE_URL
-# If an unwanted value appears, clear it:
-unset DATABASE_URL
-```
-
----
-
-## Running tests
-
-```bash
-cd backend
-poetry run pytest -q
-```
-
-## Database & migrations
-
-Migrations live under `backend/alembic/versions/` and are managed by Alembic. Always run migrations against the same database the app is pointed at.
-
-```bash
-cd backend
-poetry run alembic -c alembic/alembic.ini upgrade head
-```
-
-## Developer notes
-- Project follows domain-driven layout: `app/adapters`, `app/application/use_cases`, `app/domain`.
-- DB initialization & session management: `app/adapters/outgoing/persistence/database.py`.
-- If you want to avoid local README auto-sync, remove or disable the local git hook (see `.git/hooks/`).
-
-## Where to start reading the code
-1. `backend/app/main.py` — app entry and router registration
-2. `backend/app/adapters/outgoing/persistence` — models, database, repositories
-3. `backend/alembic/` — migration scripts
-4. `tests/` — unit tests and examples
-
----
-
-For more detailed developer docs see the `docs/` folder.
+Strata is released under the MIT License.
