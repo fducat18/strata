@@ -1,0 +1,60 @@
+name: Desktop Build (macOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        required: true
+        default: "app"
+        type: choice
+        options:
+          - app
+          - dmg
+
+jobs:
+  build:
+    name: Build Tauri (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install backend deps & build
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+
+      - name: Install frontend deps & build
+        working-directory: front
+        env:
+          PUBLIC_API_URL: http://localhost:3456/api/v1
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install root deps (Tauri CLI)
+        run: npm ci
+
+      - name: Build Tauri app
+        run: npx tauri build --bundles ${{ inputs.build_type }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: strata-macos-${{ inputs.build_type }}
+          path: src-tauri/target/release/bundle/macos/
+          retention-days: 30

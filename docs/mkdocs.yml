@@ -42,6 +42,7 @@ nav:
       - Frontend: Frontend.md
       - Migrations: Migrations.md
       - Backup: Backup.md
+      - Desktop App: DesktopApp.md
       - Validation: Validation.md
       - Mental Model: MentalModel.md
 
