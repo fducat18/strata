@@ -1,24 +1,28 @@
 {
   "name": "backend",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "node scripts/gen-version.mjs",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "prestart:dev": "node scripts/gen-version.mjs",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "lint:ci": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "pretest": "node scripts/gen-version.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "pretest:e2e": "node scripts/gen-version.mjs",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
@@ -27,13 +31,14 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.2",
     "@nestjs/throttler": "^6.5.0",
-    "@prisma/client": "^6.19.3",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.4.2",
     "helmet": "^8.1.0",
-    "prisma": "^6.19.3",
+    "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "uuid": "^14.0.0"
@@ -65,9 +70,6 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "jest": {
     "moduleFileExtensions": [
       "js",
@@ -83,15 +85,22 @@
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!_generated/**",
+      "!**/*.module.ts",
+      "!**/main.ts",
+      "!**/*.dto.ts",
+      "!**/dto/**",
+      "!**/responses/**",
+      "!**/index.ts"
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
       "global": {
-        "statements": 70,
-        "branches": 60,
-        "functions": 70,
-        "lines": 70
+        "statements": 90,
+        "branches": 80,
+        "functions": 90,
+        "lines": 90
       }
     },
     "testEnvironment": "node"

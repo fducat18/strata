@@ -12,7 +12,6 @@ describe('backupStore', () => {
     useBackupStore.getState().setParsed({
       version: '1.0',
       data: {
-        portfolios: [{}, {}],
         assets: [{}],
         categories: [],
         tags: [{}],
@@ -20,7 +19,7 @@ describe('backupStore', () => {
     });
     const s = useBackupStore.getState();
     expect(s.step).toBe('review');
-    expect(s.counts).toEqual({ portfolios: 2, assets: 1, categories: 0, tags: 1 });
+    expect(s.counts).toEqual({ assets: 1, categories: 0, tags: 1 });
   });
 
   it('setError records and switches to error step', () => {

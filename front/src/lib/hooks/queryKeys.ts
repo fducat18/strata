@@ -2,9 +2,10 @@
  * Stable React Query keys. One source of truth so invalidation never drifts.
  */
 export const queryKeys = {
-  portfolios: ['portfolios'] as const,
-  portfolio: (id: string) => ['portfolios', id] as const,
-  portfolioSnapshots: (id: string) => ['portfolios', id, 'snapshots'] as const,
+  portfolioSnapshots: {
+    all: () => ['portfolio-snapshots'] as const,
+    currentValue: () => ['portfolio-snapshots', 'current-value'] as const,
+  },
 
   assets: (portfolioId?: string) => ['assets', { portfolioId }] as const,
   assetsAll: ['assets'] as const,

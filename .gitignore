@@ -21,9 +21,15 @@ Thumbs.db
 .idea/
 .vscode/settings.json
 
-# Docs
-docs/.venv/
-docs/site/
+# Docs (Astro Starlight)
+docs/.astro/
+docs/dist/
+docs/node_modules/
+
+# Generated version files (created at build time from git describe)
+front/src/lib/version.ts
+backend/src/_generated/
+src-tauri/.version
 
 # Test coverage
 coverage/
@@ -36,5 +42,12 @@ prisma/*.db-journal
 # Tauri
 src-tauri/target/
 
+# Playwright / e2e artifacts
+front/playwright-report/
+front/test-results/
+
 # Misc
 *.log
+
+# Local CA certs (corporate proxy, never commit)
+backend/certs/*.crt

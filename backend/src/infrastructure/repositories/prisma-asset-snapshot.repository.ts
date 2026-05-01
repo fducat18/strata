@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AssetSnapshot as AssetSnapshotModel } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -13,7 +14,7 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     super();
   }
 
-  private mapToEntity(data: any): AssetSnapshot {
+  private mapToEntity(data: AssetSnapshotModel): AssetSnapshot {
     return new AssetSnapshot(
       data.id,
       data.assetId,

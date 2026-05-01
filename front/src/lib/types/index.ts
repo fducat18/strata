@@ -1,18 +1,8 @@
-export interface Portfolio {
-  id: string;
-  name: string;
-  baseCurrency: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Asset {
   id: string;
   name: string;
   quantity: string | null;
   disposed: boolean;
-  portfolioId: string;
-  portfolio?: Portfolio;
   assetType: AssetType;
   categories: Category[];
   tags: Tag[];
@@ -48,8 +38,9 @@ export interface AssetSnapshot {
 
 export interface PortfolioSnapshot {
   id: string;
-  portfolioId: string;
   value: string;
+  currency: string;
+  notes?: string;
   observedAt: string;
   createdAt: string;
 }
@@ -66,19 +57,8 @@ export interface Transaction {
 }
 
 // Request types
-export interface CreatePortfolioRequest {
-  name: string;
-  baseCurrency: string;
-}
-
-export interface UpdatePortfolioRequest {
-  name?: string;
-  baseCurrency?: string;
-}
-
 export interface CreateAssetRequest {
   name: string;
-  portfolioId: string;
   assetTypeId: string;
   quantity?: string;
   categoryIds?: string[];

@@ -1,6 +1,6 @@
 import {
   AssetNotFoundException,
-  PortfolioNotFoundException,
+  PortfolioSnapshotNotFoundException,
   CategoryNotFoundException,
   TagNotFoundException,
   AssetTypeNotFoundException,
@@ -22,8 +22,8 @@ export class DomainExceptionMapper {
   static map(exception: Error): MappedDomainException {
     if (exception instanceof AssetNotFoundException)
       return this.assetNotFound();
-    if (exception instanceof PortfolioNotFoundException)
-      return this.portfolioNotFound();
+    if (exception instanceof PortfolioSnapshotNotFoundException)
+      return this.portfolioSnapshotNotFound();
     if (exception instanceof CategoryNotFoundException)
       return this.categoryNotFound();
     if (exception instanceof TagNotFoundException) return this.tagNotFound();
@@ -39,8 +39,11 @@ export class DomainExceptionMapper {
   private static assetNotFound(): MappedDomainException {
     return { status: HttpStatus.NOT_FOUND, code: 'ASSET_NOT_FOUND' };
   }
-  private static portfolioNotFound(): MappedDomainException {
-    return { status: HttpStatus.NOT_FOUND, code: 'PORTFOLIO_NOT_FOUND' };
+  private static portfolioSnapshotNotFound(): MappedDomainException {
+    return {
+      status: HttpStatus.NOT_FOUND,
+      code: 'PORTFOLIO_SNAPSHOT_NOT_FOUND',
+    };
   }
   private static categoryNotFound(): MappedDomainException {
     return { status: HttpStatus.NOT_FOUND, code: 'CATEGORY_NOT_FOUND' };

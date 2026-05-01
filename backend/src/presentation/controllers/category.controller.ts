@@ -10,29 +10,25 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoryService } from '../../application/services/index.js';
-import { DomainExceptionFilter } from '../filters/index.js';
+import {
+  DomainExceptionFilter,
+  PrismaExceptionFilter,
+} from '../filters/index.js';
 import { CreateCategoryDto } from '../dto/index.js';
 import { CategoryResponseDto } from '../dto/responses/index.js';
-import type { Category } from '../../domain/entities/index.js';
-
-function mapCategoryToResponse(category: Category): CategoryResponseDto {
-  const dto = new CategoryResponseDto();
-  dto.id = category.id;
-  dto.name = category.name;
-  dto.parentId = category.parentId;
-  dto.children = (category.children ?? []).map(mapCategoryToResponse);
-  return dto;
-}
+import { mapCategoryToResponse } from './mappers/category.mapper.js';
+import { ApiStandardErrors } from './api-standard-errors.decorator.js';
 
 @ApiTags('Categories')
 @Controller('api/v1/categories')
-@UseFilters(DomainExceptionFilter)
+@UseFilters(PrismaExceptionFilter, DomainExceptionFilter)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a category' })
   @ApiResponse({ status: 201, type: CategoryResponseDto })
+  @ApiStandardErrors([400, 404, 409, 500])
   async create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     const category = await this.categoryService.create({
       name: dto.name,
@@ -44,6 +40,7 @@ export class CategoryController {
   @Get()
   @ApiOperation({ summary: 'List all categories' })
   @ApiResponse({ status: 200, type: [CategoryResponseDto] })
+  @ApiStandardErrors([500])
   async findAll(): Promise<CategoryResponseDto[]> {
     const categories = await this.categoryService.findAll();
     return categories.map(mapCategoryToResponse);
@@ -52,6 +49,7 @@ export class CategoryController {
   @Get(':id')
   @ApiOperation({ summary: 'Get category by ID' })
   @ApiResponse({ status: 200, type: CategoryResponseDto })
+  @ApiStandardErrors([404, 500])
   async findById(@Param('id') id: string): Promise<CategoryResponseDto> {
     const category = await this.categoryService.findById(id);
     return mapCategoryToResponse(category);
@@ -61,6 +59,7 @@ export class CategoryController {
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete a category' })
   @ApiResponse({ status: 204 })
+  @ApiStandardErrors([404, 409, 500])
   async delete(@Param('id') id: string): Promise<void> {
     await this.categoryService.delete(id);
   }
@@ -68,6 +67,7 @@ export class CategoryController {
   @Get(':id/children')
   @ApiOperation({ summary: 'Get children of a category' })
   @ApiResponse({ status: 200, type: [CategoryResponseDto] })
+  @ApiStandardErrors([404, 500])
   async findChildren(@Param('id') id: string): Promise<CategoryResponseDto[]> {
     const children = await this.categoryService.findChildren(id);
     return children.map(mapCategoryToResponse);

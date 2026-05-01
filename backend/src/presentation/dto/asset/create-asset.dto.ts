@@ -2,16 +2,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { IsDecimalString } from '../validators/is-decimal-string.validator.js';
 
-/** Payload to create a new Asset under a Portfolio. */
+/** Payload to create a new Asset. */
 export class CreateAssetDto {
   @ApiProperty({ description: 'Name of the asset' })
   @IsString()
   @IsNotEmpty()
   name!: string;
-
-  @ApiProperty({ description: 'Portfolio ID' })
-  @IsUUID()
-  portfolioId!: string;
 
   @ApiProperty({ description: 'Asset type ID' })
   @IsUUID()

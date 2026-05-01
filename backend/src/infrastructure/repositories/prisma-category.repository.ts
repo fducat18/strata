@@ -8,6 +8,10 @@ import {
 import { Category } from '../../domain/entities/category.entity.js';
 import { DuplicateNameException } from '../../domain/exceptions/index.js';
 
+type CategoryWithRelations = Prisma.CategoryGetPayload<{
+  include: { parent: true; children: true };
+}>;
+
 @Injectable()
 export class PrismaCategoryRepository extends ICategoryRepository {
   constructor(private readonly prisma: PrismaService) {
@@ -19,7 +23,7 @@ export class PrismaCategoryRepository extends ICategoryRepository {
     children: true,
   };
 
-  private mapToEntity(data: any): Category {
+  private mapToEntity(data: CategoryWithRelations): Category {
     return new Category(
       data.id,
       data.name,
@@ -27,8 +31,7 @@ export class PrismaCategoryRepository extends ICategoryRepository {
       data.parent
         ? new Category(data.parent.id, data.parent.name, data.parent.parentId)
         : null,
-      data.children?.map((c: any) => new Category(c.id, c.name, c.parentId)) ??
-        [],
+      data.children?.map((c) => new Category(c.id, c.name, c.parentId)) ?? [],
     );
   }
 

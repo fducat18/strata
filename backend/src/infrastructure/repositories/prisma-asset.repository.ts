@@ -9,11 +9,20 @@ import {
 } from '../../domain/ports/asset.repository.port.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
 import { AssetType } from '../../domain/entities/asset-type.entity.js';
-import { Portfolio } from '../../domain/entities/portfolio.entity.js';
 import { AssetSnapshot } from '../../domain/entities/asset-snapshot.entity.js';
 import { Transaction } from '../../domain/entities/transaction.entity.js';
 import { Category } from '../../domain/entities/category.entity.js';
 import { Tag } from '../../domain/entities/tag.entity.js';
+
+type AssetWithRelations = Prisma.AssetGetPayload<{
+  include: {
+    assetType: true;
+    categories: { include: { category: true } };
+    tags: { include: { tag: true } };
+    snapshots: true;
+    transactions: true;
+  };
+}>;
 
 @Injectable()
 export class PrismaAssetRepository extends IAssetRepository {
@@ -23,20 +32,18 @@ export class PrismaAssetRepository extends IAssetRepository {
 
   private readonly includeRelations = {
     assetType: true,
-    portfolio: true,
     categories: { include: { category: true } },
     tags: { include: { tag: true } },
     snapshots: true,
     transactions: true,
   };
 
-  private mapToEntity(data: any): Asset {
+  private mapToEntity(data: AssetWithRelations): Asset {
     return new Asset(
       data.id,
       data.name,
-      data.quantity ? new Decimal(data.quantity.toString()) : null,
+      data.quantity != null ? new Decimal(data.quantity.toString()) : null,
       data.disposed,
-      data.portfolioId,
       data.assetTypeId,
       data.createdAt,
       data.updatedAt,
@@ -47,17 +54,8 @@ export class PrismaAssetRepository extends IAssetRepository {
             data.assetType.label,
           )
         : null,
-      data.portfolio
-        ? new Portfolio(
-            data.portfolio.id,
-            data.portfolio.name,
-            data.portfolio.baseCurrency,
-            data.portfolio.createdAt,
-            data.portfolio.updatedAt,
-          )
-        : null,
       data.snapshots?.map(
-        (s: any) =>
+        (s) =>
           new AssetSnapshot(
             s.id,
             s.assetId,
@@ -67,7 +65,7 @@ export class PrismaAssetRepository extends IAssetRepository {
           ),
       ) ?? [],
       data.transactions?.map(
-        (t: any) =>
+        (t) =>
           new Transaction(
             t.id,
             t.assetId,
@@ -80,10 +78,10 @@ export class PrismaAssetRepository extends IAssetRepository {
           ),
       ) ?? [],
       data.categories?.map(
-        (c: any) =>
+        (c) =>
           new Category(c.category.id, c.category.name, c.category.parentId),
       ) ?? [],
-      data.tags?.map((t: any) => new Tag(t.tag.id, t.tag.name)) ?? [],
+      data.tags?.map((t) => new Tag(t.tag.id, t.tag.name)) ?? [],
     );
   }
 
@@ -91,9 +89,8 @@ export class PrismaAssetRepository extends IAssetRepository {
     const result = await this.prisma.asset.create({
       data: {
         name: data.name,
-        portfolioId: data.portfolioId,
         assetTypeId: data.assetTypeId,
-        quantity: data.quantity ? new Decimal(data.quantity) : null,
+        quantity: data.quantity != null ? new Decimal(data.quantity) : null,
       },
       include: this.includeRelations,
     });
@@ -110,14 +107,6 @@ export class PrismaAssetRepository extends IAssetRepository {
 
   async findAll(): Promise<Asset[]> {
     const results = await this.prisma.asset.findMany({
-      include: this.includeRelations,
-    });
-    return results.map((r) => this.mapToEntity(r));
-  }
-
-  async findByPortfolio(portfolioId: string): Promise<Asset[]> {
-    const results = await this.prisma.asset.findMany({
-      where: { portfolioId },
       include: this.includeRelations,
     });
     return results.map((r) => this.mapToEntity(r));

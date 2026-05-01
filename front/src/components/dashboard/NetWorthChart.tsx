@@ -1,26 +1,23 @@
 import { usePortfolioSnapshots } from '@/lib/hooks';
-import type { Portfolio } from '@/lib/types';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatMoney, formatDate, toDecimal } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
 
-interface Props {
-  portfolios: Portfolio[];
-}
-
-export function NetWorthChart({ portfolios }: Props) {
-  // For now, show the first portfolio's snapshots as an example
-  const firstPortfolio = portfolios[0];
-  const { data: snapshots } = usePortfolioSnapshots(firstPortfolio?.id || '');
+export function NetWorthChart() {
+  const { data: snapshots } = usePortfolioSnapshots();
   const locale = useLocale();
   const currency = useCurrency();
 
   if (!snapshots || snapshots.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">No snapshots yet. Take a portfolio snapshot to see the chart.</p>;
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        No portfolio history yet. Enter your assets, then click <strong>Take Snapshot</strong> to start tracking your net worth over time.
+      </p>
+    );
   }
 
   const fmtOpts = { currency, locale };
-  const chartData = snapshots
+  const chartData = [...snapshots]
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
     .map(s => ({
       date: formatDate(s.observedAt, { locale }),

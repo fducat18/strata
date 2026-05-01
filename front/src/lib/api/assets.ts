@@ -9,7 +9,7 @@ import type {
 
 export const assetApi = {
   getAll: (portfolioId?: string) => {
-    const params = portfolioId ? { portfolio_id: portfolioId } : undefined;
+    const params = portfolioId ? { portfolioId } : undefined;
     return api.get<Asset[]>('/assets', { params }).then((r) => r.data);
   },
   getById: (id: string) => api.get<Asset>(`/assets/${id}`).then((r) => r.data),

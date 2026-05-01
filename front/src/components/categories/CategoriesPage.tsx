@@ -10,6 +10,7 @@ import {
 } from '@/components/ui';
 import { Plus, FolderTree, Trash2, ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import type { Category } from '@/lib/types';
+import { useUIStore } from '@/stores/uiStore';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -112,16 +113,26 @@ export function CategoriesPage() {
   };
 
   const handleCreate = handleSubmit(async (data) => {
-    await createMutation.mutateAsync({
-      name: data.name.trim(),
-      parentId: data.parentId || undefined,
-    });
-    onCloseDialog();
+    try {
+      await createMutation.mutateAsync({
+        name: data.name.trim(),
+        parentId: data.parentId || undefined,
+      });
+      onCloseDialog();
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ type: 'error', message });
+    }
   });
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this category?')) {
-      await deleteMutation.mutateAsync(id);
+      try {
+        await deleteMutation.mutateAsync(id);
+      } catch (err: unknown) {
+        const message = (err as any)?.message ?? 'An unexpected error occurred';
+        useUIStore.getState().pushToast({ type: 'error', message });
+      }
     }
   };
 
@@ -150,7 +161,6 @@ export function CategoriesPage() {
               icon={<FolderTree className="h-12 w-12" />}
               title="No categories yet"
               description="Create categories to organize your assets."
-              action={<Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4" /> Create Category</Button>}
             />
           )}
         </CardContent>

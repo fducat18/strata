@@ -1,28 +1,24 @@
-# ---- Build stage: produce a static MkDocs site ----
-FROM python:3.12-slim AS build
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-RUN pip install --no-cache-dir \
-    mkdocs \
-    mkdocs-material \
-    pymdown-extensions
+# ---- Build stage: produce a static Astro Starlight site ----
+FROM node:22-alpine AS build
 
 WORKDIR /site
-COPY mkdocs.yml .
-COPY docs ./docs
-RUN mkdocs build --strict
+
+# Install deps with cache-friendly layer
+COPY package.json package-lock.json* ./
+RUN npm ci --no-audit --no-fund 2>/dev/null || npm install --no-audit --no-fund
+
+# Build the docs site
+COPY astro.config.mjs ./
+COPY src ./src
+COPY public ./public
+RUN npm run build
 
 # ---- Runtime stage: serve the built site with nginx ----
 FROM nginx:alpine AS runtime
 
-# Listen on 8000 instead of nginx's default 80 so docker-compose mapping
-# `8001:8000` keeps working unchanged.
-RUN sed -i 's/listen\s*80;/listen 8000;/' /etc/nginx/conf.d/default.conf
+# Replace default nginx config with a clean one (listen 8001, serve /docs/).
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=build /site/site /usr/share/nginx/html
+COPY --from=build /site/dist /usr/share/nginx/html/docs
 
-EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:8000/ >/dev/null 2>&1 || exit 1
+EXPOSE 8001

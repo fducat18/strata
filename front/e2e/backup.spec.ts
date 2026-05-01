@@ -13,9 +13,14 @@ test.beforeAll(async ({ request }) => {
 test('export downloads a JSON file (skipped if backend is down)', async ({ page }) => {
   test.skip(!backendOk, 'Backend not reachable — export needs API');
   await page.goto('/settings');
-  const [ download ] = await Promise.all([
+  // Wait for the React island to hydrate before clicking, otherwise the click
+  // hits the SSR'd HTML before its event handler is attached.
+  const exportBtn = page.getByRole('button', { name: /Export backup as JSON/i });
+  await expect(exportBtn).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByRole('button', { name: /Export backup as JSON/i }).click(),
+    exportBtn.click(),
   ]);
   expect(download.suggestedFilename()).toMatch(/^strata-backup-\d{4}-\d{2}-\d{2}\.json$/);
 });
@@ -23,8 +28,11 @@ test('export downloads a JSON file (skipped if backend is down)', async ({ page 
 test('import opens confirm dialog with parsed counts', async ({ page }) => {
   // No backend needed for parse/preview step.
   await page.goto('/settings');
+  const importBtn = page.getByRole('button', { name: /Import backup from JSON/i });
+  await expect(importBtn).toBeVisible();
+  await page.waitForLoadState('networkidle');
   const fileChooserPromise = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: /Import backup from JSON/i }).click();
+  await importBtn.click();
   const chooser = await fileChooserPromise;
   const payload = JSON.stringify({
     version: '1.0',

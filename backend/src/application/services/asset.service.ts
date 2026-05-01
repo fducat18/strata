@@ -1,33 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Asset } from '../../domain/entities/index.js';
 import {
   IAssetRepository,
-  IPortfolioRepository,
   IAssetTypeRepository,
+  ITagRepository,
+  ICategoryRepository,
   type CreateAssetData,
   type UpdateAssetData,
 } from '../../domain/ports/index.js';
 import {
   AssetNotFoundException,
-  PortfolioNotFoundException,
   AssetTypeNotFoundException,
+  TagNotFoundException,
+  CategoryNotFoundException,
 } from '../../domain/exceptions/index.js';
 
 @Injectable()
 export class AssetService {
   constructor(
     private readonly assetRepository: IAssetRepository,
-    private readonly portfolioRepository: IPortfolioRepository,
     private readonly assetTypeRepository: IAssetTypeRepository,
+    private readonly tagRepository: ITagRepository,
+    private readonly categoryRepository: ICategoryRepository,
   ) {}
 
   async create(data: CreateAssetData): Promise<Asset> {
-    const portfolio = await this.portfolioRepository.findById(data.portfolioId);
-    if (!portfolio)
-      throw new PortfolioNotFoundException(
-        `Portfolio ${data.portfolioId} not found`,
-      );
-
     const assetType = await this.assetTypeRepository.findById(data.assetTypeId);
     if (!assetType)
       throw new AssetTypeNotFoundException(
@@ -45,15 +47,6 @@ export class AssetService {
 
   async findAll(): Promise<Asset[]> {
     return this.assetRepository.findAll();
-  }
-
-  async findByPortfolio(portfolioId: string): Promise<Asset[]> {
-    const portfolio = await this.portfolioRepository.findById(portfolioId);
-    if (!portfolio)
-      throw new PortfolioNotFoundException(
-        `Portfolio ${portfolioId} not found`,
-      );
-    return this.assetRepository.findByPortfolio(portfolioId);
   }
 
   async update(id: string, data: UpdateAssetData): Promise<Asset> {
@@ -84,21 +77,79 @@ export class AssetService {
 
   async addCategory(assetId: string, categoryId: string): Promise<Asset> {
     await this.findById(assetId);
-    return this.assetRepository.addCategory(assetId, categoryId);
+    const category = await this.categoryRepository.findById(categoryId);
+    if (!category)
+      throw new CategoryNotFoundException(`Category ${categoryId} not found`);
+    try {
+      return await this.assetRepository.addCategory(assetId, categoryId);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `Category ${categoryId} is already attached to asset ${assetId}`,
+        );
+      }
+      throw error;
+    }
   }
 
-  async removeCategory(assetId: string, categoryId: string): Promise<Asset> {
+  async removeCategory(assetId: string, categoryId: string): Promise<void> {
     await this.findById(assetId);
-    return this.assetRepository.removeCategory(assetId, categoryId);
+    const category = await this.categoryRepository.findById(categoryId);
+    if (!category)
+      throw new CategoryNotFoundException(`Category ${categoryId} not found`);
+    try {
+      await this.assetRepository.removeCategory(assetId, categoryId);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(
+          `Category ${categoryId} is not attached to asset ${assetId}`,
+        );
+      }
+      throw error;
+    }
   }
 
   async addTag(assetId: string, tagId: string): Promise<Asset> {
     await this.findById(assetId);
-    return this.assetRepository.addTag(assetId, tagId);
+    const tag = await this.tagRepository.findById(tagId);
+    if (!tag) throw new TagNotFoundException(`Tag ${tagId} not found`);
+    try {
+      return await this.assetRepository.addTag(assetId, tagId);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          `Tag ${tagId} is already attached to asset ${assetId}`,
+        );
+      }
+      throw error;
+    }
   }
 
-  async removeTag(assetId: string, tagId: string): Promise<Asset> {
+  async removeTag(assetId: string, tagId: string): Promise<void> {
     await this.findById(assetId);
-    return this.assetRepository.removeTag(assetId, tagId);
+    const tag = await this.tagRepository.findById(tagId);
+    if (!tag) throw new TagNotFoundException(`Tag ${tagId} not found`);
+    try {
+      await this.assetRepository.removeTag(assetId, tagId);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(
+          `Tag ${tagId} is not attached to asset ${assetId}`,
+        );
+      }
+      throw error;
+    }
   }
 }

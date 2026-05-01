@@ -6,14 +6,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from './queryKeys';
 
-export function invalidatePortfolioQueries(qc: QueryClient, id?: string): void {
-  qc.invalidateQueries({ queryKey: queryKeys.portfolios });
-  if (id) {
-    qc.invalidateQueries({ queryKey: queryKeys.portfolio(id) });
-    qc.invalidateQueries({ queryKey: queryKeys.portfolioSnapshots(id) });
-  }
-}
-
 export function invalidateAssetQueries(qc: QueryClient, id?: string): void {
   qc.invalidateQueries({ queryKey: queryKeys.assetsAll });
   if (id) {

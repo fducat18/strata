@@ -16,7 +16,7 @@ describe('themeStore', () => {
     useThemeStore.getState().setTheme('dark');
     expect(useThemeStore.getState().theme).toBe('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(localStorage.getItem('strata.theme')).toContain('"theme":"dark"');
+    expect(localStorage.getItem('strata.theme')).toBe('dark');
   });
 
   it('setTheme(light) removes dark class', () => {

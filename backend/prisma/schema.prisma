@@ -4,36 +4,21 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model Portfolio {
-  id           String              @id @default(uuid())
-  name         String              @unique
-  baseCurrency String              @map("base_currency")
-  assets       Asset[]
-  snapshots    PortfolioSnapshot[]
-  createdAt    DateTime            @default(now()) @map("created_at")
-  updatedAt    DateTime            @updatedAt @map("updated_at")
-
-  @@map("portfolios")
 }
 
 model Asset {
-  id           String               @id @default(uuid())
-  name         String
-  quantity     Decimal?
-  disposed     Boolean              @default(false)
-  portfolioId  String               @map("portfolio_id")
-  assetTypeId  String               @map("asset_type_id")
-  portfolio    Portfolio            @relation(fields: [portfolioId], references: [id])
-  assetType    AssetType            @relation(fields: [assetTypeId], references: [id])
-  snapshots    AssetSnapshot[]
+  id          String               @id @default(uuid())
+  name        String
+  quantity    Decimal?
+  disposed    Boolean              @default(false)
+  assetTypeId String               @map("asset_type_id")
+  assetType   AssetType            @relation(fields: [assetTypeId], references: [id])
+  snapshots   AssetSnapshot[]
   transactions Transaction[]
-  categories   CategoriesOnAssets[]
-  tags         TagsOnAssets[]
-  createdAt    DateTime             @default(now()) @map("created_at")
-  updatedAt    DateTime             @updatedAt @map("updated_at")
+  categories  CategoriesOnAssets[]
+  tags        TagsOnAssets[]
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
 
   @@map("assets")
 }
@@ -78,27 +63,35 @@ model AssetSnapshot {
   @@map("asset_snapshots")
 }
 
+// Standalone snapshot of total portfolio value at a point in time.
+// "Portfolio" in Strata = everything you own — not linked to a Portfolio table (which no longer exists).
 model PortfolioSnapshot {
-  id          String   @id @default(uuid())
-  portfolioId String   @map("portfolio_id")
-  value       Decimal
-  observedAt  DateTime @map("observed_at")
-  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  value      Decimal
+  currency   String   @default("EUR")
+  notes      String?
+  observedAt DateTime @map("observed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("portfolio_snapshots")
 }
 
+enum TransactionType {
+  ACQUIRE
+  DISPOSE
+  ADJUST
+}
+
 model Transaction {
-  id         String   @id @default(uuid())
-  assetId    String   @map("asset_id")
-  type       String
-  unitPrice  Decimal  @map("unit_price")
+  id         String          @id @default(uuid())
+  assetId    String          @map("asset_id")
+  type       TransactionType
+  unitPrice  Decimal         @map("unit_price")
   quantity   Decimal
   currency   String
-  occurredAt DateTime @map("occurred_at")
-  asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now()) @map("created_at")
+  occurredAt DateTime        @map("occurred_at")
+  asset      Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now()) @map("created_at")
 
   @@map("transactions")
 }

@@ -4,7 +4,6 @@ import { AssetSnapshot } from './asset-snapshot.entity';
 import { Transaction } from './transaction.entity';
 import { Category } from './category.entity';
 import { Tag } from './tag.entity';
-import { Portfolio } from './portfolio.entity';
 
 export class Asset {
   constructor(
@@ -12,12 +11,10 @@ export class Asset {
     public readonly name: string,
     public readonly quantity: Decimal | null,
     public readonly disposed: boolean,
-    public readonly portfolioId: string,
     public readonly assetTypeId: string,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly assetType: AssetType | null = null,
-    public readonly portfolio: Portfolio | null = null,
     public readonly snapshots: AssetSnapshot[] = [],
     public readonly transactions: Transaction[] = [],
     public readonly categories: Category[] = [],
@@ -39,12 +36,10 @@ export class Asset {
       this.name,
       this.quantity,
       true,
-      this.portfolioId,
       this.assetTypeId,
       this.createdAt,
       this.updatedAt,
       this.assetType,
-      this.portfolio,
       this.snapshots,
       this.transactions,
       this.categories,

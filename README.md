@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml/badge.svg)](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml)
 [![codecov](https://codecov.io/gh/francoiducat/strata/graph/badge.svg)](https://codecov.io/gh/francoiducat/strata)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/website?url=https%3A%2F%2Fstrata.ducatillon.net%2Fdocs%2F&label=docs)](https://strata.ducatillon.net/docs/)
 
 # Strata — Collect. Track. Grow.
@@ -16,7 +17,7 @@ Strata is a self-hosted personal asset manager that tracks your full net worth �
 |---|---|
 | [`backend/`](backend/) | NestJS 11 API, Prisma schema & migrations, Jest unit + e2e tests |
 | [`front/`](front/) | Astro 6 + React 19 + Tailwind v4 UI, Vitest + Playwright tests |
-| [`docs/`](docs/) | MkDocs Material site (deployed to <https://strata.ducatillon.net/docs/>) |
+| [`docs/`](docs/) | Astro Starlight documentation site (deployed to <https://strata.ducatillon.net/docs/>) |
 | [`.bruno/Strata/`](.bruno/Strata/) | Bruno API collection — every endpoint, ready to run |
 | [`docker-compose.yml`](docker-compose.yml) | Backend + frontend + docs, ready to `up` |
 | `src-tauri/` | _(coming)_ Tauri desktop wrapper |
@@ -28,7 +29,7 @@ Requires Docker Desktop (or Docker + Compose v2).
 ```bash
 git clone https://github.com/francoiducat/strata.git
 cd strata
-docker compose up --build
+docker-compose up --build
 ```
 
 | Service | URL |
@@ -46,7 +47,7 @@ Each package has its own README with the full command table:
 
 - **Backend** — see [`backend/README.md`](backend/README.md)
 - **Frontend** — see [`front/README.md`](front/README.md)
-- **Docs site** — `cd docs && pip install mkdocs mkdocs-material pymdown-extensions && mkdocs serve`
+- **Docs site** — `cd docs && npm install && npm run dev`
 
 For architecture, data model, migrations workflow and recovery procedures, read the [docs site](https://strata.ducatillon.net/docs/).
 
@@ -56,4 +57,10 @@ Open the [Bruno](https://www.usebruno.com/) collection in `.bruno/Strata/` for a
 
 ## License
 
-Strata is released under the MIT License.
+Strata is released under the Apache-2.0 License. See [`LICENSE`](LICENSE).
+
+## Community & governance
+
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)

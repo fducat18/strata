@@ -1,16 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Decimal } from 'decimal.js';
 import { AssetService } from './asset.service.js';
 import { IAssetRepository } from '../../domain/ports/asset.repository.port.js';
-import { IPortfolioRepository } from '../../domain/ports/portfolio.repository.port.js';
 import { IAssetTypeRepository } from '../../domain/ports/asset-type.repository.port.js';
+import { ITagRepository } from '../../domain/ports/tag.repository.port.js';
+import { ICategoryRepository } from '../../domain/ports/category.repository.port.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
-import { Portfolio } from '../../domain/entities/portfolio.entity.js';
 import { AssetType } from '../../domain/entities/asset-type.entity.js';
+import { Tag } from '../../domain/entities/tag.entity.js';
+import { Category } from '../../domain/entities/category.entity.js';
 import {
   AssetNotFoundException,
-  PortfolioNotFoundException,
   AssetTypeNotFoundException,
+  TagNotFoundException,
+  CategoryNotFoundException,
 } from '../../domain/exceptions/domain.exceptions.js';
 
 describe('AssetService', () => {
@@ -20,7 +25,6 @@ describe('AssetService', () => {
     save: jest.fn(),
     findById: jest.fn(),
     findAll: jest.fn(),
-    findByPortfolio: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
     dispose: jest.fn(),
@@ -30,34 +34,40 @@ describe('AssetService', () => {
     removeTag: jest.fn(),
   };
 
-  const mockPortfolioRepo = {
-    save: jest.fn(),
-    findById: jest.fn(),
-    findAll: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  };
-
   const mockAssetTypeRepo = {
     findById: jest.fn(),
     findAll: jest.fn(),
     findByCode: jest.fn(),
   };
 
+  const mockTagRepo = {
+    save: jest.fn(),
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    delete: jest.fn(),
+  };
+
+  const mockCategoryRepo = {
+    save: jest.fn(),
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    delete: jest.fn(),
+    findChildren: jest.fn(),
+  };
+
   const now = new Date();
-  const samplePortfolio = new Portfolio('p1', 'Portfolio', 'EUR', now, now);
   const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks');
+  const sampleTag = new Tag('t1', 'MyTag');
+  const sampleCategory = new Category('c1', 'MyCategory', null);
   const sampleAsset = new Asset(
     'a1',
     'My Asset',
     new Decimal('10'),
     false,
-    'p1',
     'at1',
     now,
     now,
     sampleAssetType,
-    samplePortfolio,
   );
 
   beforeEach(async () => {
@@ -67,8 +77,9 @@ describe('AssetService', () => {
       providers: [
         AssetService,
         { provide: IAssetRepository, useValue: mockAssetRepo },
-        { provide: IPortfolioRepository, useValue: mockPortfolioRepo },
         { provide: IAssetTypeRepository, useValue: mockAssetTypeRepo },
+        { provide: ITagRepository, useValue: mockTagRepo },
+        { provide: ICategoryRepository, useValue: mockCategoryRepo },
       ],
     }).compile();
 
@@ -76,35 +87,21 @@ describe('AssetService', () => {
   });
 
   describe('create', () => {
-    it('throws PortfolioNotFoundException when portfolio does not exist', async () => {
-      mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(
-        service.create({
-          name: 'A',
-          portfolioId: 'p-unknown',
-          assetTypeId: 'at1',
-        }),
-      ).rejects.toThrow(PortfolioNotFoundException);
-    });
-
     it('throws AssetTypeNotFoundException when asset type does not exist', async () => {
-      mockPortfolioRepo.findById.mockResolvedValue(samplePortfolio);
       mockAssetTypeRepo.findById.mockResolvedValue(null);
       await expect(
         service.create({
           name: 'A',
-          portfolioId: 'p1',
           assetTypeId: 'at-unknown',
         }),
       ).rejects.toThrow(AssetTypeNotFoundException);
     });
 
     it('calls repository.save when valid', async () => {
-      mockPortfolioRepo.findById.mockResolvedValue(samplePortfolio);
       mockAssetTypeRepo.findById.mockResolvedValue(sampleAssetType);
       mockAssetRepo.save.mockResolvedValue(sampleAsset);
 
-      const data = { name: 'My Asset', portfolioId: 'p1', assetTypeId: 'at1' };
+      const data = { name: 'My Asset', assetTypeId: 'at1' };
       const result = await service.create(data);
 
       expect(mockAssetRepo.save).toHaveBeenCalledWith(data);
@@ -131,22 +128,6 @@ describe('AssetService', () => {
     it('returns all assets', async () => {
       mockAssetRepo.findAll.mockResolvedValue([sampleAsset]);
       const result = await service.findAll();
-      expect(result).toEqual([sampleAsset]);
-    });
-  });
-
-  describe('findByPortfolio', () => {
-    it('throws PortfolioNotFoundException when portfolio does not exist', async () => {
-      mockPortfolioRepo.findById.mockResolvedValue(null);
-      await expect(service.findByPortfolio('p-unknown')).rejects.toThrow(
-        PortfolioNotFoundException,
-      );
-    });
-
-    it('returns assets for valid portfolio', async () => {
-      mockPortfolioRepo.findById.mockResolvedValue(samplePortfolio);
-      mockAssetRepo.findByPortfolio.mockResolvedValue([sampleAsset]);
-      const result = await service.findByPortfolio('p1');
       expect(result).toEqual([sampleAsset]);
     });
   });
@@ -214,36 +195,168 @@ describe('AssetService', () => {
   describe('addCategory', () => {
     it('calls repository.addCategory', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
       mockAssetRepo.addCategory.mockResolvedValue(sampleAsset);
       await service.addCategory('a1', 'c1');
       expect(mockAssetRepo.addCategory).toHaveBeenCalledWith('a1', 'c1');
+    });
+
+    it('throws CategoryNotFoundException when category does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(null);
+      await expect(service.addCategory('a1', 'c-unknown')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
+    });
+
+    it('throws ConflictException on duplicate', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      mockAssetRepo.addCategory.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('conflict', {
+          code: 'P2002',
+          clientVersion: '5.0.0',
+        }),
+      );
+      await expect(service.addCategory('a1', 'c1')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      const unknownErr = new Error('unexpected');
+      mockAssetRepo.addCategory.mockRejectedValue(unknownErr);
+      await expect(service.addCategory('a1', 'c1')).rejects.toThrow(
+        'unexpected',
+      );
     });
   });
 
   describe('removeCategory', () => {
     it('calls repository.removeCategory', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
-      mockAssetRepo.removeCategory.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      mockAssetRepo.removeCategory.mockResolvedValue(undefined);
       await service.removeCategory('a1', 'c1');
       expect(mockAssetRepo.removeCategory).toHaveBeenCalledWith('a1', 'c1');
+    });
+
+    it('throws CategoryNotFoundException when category does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(null);
+      await expect(service.removeCategory('a1', 'c-unknown')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
+    });
+
+    it('throws NotFoundException when relation does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      mockAssetRepo.removeCategory.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('not found', {
+          code: 'P2025',
+          clientVersion: '5.0.0',
+        }),
+      );
+      await expect(service.removeCategory('a1', 'c1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      const unknownErr = new Error('unexpected remove category');
+      mockAssetRepo.removeCategory.mockRejectedValue(unknownErr);
+      await expect(service.removeCategory('a1', 'c1')).rejects.toThrow(
+        'unexpected remove category',
+      );
     });
   });
 
   describe('addTag', () => {
     it('calls repository.addTag', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
       mockAssetRepo.addTag.mockResolvedValue(sampleAsset);
       await service.addTag('a1', 't1');
       expect(mockAssetRepo.addTag).toHaveBeenCalledWith('a1', 't1');
+    });
+
+    it('throws TagNotFoundException when tag does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(null);
+      await expect(service.addTag('a1', 't-unknown')).rejects.toThrow(
+        TagNotFoundException,
+      );
+    });
+
+    it('throws ConflictException on duplicate', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockAssetRepo.addTag.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('conflict', {
+          code: 'P2002',
+          clientVersion: '5.0.0',
+        }),
+      );
+      await expect(service.addTag('a1', 't1')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockAssetRepo.addTag.mockRejectedValue(new Error('unexpected add tag'));
+      await expect(service.addTag('a1', 't1')).rejects.toThrow(
+        'unexpected add tag',
+      );
     });
   });
 
   describe('removeTag', () => {
     it('calls repository.removeTag', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
-      mockAssetRepo.removeTag.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockAssetRepo.removeTag.mockResolvedValue(undefined);
       await service.removeTag('a1', 't1');
       expect(mockAssetRepo.removeTag).toHaveBeenCalledWith('a1', 't1');
+    });
+
+    it('throws TagNotFoundException when tag does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(null);
+      await expect(service.removeTag('a1', 't-unknown')).rejects.toThrow(
+        TagNotFoundException,
+      );
+    });
+
+    it('throws NotFoundException when relation does not exist', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockAssetRepo.removeTag.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('not found', {
+          code: 'P2025',
+          clientVersion: '5.0.0',
+        }),
+      );
+      await expect(service.removeTag('a1', 't1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockAssetRepo.removeTag.mockRejectedValue(
+        new Error('unexpected remove tag'),
+      );
+      await expect(service.removeTag('a1', 't1')).rejects.toThrow(
+        'unexpected remove tag',
+      );
     });
   });
 });

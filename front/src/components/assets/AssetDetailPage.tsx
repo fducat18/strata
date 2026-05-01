@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { formatMoney, formatDate, formatDateTime, formatQuantity, toDecimal, getAssetTypeIcon } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
+import { useUIStore } from '@/stores/uiStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -48,7 +49,7 @@ export function AssetDetailPage({ assetId }: Props) {
   if (!asset) return <EmptyState title="Asset not found" />;
 
   const fmtOpts = { currency, locale };
-  const chartData = (snapshots || [])
+  const chartData = [...(snapshots || [])]
     .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
     .map(s => ({ date: formatDate(s.observedAt, { locale }), value: toDecimal(s.value)?.toNumber() ?? 0 }));
 
@@ -65,34 +66,54 @@ export function AssetDetailPage({ assetId }: Props) {
 
   const handleSaveEdit = async () => {
     if (!editName.trim()) return;
-    await updateMutation.mutateAsync({
-      id: assetId,
-      data: { name: editName.trim(), quantity: editQuantity || undefined },
-    });
-    setShowEdit(false);
+    try {
+      await updateMutation.mutateAsync({
+        id: assetId,
+        data: { name: editName.trim(), quantity: editQuantity || undefined },
+      });
+      setShowEdit(false);
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ type: 'error', message });
+    }
   };
 
   const handleDelete = async () => {
     if (confirm('Delete this asset permanently?')) {
-      await deleteMutation.mutateAsync(assetId);
-      window.location.href = '/assets';
+      try {
+        await deleteMutation.mutateAsync(assetId);
+        window.location.assign('/assets');
+      } catch (err: unknown) {
+        const message = (err as any)?.message ?? 'An unexpected error occurred';
+        useUIStore.getState().pushToast({ type: 'error', message });
+      }
     }
   };
 
   const handleDispose = async () => {
     if (confirm('Mark this asset as disposed?')) {
-      await disposeMutation.mutateAsync(assetId);
+      try {
+        await disposeMutation.mutateAsync(assetId);
+      } catch (err: unknown) {
+        const message = (err as any)?.message ?? 'An unexpected error occurred';
+        useUIStore.getState().pushToast({ type: 'error', message });
+      }
     }
   };
 
   const handleSnapshot = async () => {
     if (!snapshotValue) return;
-    await snapshotMutation.mutateAsync({
-      id: assetId,
-      data: { value: snapshotValue, observedAt: new Date().toISOString() },
-    });
-    setSnapshotValue('');
-    setShowSnapshot(false);
+    try {
+      await snapshotMutation.mutateAsync({
+        id: assetId,
+        data: { value: snapshotValue, observedAt: new Date().toISOString() },
+      });
+      setSnapshotValue('');
+      setShowSnapshot(false);
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ type: 'error', message });
+    }
   };
 
   return (
@@ -257,7 +278,7 @@ export function AssetDetailPage({ assetId }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {snapshots
+                {[...snapshots]
                   .sort((a, b) => new Date(b.observedAt).getTime() - new Date(a.observedAt).getTime())
                   .map(s => (
                     <TableRow key={s.id}>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   LayoutDashboard,
-  Briefcase,
   Package,
   FolderTree,
   Tags,
@@ -10,10 +9,10 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VERSION } from '@/lib/version';
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { label: 'Portfolios', href: '/portfolios', icon: Briefcase },
   { label: 'Assets', href: '/assets', icon: Package },
   { label: 'Categories', href: '/categories', icon: FolderTree },
   { label: 'Tags', href: '/tags', icon: Tags },
@@ -66,6 +65,27 @@ export function Sidebar({ currentPath }: SidebarProps) {
           );
         })}
       </nav>
+
+      <div
+        className={cn(
+          'border-t border-border px-3 py-2 text-xs text-muted-foreground',
+          collapsed && 'text-center'
+        )}
+        title={`${VERSION.version} (${VERSION.env}) — ${VERSION.gitSha}`}
+      >
+        {collapsed ? (
+          <span aria-label="Version">v</span>
+        ) : (
+          <span>
+            v{VERSION.version}
+            {VERSION.env === 'development' && (
+              <span className="ml-1 rounded bg-amber-500/15 px-1 text-amber-700 dark:text-amber-400">
+                DEV
+              </span>
+            )}
+          </span>
+        )}
+      </div>
     </aside>
   );
 }

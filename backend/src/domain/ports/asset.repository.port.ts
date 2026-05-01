@@ -2,7 +2,6 @@ import { Asset } from '../entities/asset.entity';
 
 export interface CreateAssetData {
   name: string;
-  portfolioId: string;
   assetTypeId: string;
   quantity?: string;
 }
@@ -17,7 +16,6 @@ export abstract class IAssetRepository {
   abstract save(data: CreateAssetData): Promise<Asset>;
   abstract findById(id: string): Promise<Asset | null>;
   abstract findAll(): Promise<Asset[]>;
-  abstract findByPortfolio(portfolioId: string): Promise<Asset[]>;
   abstract update(id: string, data: UpdateAssetData): Promise<Asset>;
   abstract delete(id: string): Promise<void>;
   abstract dispose(id: string): Promise<Asset>;

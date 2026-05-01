@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  useAssets, useAssetTypes, usePortfolios, useCategories, useTags, useCreateAsset,
+  useAssets, useAssetTypes, useCategories, useTags, useCreateAsset,
 } from '@/lib/hooks';
 import {
   Button, Card, CardContent, Input, Select, Badge,
@@ -8,13 +8,13 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
   Loading, EmptyState,
 } from '@/components/ui';
-import { Plus, Package, Search, X } from 'lucide-react';
+import { Plus, Package, Search } from 'lucide-react';
 import { formatQuantity, getAssetTypeIcon } from '@/lib/format';
+import { useUIStore } from '@/stores/uiStore';
 
 export function AssetListPage() {
   const { data: assets, isLoading, isError, refetch } = useAssets();
   const { data: assetTypes } = useAssetTypes();
-  const { data: portfolios } = usePortfolios();
   const { data: categories } = useCategories();
   const { data: tags } = useTags();
   const createMutation = useCreateAsset();
@@ -22,12 +22,10 @@ export function AssetListPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterPortfolio, setFilterPortfolio] = useState('');
   const [showDisposed, setShowDisposed] = useState(false);
 
   // Create form state
   const [newName, setNewName] = useState('');
-  const [newPortfolioId, setNewPortfolioId] = useState('');
   const [newAssetTypeId, setNewAssetTypeId] = useState('');
   const [newQuantity, setNewQuantity] = useState('');
 
@@ -46,24 +44,26 @@ export function AssetListPage() {
   if (!showDisposed) filtered = filtered.filter(a => !a.disposed);
   if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
   if (filterType) filtered = filtered.filter(a => a.assetType?.code === filterType);
-  if (filterPortfolio) filtered = filtered.filter(a => a.portfolioId === filterPortfolio);
 
   const handleCreate = async () => {
-    if (!newName.trim() || !newPortfolioId || !newAssetTypeId) return;
-    await createMutation.mutateAsync({
-      name: newName.trim(),
-      portfolioId: newPortfolioId,
-      assetTypeId: newAssetTypeId,
-      quantity: newQuantity || undefined,
-    });
-    setNewName('');
-    setNewQuantity('');
-    setShowCreate(false);
+    if (!newName.trim() || !newAssetTypeId) return;
+    try {
+      await createMutation.mutateAsync({
+        name: newName.trim(),
+        assetTypeId: newAssetTypeId,
+        quantity: newQuantity || undefined,
+      });
+      setNewName('');
+      setNewQuantity('');
+      setShowCreate(false);
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ variant: 'error', message });
+    }
   };
 
   const resetCreate = () => {
     setNewName('');
-    setNewPortfolioId('');
     setNewAssetTypeId('');
     setNewQuantity('');
     setShowCreate(false);
@@ -74,7 +74,7 @@ export function AssetListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Assets</h1>
-          <p className="text-muted-foreground">Manage all your assets across portfolios.</p>
+          <p className="text-muted-foreground">Manage all your assets.</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" /> New Asset
@@ -98,10 +98,6 @@ export function AssetListPage() {
             <Select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-48" aria-label="Filter by asset type">
               <option value="">All Types</option>
               {assetTypes?.map(t => <option key={t.id} value={t.code}>{t.label}</option>)}
-            </Select>
-            <Select value={filterPortfolio} onChange={e => setFilterPortfolio(e.target.value)} className="w-48" aria-label="Filter by portfolio">
-              <option value="">All Portfolios</option>
-              {portfolios?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Select>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -170,8 +166,8 @@ export function AssetListPage() {
         <EmptyState
           icon={<Package className="h-12 w-12" />}
           title="No assets found"
-          description={search || filterType || filterPortfolio ? 'Try adjusting your filters.' : 'Create your first asset to get started.'}
-          action={!search && !filterType && !filterPortfolio ? (
+          description={search || filterType ? 'Try adjusting your filters.' : 'Create your first asset to get started.'}
+          action={!search && !filterType ? (
             <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4" /> Create Asset</Button>
           ) : undefined}
         />
@@ -188,13 +184,6 @@ export function AssetListPage() {
             <Input id="asset-name" value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Bitcoin" className="mt-1" />
           </div>
           <div>
-            <label htmlFor="asset-portfolio" className="text-sm font-medium">Portfolio</label>
-            <Select id="asset-portfolio" value={newPortfolioId} onChange={e => setNewPortfolioId(e.target.value)} className="mt-1">
-              <option value="">Select portfolio...</option>
-              {portfolios?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </Select>
-          </div>
-          <div>
             <label htmlFor="asset-type" className="text-sm font-medium">Asset Type</label>
             <Select id="asset-type" value={newAssetTypeId} onChange={e => setNewAssetTypeId(e.target.value)} className="mt-1">
               <option value="">Select type...</option>
@@ -208,7 +197,7 @@ export function AssetListPage() {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={resetCreate}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={!newName.trim() || !newPortfolioId || !newAssetTypeId || createMutation.isPending}>
+          <Button onClick={handleCreate} disabled={!newName.trim() || !newAssetTypeId || createMutation.isPending}>
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>

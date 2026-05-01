@@ -1,10 +1,4 @@
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
   AssetNotFoundException,
@@ -12,14 +6,14 @@ import {
   CategoryHasChildrenException,
   CategoryNotFoundException,
   DuplicateNameException,
-  PortfolioNotFoundException,
+  PortfolioSnapshotNotFoundException,
   TagNotFoundException,
 } from '../../domain/exceptions/index.js';
 import { DomainExceptionMapper } from './domain-exception.mapper.js';
 
 @Catch(
   AssetNotFoundException,
-  PortfolioNotFoundException,
+  PortfolioSnapshotNotFoundException,
   CategoryNotFoundException,
   TagNotFoundException,
   AssetTypeNotFoundException,
@@ -35,9 +29,9 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const { status, code } = DomainExceptionMapper.map(exception);
     const errorLabel: string =
-      status === (HttpStatus.NOT_FOUND as number)
+      status === 404
         ? 'Not Found'
-        : status === (HttpStatus.CONFLICT as number)
+        : status === 409
           ? 'Conflict'
           : 'Internal Server Error';
 

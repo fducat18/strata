@@ -38,7 +38,7 @@ export function BackupSection() {
               type="file"
               accept=".json,application/json"
               onChange={importer.onFileChange}
-              className="hidden"
+              className="sr-only"
               id="import-file"
               aria-label="Choose backup file to import"
             />
@@ -52,7 +52,7 @@ export function BackupSection() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Exports all portfolios, assets, categories, and tags to a JSON file
+            Exports all assets, categories, and tags to a JSON file
             usable for backups or computer migration.
           </p>
           {step === 'error' && errors.length > 0 && (
@@ -76,7 +76,6 @@ export function BackupSection() {
           <p>This will restore the following from the selected file:</p>
           {counts && (
             <ul className="list-disc pl-5">
-              <li>{counts.portfolios} portfolios</li>
               <li>{counts.assets} assets</li>
               <li>{counts.categories} categories</li>
               <li>{counts.tags} tags</li>

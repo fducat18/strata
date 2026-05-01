@@ -1,49 +1,28 @@
-# Strata Documentation Site
+# Strata Docs
 
-MkDocs Material site published to <https://strata.ducatillon.net/docs/>.
+Astro Starlight site, served at <https://strata.ducatillon.net/docs/>.
 
-## Local preview (live reload)
+## Local
 
 ```bash
 cd docs
-pip install mkdocs mkdocs-material pymdown-extensions
-mkdocs serve
+npm install
+npm run dev    # http://localhost:4321
+npm run build  # static output → dist/
 ```
 
-Open <http://127.0.0.1:8000>.
+## Authoring
 
-## Build the static site
+Drop `.md` (or `.mdx`) files into `src/content/docs/`. The slug is the lowercase filename (`quickstart.md` → `/docs/quickstart`). Sidebar order is configured in `astro.config.mjs`.
 
-```bash
-mkdocs build --strict
-# Output: ./site/
+Each page needs frontmatter:
+
+```yaml
+---
+title: "Page title"
+---
 ```
 
-`--strict` fails the build on broken links and pages outside the nav. CI relies on this.
+## Build & deploy
 
-## Container
-
-The `Dockerfile` is a **two-stage** build:
-
-1. `python:3.12-slim` runs `mkdocs build --strict`, producing `site/`.
-2. `nginx:alpine` serves that static `site/` on port `8000`.
-
-This is intentionally **not** `mkdocs serve` — the container ships a pre-built site so it boots fast, has no Python at runtime and behaves the same locally and in production. `docker-compose.yml` maps host `8001` → container `8000`, so <http://localhost:8001> still works after `docker compose up`.
-
-If you change docs while the container is running, rebuild:
-
-```bash
-docker compose up --build docs
-```
-
-For live-reload while editing, prefer `mkdocs serve` on the host (above) instead of the container.
-
-## Layout
-
-| Path | Purpose |
-|---|---|
-| `mkdocs.yml` | Site config + navigation |
-| `docs/` | Markdown source — every file here is part of the published site |
-| `_internal/` | Drafts and snippets **excluded from the build** (kept under version control for reference) |
-| `site/` | Generated output (gitignored) |
-| `Dockerfile` | Multi-stage build → nginx |
+The site is built into `dist/` as a static site. The repo `docs/Dockerfile` produces an nginx image serving the built site on port 8000 (matches the rest of the stack).

@@ -32,9 +32,9 @@ test('create asset under a portfolio, list it, edit name', async ({ page }) => {
   await page.goto('/assets');
   await page.getByRole('button', { name: /New Asset/i }).click();
   await page.getByLabel('Name').fill(assetName);
-  await page.getByLabel('Portfolio').selectOption({ label: portfolioName });
+  await page.getByLabel('Portfolio', { exact: true }).selectOption({ label: portfolioName });
   // Pick first non-placeholder asset type
-  const typeSelect = page.getByLabel('Asset Type');
+  const typeSelect = page.getByLabel('Asset Type', { exact: true });
   await typeSelect.selectOption({ index: 1 });
   await page.getByLabel('Quantity (optional)').fill('1.5');
   await page.getByRole('button', { name: /^Create$/ }).click();

@@ -1,0 +1,80 @@
+---
+title: Strata
+description: Universal asset tracking & net-worth dashboard. Collect. Track. Grow.
+template: splash
+hero:
+  tagline: Universal asset tracking & net-worth dashboard. Your stuff, organized — investments, real estate, crypto, collections, anything you own.
+  actions:
+    - text: Use Strata App
+      link: /docs/strataapp/
+      icon: right-arrow
+      variant: primary
+    - text: Developer Docs
+      link: /docs/architecture/
+      icon: external
+      variant: secondary
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<CardGrid>
+	<LinkCard
+		title="Quick Start"
+		description="Get Strata running in minutes — Docker, local dev, or the desktop app."
+		href="/docs/quickstart/"
+	/>
+	<LinkCard
+		title="Recovery"
+		description="Restoring on a fresh laptop in 3 years? Start here. Don't lose your asset data."
+		href="/docs/recovery/"
+	/>
+	<LinkCard
+		title="Desktop App"
+		description="Tauri-based native app. Dev vs production data separation, version banner."
+		href="/docs/desktopapp/"
+	/>
+	<LinkCard
+		title="Versioning"
+		description="Git tags as the single source of truth — visible everywhere in the app."
+		href="/docs/versioning/"
+	/>
+	<LinkCard
+		title="Backup & Restore"
+		description="Export, automate, and restore your data with confidence."
+		href="/docs/backup/"
+	/>
+	<LinkCard
+		title="Mental Model"
+		description="Understand how assets, categories, snapshots, and net worth fit together."
+		href="/docs/mentalmodel/"
+	/>
+</CardGrid>
+
+## Explore
+
+<CardGrid>
+	<Card title="Architecture" icon="puzzle">
+		Hexagonal architecture: domain, application, infrastructure, presentation.
+		[Read more →](/docs/architecture/)
+	</Card>
+	<Card title="Data Model" icon="seti:db">
+		Assets, snapshots, transactions, categories, tags — no Portfolio entity.
+		[Read more →](/docs/datamodel/)
+	</Card>
+	<Card title="Frontend" icon="laptop">
+		Astro 6 + React 19 + Tailwind v4 + Zustand + react-query.
+		[Read more →](/docs/frontend/)
+	</Card>
+	<Card title="Backup & Restore" icon="download">
+		Export, automate, and restore your data with confidence.
+		[Read more →](/docs/backup/)
+	</Card>
+	<Card title="Migrations" icon="rocket">
+		Prisma Migrate workflow and schema evolution.
+		[Read more →](/docs/migrations/)
+	</Card>
+	<Card title="Tech Stack" icon="setting">
+		Everything Strata is built on, and why.
+		[Read more →](/docs/techstack/)
+	</Card>
+</CardGrid>

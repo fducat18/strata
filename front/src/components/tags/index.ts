@@ -1,1 +1,0 @@
-export { TagsPage } from './TagsPage';

@@ -7,7 +7,6 @@
 import { create } from 'zustand';
 
 export interface BackupCounts {
-  portfolios: number;
   assets: number;
   categories: number;
   tags: number;
@@ -17,7 +16,6 @@ export interface ParsedBackup {
   version: string;
   exportedAt?: string;
   data: {
-    portfolios?: unknown[];
     assets?: unknown[];
     categories?: unknown[];
     tags?: unknown[];
@@ -43,7 +41,6 @@ interface BackupState {
 
 function countsOf(p: ParsedBackup): BackupCounts {
   return {
-    portfolios: p.data.portfolios?.length ?? 0,
     assets: p.data.assets?.length ?? 0,
     categories: p.data.categories?.length ?? 0,
     tags: p.data.tags?.length ?? 0,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Tag as TagModel } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   ITagRepository,
@@ -14,7 +14,7 @@ export class PrismaTagRepository extends ITagRepository {
     super();
   }
 
-  private mapToEntity(data: any): Tag {
+  private mapToEntity(data: TagModel): Tag {
     return new Tag(data.id, data.name);
   }
 

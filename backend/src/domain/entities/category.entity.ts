@@ -8,8 +8,8 @@ export class Category {
   ) {}
 
   getHierarchy(): string[] {
-    const names: string[] = [];
-    let current: Category | null = this;
+    const names: string[] = [this.name];
+    let current: Category | null = this.parent;
     while (current) {
       names.unshift(current.name);
       current = current.parent;

@@ -1,9 +1,6 @@
 import request from 'supertest';
 import { App } from 'supertest/types';
-import {
-  createIsolatedE2EApp,
-  E2ETestContext,
-} from './helpers/e2e-setup.js';
+import { createIsolatedE2EApp, E2ETestContext } from './helpers/e2e-setup.js';
 
 /**
  * Backup → wipe → restore round-trip.
@@ -113,7 +110,9 @@ describe('Admin backup/restore (e2e)', () => {
     const snaps = await request(http)
       .get(`/api/v1/assets/${assetId}/snapshots`)
       .expect(200);
-    expect(snaps.body.find((s: any) => s.id === snapshotId).value).toBe('1234.56');
+    expect(snaps.body.find((s: any) => s.id === snapshotId).value).toBe(
+      '1234.56',
+    );
   }, 30_000);
 
   it('rejects unsupported schemaVersion → 400', async () => {

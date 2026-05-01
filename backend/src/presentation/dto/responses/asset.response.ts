@@ -6,12 +6,6 @@ export class AssetTypeResponseDto {
   @ApiProperty() label!: string;
 }
 
-export class PortfolioNestedResponseDto {
-  @ApiProperty() id!: string;
-  @ApiProperty() name!: string;
-  @ApiProperty() baseCurrency!: string;
-}
-
 export class CategoryNestedResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
@@ -36,14 +30,11 @@ export class AssetResponseDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   quantity!: string | null;
   @ApiProperty() disposed!: boolean;
-  @ApiProperty() portfolioId!: string;
   @ApiProperty() assetTypeId!: string;
   @ApiProperty() createdAt!: string;
   @ApiProperty() updatedAt!: string;
   @ApiPropertyOptional({ type: AssetTypeResponseDto, nullable: true })
   assetType!: AssetTypeResponseDto | null;
-  @ApiPropertyOptional({ type: PortfolioNestedResponseDto, nullable: true })
-  portfolio!: PortfolioNestedResponseDto | null;
   @ApiProperty({ type: [CategoryNestedResponseDto] })
   categories!: CategoryNestedResponseDto[];
   @ApiProperty({ type: [TagNestedResponseDto] })

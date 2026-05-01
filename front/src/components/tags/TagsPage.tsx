@@ -9,6 +9,7 @@ import {
   Input, Badge, Loading, EmptyState,
 } from '@/components/ui';
 import { Plus, Tags as TagsIcon, Trash2 } from 'lucide-react';
+import { useUIStore } from '@/stores/uiStore';
 
 const tagSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50),
@@ -43,9 +44,14 @@ export function TagsPage() {
   }
 
   const handleCreate = handleSubmit(async (data) => {
-    await createMutation.mutateAsync(data);
-    reset();
-    setShowCreate(false);
+    try {
+      await createMutation.mutateAsync(data);
+      reset();
+      setShowCreate(false);
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ type: 'error', message });
+    }
   });
 
   const handleClose = () => {
@@ -55,7 +61,12 @@ export function TagsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Delete this tag?')) {
-      await deleteMutation.mutateAsync(id);
+      try {
+        await deleteMutation.mutateAsync(id);
+      } catch (err: unknown) {
+        const message = (err as any)?.message ?? 'An unexpected error occurred';
+        useUIStore.getState().pushToast({ type: 'error', message });
+      }
     }
   };
 

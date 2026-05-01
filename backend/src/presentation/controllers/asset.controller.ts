@@ -8,25 +8,13 @@ import {
   Param,
   Post,
   Put,
-  Query,
   UseFilters,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   AssetService,
   AssetSnapshotService,
 } from '../../application/services/index.js';
-import {
-  AddCategoryToAssetUseCase,
-  AddTagToAssetUseCase,
-  RemoveCategoryFromAssetUseCase,
-  RemoveTagFromAssetUseCase,
-} from '../../application/use-cases/asset-associations/index.js';
 import {
   CreateAssetDto,
   CreateAssetSnapshotDto,
@@ -36,7 +24,10 @@ import {
   AssetResponseDto,
   AssetSnapshotResponseDto,
 } from '../dto/responses/index.js';
-import { DomainExceptionFilter, PrismaExceptionFilter } from '../filters/index.js';
+import {
+  DomainExceptionFilter,
+  PrismaExceptionFilter,
+} from '../filters/index.js';
 import {
   mapAssetToResponse,
   mapAssetSnapshotToResponse,
@@ -52,10 +43,6 @@ export class AssetController {
   constructor(
     private readonly assetService: AssetService,
     private readonly assetSnapshotService: AssetSnapshotService,
-    private readonly addTag: AddTagToAssetUseCase,
-    private readonly removeTagUC: RemoveTagFromAssetUseCase,
-    private readonly addCategory: AddCategoryToAssetUseCase,
-    private readonly removeCategoryUC: RemoveCategoryFromAssetUseCase,
   ) {}
 
   @Post()
@@ -65,7 +52,6 @@ export class AssetController {
   async create(@Body() dto: CreateAssetDto): Promise<AssetResponseDto> {
     const asset = await this.assetService.create({
       name: dto.name,
-      portfolioId: dto.portfolioId,
       assetTypeId: dto.assetTypeId,
       quantity: dto.quantity,
     });
@@ -73,29 +59,11 @@ export class AssetController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all assets, optionally filtered by portfolio' })
-  @ApiQuery({ name: 'portfolioId', required: false })
-  @ApiQuery({
-    name: 'portfolio_id',
-    required: false,
-    deprecated: true,
-    description: 'Deprecated alias for portfolioId — to be removed.',
-  })
+  @ApiOperation({ summary: 'List all assets' })
   @ApiResponse({ status: 200, type: [AssetResponseDto] })
   @ApiStandardErrors([500])
-  async findAll(
-    @Query('portfolioId') portfolioId?: string,
-    @Query('portfolio_id') portfolioIdLegacy?: string,
-  ): Promise<AssetResponseDto[]> {
-    const id = portfolioId ?? portfolioIdLegacy;
-    if (portfolioIdLegacy && !portfolioId) {
-      this.logger.warn(
-        'Query parameter `portfolio_id` is deprecated; use `portfolioId` instead.',
-      );
-    }
-    const assets = id
-      ? await this.assetService.findByPortfolio(id)
-      : await this.assetService.findAll();
+  async findAll(): Promise<AssetResponseDto[]> {
+    const assets = await this.assetService.findAll();
     return assets.map(mapAssetToResponse);
   }
 
@@ -177,7 +145,7 @@ export class AssetController {
     @Param('id') id: string,
     @Param('tagId') tagId: string,
   ): Promise<AssetResponseDto> {
-    const asset = await this.addTag.execute(id, tagId);
+    const asset = await this.assetService.addTag(id, tagId);
     return mapAssetToResponse(asset);
   }
 
@@ -190,7 +158,7 @@ export class AssetController {
     @Param('id') id: string,
     @Param('tagId') tagId: string,
   ): Promise<void> {
-    await this.removeTagUC.execute(id, tagId);
+    await this.assetService.removeTag(id, tagId);
   }
 
   @Post(':id/categories/:categoryId')
@@ -201,7 +169,7 @@ export class AssetController {
     @Param('id') id: string,
     @Param('categoryId') categoryId: string,
   ): Promise<AssetResponseDto> {
-    const asset = await this.addCategory.execute(id, categoryId);
+    const asset = await this.assetService.addCategory(id, categoryId);
     return mapAssetToResponse(asset);
   }
 
@@ -214,6 +182,6 @@ export class AssetController {
     @Param('id') id: string,
     @Param('categoryId') categoryId: string,
   ): Promise<void> {
-    await this.removeCategoryUC.execute(id, categoryId);
+    await this.assetService.removeCategory(id, categoryId);
   }
 }

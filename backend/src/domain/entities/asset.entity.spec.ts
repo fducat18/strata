@@ -8,7 +8,6 @@ describe('Asset', () => {
     name: 'Test Asset',
     quantity: new Decimal('10'),
     disposed: false,
-    portfolioId: 'p1',
     assetTypeId: 'at1',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
@@ -27,11 +26,9 @@ describe('Asset', () => {
       overrides.disposed !== undefined
         ? (overrides.disposed as boolean)
         : base.disposed,
-      base.portfolioId,
       base.assetTypeId,
       base.createdAt,
       base.updatedAt,
-      null,
       null,
       snapshots,
     );

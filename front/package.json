@@ -1,14 +1,18 @@
 {
   "name": "@strata/front",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Strata asset management frontend",
   "private": true,
   "scripts": {
+    "predev": "node scripts/gen-version.mjs",
     "dev": "astro dev",
+    "prebuild": "node scripts/gen-version.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "pretest": "node scripts/gen-version.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "pretest:e2e": "node scripts/gen-version.mjs",
     "test:e2e": "playwright test",
     "check": "astro check"
   },
@@ -39,8 +43,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "happy-dom": "^20.9.0",
     "jsdom": "^27.0.1",
     "vitest": "^3.2.4"

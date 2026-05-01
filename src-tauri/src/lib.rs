@@ -4,43 +4,73 @@
 // 1. Start the NestJS backend as a child process (port 3456)
 // 2. Start the Astro frontend server as a child process (port 4321)
 // 3. Wait until both servers are healthy before navigating to the frontend
-// 4. Stop both servers when the app quits
-// 5. Provide IPC commands for revealing the data folder
+// 4. Stop both servers when the app quits (incl. Cmd-Q, panic, abort)
+// 5. Provide IPC commands for revealing the data folder + reading version
 
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
-use tauri::Emitter;
+use tauri::{Emitter, Manager, RunEvent};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
-/// Port used by the embedded NestJS backend
 const BACKEND_PORT: u16 = 3456;
-/// Port used by the Astro frontend SSR server
 const FRONTEND_PORT: u16 = 4321;
 
-/// Holds both sidecar child processes so we can clean them up on exit
+/// Build-time version metadata (injected by build.rs from scripts/version.mjs).
+const APP_VERSION: &str = env!("STRATA_VERSION");
+const APP_ENV: &str = env!("STRATA_ENV"); // "production" or "development"
+const APP_GIT_SHA: &str = env!("STRATA_GIT_SHA");
+
+fn is_dev_build() -> bool {
+    APP_ENV != "production"
+}
+
+/// Holds both sidecar child processes so we can clean them up on every exit
+/// path (window close, RunEvent::ExitRequested, panic — Drop guarantees it).
 struct SidecarProcesses {
     backend: Option<Child>,
     frontend: Option<Child>,
 }
 
-/// Where the SQLite database lives on macOS
+impl SidecarProcesses {
+    fn shutdown_all(&mut self) {
+        if let Some(ref mut child) = self.backend {
+            kill_child("backend", child);
+        }
+        if let Some(ref mut child) = self.frontend {
+            kill_child("frontend", child);
+        }
+        self.backend = None;
+        self.frontend = None;
+    }
+}
+
+impl Drop for SidecarProcesses {
+    fn drop(&mut self) {
+        self.shutdown_all();
+    }
+}
+
+/// Where the SQLite database lives on macOS.
+/// Dev builds → `Strata-Dev/`, production tagged builds → `Strata/`.
 fn data_dir() -> std::path::PathBuf {
     let mut dir = dirs::data_dir().expect("could not determine app data directory");
-    dir.push("Strata");
+    if is_dev_build() {
+        dir.push("Strata-Dev");
+    } else {
+        dir.push("Strata");
+    }
     dir
 }
 
-/// Ensure the data directory exists and return the DATABASE_URL
 fn ensure_data_dir() -> String {
     let dir = data_dir();
     std::fs::create_dir_all(&dir).expect("could not create data directory");
-    // Prisma SQLite URL format: file:/absolute/path/to/strata.db
     format!("file:{}", dir.join("strata.db").display())
 }
 
-/// Locate the `node` binary on the system
 fn find_node() -> String {
     for candidate in &[
         "/opt/homebrew/bin/node",
@@ -54,7 +84,6 @@ fn find_node() -> String {
     "node".to_string()
 }
 
-/// Locate the `npx` binary on the system
 fn find_npx() -> String {
     for candidate in &[
         "/opt/homebrew/bin/npx",
@@ -69,17 +98,14 @@ fn find_npx() -> String {
 }
 
 /// Resolve the repo root directory.
-/// In dev mode: use CARGO_MANIFEST_DIR parent.
-/// In production: use the resource directory inside the .app bundle.
+/// Bundling Node + sources into the .app is tracked in
+/// `issues/bundle-node-runtime.md`; until then we use the repo layout.
 fn repo_root(_app: &tauri::App) -> std::path::PathBuf {
-    // For both dev and production, we use the repo layout.
-    // Production bundling is a future improvement.
     let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     manifest.parent().unwrap().to_path_buf()
 }
 
-/// Run `npx prisma migrate deploy` to ensure the DB schema is up to date.
-fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) {
+fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Result<(), String> {
     let npx = find_npx();
     log::info!("Running prisma migrate deploy …");
     let status = Command::new(&npx)
@@ -91,13 +117,15 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) {
         .status();
 
     match status {
-        Ok(s) if s.success() => log::info!("Prisma migrate deploy succeeded"),
-        Ok(s) => log::warn!("Prisma migrate deploy exited with {}", s),
-        Err(e) => log::error!("Failed to run prisma migrate: {}", e),
+        Ok(s) if s.success() => {
+            log::info!("Prisma migrate deploy succeeded");
+            Ok(())
+        }
+        Ok(s) => Err(format!("prisma migrate deploy exited with {}", s)),
+        Err(e) => Err(format!("could not run prisma migrate: {}", e)),
     }
 }
 
-/// Run `npx prisma db seed` to seed reference data.
 fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
     let npx = find_npx();
     log::info!("Running prisma db seed …");
@@ -116,10 +144,19 @@ fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
     }
 }
 
-/// Spawn the NestJS backend and return the child process handle.
-fn spawn_backend(backend_path: &std::path::Path, database_url: &str) -> Child {
+fn spawn_backend(
+    backend_path: &std::path::Path,
+    database_url: &str,
+) -> Result<Child, String> {
     let node = find_node();
     let main_js = backend_path.join("dist").join("main.js");
+
+    if !main_js.exists() {
+        return Err(format!(
+            "backend bundle not found at {} — run `cd backend && npm run build`",
+            main_js.display()
+        ));
+    }
 
     log::info!("Starting backend: {} {}", node, main_js.display());
 
@@ -134,13 +171,19 @@ fn spawn_backend(backend_path: &std::path::Path, database_url: &str) -> Child {
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .expect("failed to start NestJS backend — is Node.js installed?")
+        .map_err(|e| format!("failed to start NestJS backend: {} (is Node.js installed?)", e))
 }
 
-/// Spawn the Astro SSR frontend and return the child process handle.
-fn spawn_frontend(front_path: &std::path::Path) -> Child {
+fn spawn_frontend(front_path: &std::path::Path) -> Result<Child, String> {
     let node = find_node();
     let entry = front_path.join("dist").join("server").join("entry.mjs");
+
+    if !entry.exists() {
+        return Err(format!(
+            "frontend bundle not found at {} — run `cd front && npm run build`",
+            entry.display()
+        ));
+    }
 
     log::info!("Starting frontend: {} {}", node, entry.display());
 
@@ -152,10 +195,9 @@ fn spawn_frontend(front_path: &std::path::Path) -> Child {
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .expect("failed to start Astro frontend — is Node.js installed?")
+        .map_err(|e| format!("failed to start Astro frontend: {} (is Node.js installed?)", e))
 }
 
-/// Poll an HTTP endpoint until it responds 200 or we give up.
 fn wait_for_server(url: &str, name: &str, max_attempts: u32) -> bool {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(2))
@@ -178,7 +220,6 @@ fn wait_for_server(url: &str, name: &str, max_attempts: u32) -> bool {
     false
 }
 
-/// Tauri IPC: reveal the data folder in Finder
 #[tauri::command]
 fn reveal_data_folder() {
     let dir = data_dir();
@@ -188,54 +229,84 @@ fn reveal_data_folder() {
     }
 }
 
-/// Tauri IPC: get the backend base URL (for the frontend to call the API)
 #[tauri::command]
 fn get_backend_url() -> String {
     format!("http://localhost:{}", BACKEND_PORT)
 }
 
-/// Kill a child process and wait for it to exit
+#[tauri::command]
+fn get_app_version() -> serde_json::Value {
+    serde_json::json!({
+        "version": APP_VERSION,
+        "env": APP_ENV,
+        "gitSha": APP_GIT_SHA,
+    })
+}
+
 fn kill_child(name: &str, child: &mut Child) {
     log::info!("Shutting down {} (pid={}) …", name, child.id());
     let _ = child.kill();
     let _ = child.wait();
 }
 
+fn window_title() -> String {
+    if is_dev_build() {
+        format!("Strata {} (DEV)", APP_VERSION)
+    } else {
+        format!("Strata {}", APP_VERSION)
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Shared handle so we can kill both sidecars on exit
     let sidecars: Arc<Mutex<SidecarProcesses>> = Arc::new(Mutex::new(SidecarProcesses {
         backend: None,
         frontend: None,
     }));
     let sidecars_for_setup = Arc::clone(&sidecars);
-    let sidecars_for_exit = Arc::clone(&sidecars);
+    let sidecars_for_window = Arc::clone(&sidecars);
+    let sidecars_for_run = Arc::clone(&sidecars);
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .setup(move |app| {
-            // Logging
             app.handle().plugin(
                 tauri_plugin_log::Builder::default()
-                    .level(if cfg!(debug_assertions) {
+                    .level(if is_dev_build() {
                         log::LevelFilter::Debug
                     } else {
                         log::LevelFilter::Info
                     })
+                    .max_file_size(10 * 1024 * 1024)
                     .build(),
             )?;
 
-            // ── E5: macOS menu with "Reveal Data Folder" ──
+            log::info!(
+                "Strata desktop starting — version={} env={} sha={}",
+                APP_VERSION,
+                APP_ENV,
+                APP_GIT_SHA
+            );
+
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_title(&window_title());
+            }
+
             let reveal_item = MenuItemBuilder::with_id("reveal-data", "Reveal Data Folder")
                 .build(app)?;
+            let about_item = MenuItemBuilder::with_id(
+                "about-strata",
+                format!("About Strata ({})", APP_VERSION),
+            )
+            .build(app)?;
             let file_menu = SubmenuBuilder::new(app, "File")
                 .item(&reveal_item)
                 .separator()
                 .close_window()
                 .build()?;
             let app_menu = SubmenuBuilder::new(app, "Strata")
-                .about(None)
+                .item(&about_item)
                 .separator()
                 .quit()
                 .build()?;
@@ -255,31 +326,57 @@ pub fn run() {
                 .build()?;
             app.set_menu(menu)?;
 
-            // ── E3: Ensure data directory & DATABASE_URL ──
             let database_url = ensure_data_dir();
             log::info!("Database URL: {}", database_url);
 
-            // ── Resolve paths ──
             let root = repo_root(app);
             let backend_path = root.join("backend");
             let front_path = root.join("front");
             log::info!("Backend path: {}", backend_path.display());
             log::info!("Frontend path: {}", front_path.display());
 
-            // ── Run Prisma migrations & seed ──
-            run_prisma_migrate(&backend_path, &database_url);
+            if let Err(e) = run_prisma_migrate(&backend_path, &database_url) {
+                let msg = format!("Database migration failed:\n{}", e);
+                log::error!("{}", msg);
+                app.dialog()
+                    .message(&msg)
+                    .title("Strata — startup error")
+                    .kind(MessageDialogKind::Error)
+                    .blocking_show();
+                std::process::exit(1);
+            }
             run_prisma_seed(&backend_path, &database_url);
 
-            // ── E2: Spawn both sidecars ──
-            let backend = spawn_backend(&backend_path, &database_url);
-            let frontend = spawn_frontend(&front_path);
+            let backend = match spawn_backend(&backend_path, &database_url) {
+                Ok(c) => c,
+                Err(e) => {
+                    log::error!("{}", e);
+                    app.dialog()
+                        .message(&e)
+                        .title("Strata — backend failed to start")
+                        .kind(MessageDialogKind::Error)
+                        .blocking_show();
+                    std::process::exit(1);
+                }
+            };
+            let frontend = match spawn_frontend(&front_path) {
+                Ok(c) => c,
+                Err(e) => {
+                    log::error!("{}", e);
+                    app.dialog()
+                        .message(&e)
+                        .title("Strata — frontend failed to start")
+                        .kind(MessageDialogKind::Error)
+                        .blocking_show();
+                    std::process::exit(1);
+                }
+            };
             {
                 let mut s = sidecars_for_setup.lock().unwrap();
                 s.backend = Some(backend);
                 s.frontend = Some(frontend);
             }
 
-            // ── Health-poll in a background thread, then emit event ──
             let handle = app.handle().clone();
             thread::spawn(move || {
                 let backend_url = format!("http://localhost:{}/api/v1/health", BACKEND_PORT);
@@ -294,29 +391,58 @@ pub fn run() {
                 } else {
                     log::error!("Some services failed to start");
                     let _ = handle.emit("backend-ready", false);
+                    if let Some(window) = handle.get_webview_window("main") {
+                        let _ = window.dialog()
+                            .message("One of Strata's background services did not become healthy. Check the logs (Help → Reveal Data Folder).")
+                            .title("Strata — services not ready")
+                            .kind(MessageDialogKind::Warning)
+                            .blocking_show();
+                    }
                 }
             });
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![reveal_data_folder, get_backend_url])
-        .on_menu_event(|_app, event| {
-            if event.id().as_ref() == "reveal-data" {
-                reveal_data_folder();
+        .invoke_handler(tauri::generate_handler![
+            reveal_data_folder,
+            get_backend_url,
+            get_app_version
+        ])
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            "reveal-data" => reveal_data_folder(),
+            "about-strata" => {
+                let body = format!(
+                    "Strata {}\n\nEnvironment: {}\nGit: {}\n\nData folder:\n{}",
+                    APP_VERSION,
+                    APP_ENV,
+                    APP_GIT_SHA,
+                    data_dir().display()
+                );
+                app.dialog()
+                    .message(body)
+                    .title("About Strata")
+                    .kind(MessageDialogKind::Info)
+                    .show(|_| {});
             }
+            _ => {}
         })
         .on_window_event(move |_window, event| {
             if let tauri::WindowEvent::Destroyed = event {
-                if let Ok(mut s) = sidecars_for_exit.lock() {
-                    if let Some(ref mut child) = s.backend {
-                        kill_child("backend", child);
-                    }
-                    if let Some(ref mut child) = s.frontend {
-                        kill_child("frontend", child);
-                    }
+                if let Ok(mut s) = sidecars_for_window.lock() {
+                    s.shutdown_all();
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running Strata desktop application");
+        .build(tauri::generate_context!())
+        .expect("error while building Strata desktop application");
+
+    // RunEvent::ExitRequested ensures cleanup on Cmd-Q paths that don't
+    // route through Window::Destroyed.
+    app.run(move |_app_handle, event| {
+        if let RunEvent::ExitRequested { .. } = event {
+            if let Ok(mut s) = sidecars_for_run.lock() {
+                s.shutdown_all();
+            }
+        }
+    });
 }

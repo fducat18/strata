@@ -1,23 +1,16 @@
 import { Controller, Get, Param, UseFilters } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AssetTypeService } from '../../application/services/index.js';
-import { DomainExceptionFilter } from '../filters/index.js';
+import {
+  DomainExceptionFilter,
+  PrismaExceptionFilter,
+} from '../filters/index.js';
 import { AssetTypeFullResponseDto } from '../dto/responses/index.js';
-import type { AssetType } from '../../domain/entities/index.js';
-
-function mapAssetTypeToResponse(
-  assetType: AssetType,
-): AssetTypeFullResponseDto {
-  const dto = new AssetTypeFullResponseDto();
-  dto.id = assetType.id;
-  dto.code = assetType.code;
-  dto.label = assetType.label;
-  return dto;
-}
+import { mapAssetTypeToResponse } from './mappers/asset-type.mapper.js';
 
 @ApiTags('Asset Types')
 @Controller('api/v1/asset-types')
-@UseFilters(DomainExceptionFilter)
+@UseFilters(PrismaExceptionFilter, DomainExceptionFilter)
 export class AssetTypeController {
   constructor(private readonly assetTypeService: AssetTypeService) {}
 

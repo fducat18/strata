@@ -5,13 +5,6 @@ export class AssetNotFoundException extends Error {
   }
 }
 
-export class PortfolioNotFoundException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PortfolioNotFoundException';
-  }
-}
-
 export class CategoryNotFoundException extends Error {
   constructor(message: string) {
     super(message);
@@ -30,6 +23,13 @@ export class AssetTypeNotFoundException extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AssetTypeNotFoundException';
+  }
+}
+
+export class PortfolioSnapshotNotFoundException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PortfolioSnapshotNotFoundException';
   }
 }
 

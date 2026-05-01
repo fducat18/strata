@@ -1,11 +1,10 @@
 /**
  * Theme store — light/dark/system theme preference, persisted to localStorage.
  *
- * Add to this store: anything purely about visual theme (e.g. accent color).
- * Do NOT add: locale, currency, or other settings — see settingsStore.
+ * Initialization is synchronous (read localStorage at module load) to avoid
+ * race conditions between user clicks and zustand-persist async rehydration.
  */
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -15,6 +14,29 @@ interface ThemeState {
 }
 
 const STORAGE_KEY = 'strata.theme';
+
+function readStoredTheme(): Theme {
+  if (typeof window === 'undefined') return 'system';
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return 'system';
+    if (raw === 'light' || raw === 'dark' || raw === 'system') return raw;
+    const parsed = JSON.parse(raw) as { state?: { theme?: Theme } } | Theme;
+    if (typeof parsed === 'string') return parsed;
+    return parsed.state?.theme ?? 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function writeStoredTheme(theme: Theme): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    /* ignore quota errors */
+  }
+}
 
 function applyThemeToDom(theme: Theme): void {
   if (typeof window === 'undefined') return;
@@ -26,23 +48,17 @@ function applyThemeToDom(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set) => ({
-      theme: 'system',
-      setTheme: (theme) => {
-        applyThemeToDom(theme);
-        set({ theme });
-      },
-    }),
-    {
-      name: STORAGE_KEY,
-      onRehydrateStorage: () => (state) => {
-        if (state) applyThemeToDom(state.theme);
-      },
-    }
-  )
-);
+const initialTheme = readStoredTheme();
+applyThemeToDom(initialTheme);
+
+export const useThemeStore = create<ThemeState>()((set) => ({
+  theme: initialTheme,
+  setTheme: (theme) => {
+    writeStoredTheme(theme);
+    applyThemeToDom(theme);
+    set({ theme });
+  },
+}));
 
 export const useTheme = (): Theme => useThemeStore((s) => s.theme);
 export const useSetTheme = (): ((t: Theme) => void) =>
@@ -50,10 +66,9 @@ export const useSetTheme = (): ((t: Theme) => void) =>
 
 export function initThemeFromStorage(): void {
   if (typeof window === 'undefined') return;
-  // Triggers persist rehydration + DOM application.
-  const initial = useThemeStore.getState().theme;
-  applyThemeToDom(initial);
-  if (initial === 'system') {
+  const current = useThemeStore.getState().theme;
+  applyThemeToDom(current);
+  if (current === 'system') {
     window
       .matchMedia('(prefers-color-scheme: dark)')
       .addEventListener('change', () => applyThemeToDom('system'));

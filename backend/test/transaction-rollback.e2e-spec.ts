@@ -1,10 +1,7 @@
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service.js';
-import {
-  createIsolatedE2EApp,
-  E2ETestContext,
-} from './helpers/e2e-setup.js';
+import { createIsolatedE2EApp, E2ETestContext } from './helpers/e2e-setup.js';
 
 /**
  * Asserts compound writes are wrapped in $transaction.

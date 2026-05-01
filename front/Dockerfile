@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
 # PUBLIC_API_URL is baked into the client bundle at build time.
@@ -11,9 +11,19 @@ ENV PUBLIC_API_URL=$PUBLIC_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN npm run build
+# Write a fallback version.ts (the host-side `npm run docker:dev`
+# regenerates the real one from `git describe` before the build context
+# is sent). Skip the prebuild and call astro build directly.
+RUN if [ ! -f src/lib/version.ts ]; then \
+      printf '%s\n' \
+        '// fallback — overwritten by host-side gen-version.mjs in real builds' \
+        'export interface VersionInfo { version: string; env: "production"|"development"; gitSha: string; buildTime: string; }' \
+        'export const VERSION: VersionInfo = { version: "0.0.0-docker", env: "production", gitSha: "docker", buildTime: new Date().toISOString() } as const;' \
+        > src/lib/version.ts; \
+    fi
+RUN npx astro build
 
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S strata && adduser -S strata -G strata
 COPY --from=build --chown=strata:strata /app/dist ./dist

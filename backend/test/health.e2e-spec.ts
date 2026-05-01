@@ -1,9 +1,6 @@
 import request from 'supertest';
 import { App } from 'supertest/types';
-import {
-  createIsolatedE2EApp,
-  E2ETestContext,
-} from './helpers/e2e-setup.js';
+import { createIsolatedE2EApp, E2ETestContext } from './helpers/e2e-setup.js';
 
 describe('Health (e2e)', () => {
   let ctx: E2ETestContext;
@@ -17,7 +14,7 @@ describe('Health (e2e)', () => {
   });
 
   it('GET /api/v1/health → 200 with status/db/version', async () => {
-    const res = await request(ctx.app.getHttpServer() as unknown as App)
+    const res = await request(ctx.app.getHttpServer())
       .get('/api/v1/health')
       .expect(200);
     expect(res.body.status).toBe('ok');
@@ -26,7 +23,7 @@ describe('Health (e2e)', () => {
   });
 
   it('echoes a request id', async () => {
-    const res = await request(ctx.app.getHttpServer() as unknown as App)
+    const res = await request(ctx.app.getHttpServer())
       .get('/api/v1/health')
       .set('X-Request-Id', 'abc-123-fixed')
       .expect(200);
@@ -34,7 +31,7 @@ describe('Health (e2e)', () => {
   });
 
   it('generates a request id when none is provided', async () => {
-    const res = await request(ctx.app.getHttpServer() as unknown as App)
+    const res = await request(ctx.app.getHttpServer())
       .get('/api/v1/health')
       .expect(200);
     expect(res.headers['x-request-id']).toMatch(/[0-9a-f-]{36}/);

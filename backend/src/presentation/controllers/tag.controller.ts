@@ -10,21 +10,17 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { TagService } from '../../application/services/index.js';
-import { DomainExceptionFilter } from '../filters/index.js';
+import {
+  DomainExceptionFilter,
+  PrismaExceptionFilter,
+} from '../filters/index.js';
 import { CreateTagDto } from '../dto/index.js';
 import { TagResponseDto } from '../dto/responses/index.js';
-import type { Tag } from '../../domain/entities/index.js';
-
-function mapTagToResponse(tag: Tag): TagResponseDto {
-  const dto = new TagResponseDto();
-  dto.id = tag.id;
-  dto.name = tag.name;
-  return dto;
-}
+import { mapTagToResponse } from './mappers/tag.mapper.js';
 
 @ApiTags('Tags')
 @Controller('api/v1/tags')
-@UseFilters(DomainExceptionFilter)
+@UseFilters(PrismaExceptionFilter, DomainExceptionFilter)
 export class TagController {
   constructor(private readonly tagService: TagService) {}
 

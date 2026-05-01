@@ -8,7 +8,7 @@ describe('Strata API (e2e)', () => {
   let cleanup: () => Promise<void>;
 
   beforeAll(async () => {
-    const ctx = await createIsolatedE2EApp({ seed: true, seedDemo: true });
+    const ctx = await createIsolatedE2EApp({ seed: true });
     app = ctx.app as INestApplication<App>;
     cleanup = ctx.cleanup;
   }, 60_000);
@@ -259,7 +259,9 @@ describe('Strata API (e2e)', () => {
         .expect(200);
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: childCategoryId })]),
+        expect.arrayContaining([
+          expect.objectContaining({ id: childCategoryId }),
+        ]),
       );
     });
 
@@ -275,13 +277,17 @@ describe('Strata API (e2e)', () => {
         .post(`/api/v1/assets/${createdAssetId}/categories/${childCategoryId}`)
         .expect(201);
       expect(res.body.categories).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: childCategoryId })]),
+        expect.arrayContaining([
+          expect.objectContaining({ id: childCategoryId }),
+        ]),
       );
     });
 
     it('DELETE /api/v1/assets/:id/categories/:categoryId → removes category from asset', async () => {
       await request(app.getHttpServer())
-        .delete(`/api/v1/assets/${createdAssetId}/categories/${childCategoryId}`)
+        .delete(
+          `/api/v1/assets/${createdAssetId}/categories/${childCategoryId}`,
+        )
         .expect(204);
     });
 
@@ -394,4 +400,3 @@ describe('Strata API (e2e)', () => {
     });
   });
 });
-

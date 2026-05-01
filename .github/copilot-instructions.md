@@ -1,160 +1,127 @@
 # Strata — Copilot / AI Agent Instructions
 
-Strata is a universal asset-tracking backend (FastAPI + SQLAlchemy + SQLite) built with hexagonal architecture (Ports & Adapters) and DDD. It tracks portfolios, assets, snapshots, transactions, categories, and tags to compute net worth.
+Strata is a personal asset-tracking app: a **NestJS + Prisma (SQLite)** backend, an **Astro + React + Tailwind v4** frontend, a **Tauri v2 (Rust)** desktop wrapper that spawns both as sidecars, and an **Astro Starlight** documentation site. It tracks portfolios, assets, snapshots, transactions, categories and tags to compute net worth.
+
+## Layout
+
+```
+backend/       NestJS (hexagonal: domain/ application/ infrastructure/ presentation/)
+front/         Astro 6 + React 19 + Tailwind v4 (Zustand + react-query)
+src-tauri/     Tauri v2 desktop shell (Rust); spawns backend (port 3456) + front (port 4321)
+docs/          Astro Starlight docs site (Markdown-first)
+scripts/       Repo-wide Node scripts (version.mjs, sync-readme.mjs, tauri-*.sh)
+issues/        Lightweight in-tree tracker for deferred work
+.bruno/Strata/ Bruno API request collection
+```
+
+All TypeScript packages use `nodenext` module resolution — **relative imports must include `.js`** (Jest `moduleNameMapper` strips it for tests).
 
 ## Build & Test
 
-All commands run from `backend/`:
-
 ```bash
-# Local dev
-poetry install
-export DATABASE_URL="sqlite://$(pwd)/.data/strata.db"
-poetry run alembic -c alembic/alembic.ini upgrade head
-poetry run uvicorn app.main:app --reload --port 8000
-# Swagger UI at http://127.0.0.1:8000/swagger
+# Backend (cd backend)
+npm install
+npm run start:dev           # ts-node + watch on :3000
+npm test                    # Jest unit (~69 tests)
+npm run test:e2e            # Jest e2e under test/  (~48 tests)
+npm run lint:ci             # zero-error gate
+npx prisma migrate dev --name <change>   # after schema.prisma edit
 
-# Docker (from repo root)
-docker-compose up --build
+# Frontend (cd front)
+npm install
+npm run dev                 # Astro on :4321
+npm test                    # Vitest (~65 tests)
+npm run test:e2e            # Playwright e2e
+npm run build               # SSR via @astrojs/node
 
-# Tests
-poetry run pytest -q                                          # full suite
-poetry run pytest tests/unit/app/adapters/incoming/ -q       # single directory
-poetry run pytest -k "test_create_asset" -q                  # single test by name
-poetry run pytest --cov=app --cov-report=term-missing        # with coverage
+# Docs (cd docs)
+npm install
+npm run dev                 # Starlight on :4321
+npm run build               # static → dist/
 
-# New migration (after SQLAlchemy model change)
-poetry run alembic revision --autogenerate -m "describe change"
-poetry run alembic upgrade head
+# Desktop (repo root)
+./scripts/tauri-dev.sh      # tauri dev (system Node required)
+./scripts/tauri-build.sh    # produces .app bundle
+
+# Docker (repo root, single compose with profile)
+docker compose up --build                  # dev profile (default)
+docker compose --profile prod up --build   # prod profile
 ```
-
-`pytest.ini` sets `testpaths = tests` so run pytest from `backend/`.
 
 ## Architecture
 
-The project uses **Hexagonal Architecture** with three strict layers:
+**Backend** uses hexagonal layering. **No framework imports allowed inside `domain/`**.
 
 ```
-domain/          ← Pure Python. No FastAPI, SQLAlchemy, or I/O. Entities use Pydantic BaseModel.
-application/     ← Use cases orchestrate domain logic. Input via Pydantic command/request DTOs.
-adapters/
-  incoming/api/  ← Thin FastAPI routes: parse request → call use case → map to response via ApiMapper
-  outgoing/      ← SQLAlchemy repository implementations, persistence mappers
+backend/src/
+  modules/<bounded-context>/
+    domain/         entities (plain TS), value objects, repository ports
+    application/    use cases (one class per use case, .execute())
+    infrastructure/ Prisma repositories implementing domain ports
+    presentation/   NestJS controllers, DTOs, swagger decorators
 ```
 
-**Domain layer is kept pure** — no framework imports inside `domain/`. Domain entities inherit `pydantic.BaseModel` with `model_config = ConfigDict(from_attributes=True)`.
+**DI pattern**: each module declares providers with `useClass`/`useFactory`; controllers depend on use case classes; use cases depend on repository ports (string token bound to Prisma impl).
 
-**Repository ports** (interfaces) live in `domain/ports/repository/` (e.g. `IAssetRepository`). SQLAlchemy implementations are in `adapters/outgoing/persistence/repository/` and are injected via FastAPI `Depends()` in `adapters/incoming/api/dependencies/`.
+**Validation layering** (apply in this order):
+1. Shape/types → class-validator on DTOs at the controller boundary
+2. Existence → use case checks via repositories
+3. Invariants → enforced in domain entity constructors / methods
+4. Integrity → Prisma constraints; catch `PrismaClientKnownRequestError`
 
-**Dependency injection flow**: `dependencies/{domain}.py` wires repositories → use cases → routes use `Depends(use_case_factory)`.
+**Error mapping**: domain exceptions live in `domain/exceptions/`; an `HttpExceptionFilter` (or per-domain filter) maps them to HTTP codes (typically 404 / 409 / 422).
 
-## Key Conventions
+**Frontend** keeps server state in `react-query` and ephemeral UI state in **Zustand** stores under `front/src/stores/`. SSR pages live in `front/src/pages/`; islands live in `front/src/components/`.
 
-**Use case pattern** — each use case is a class with `execute()`:
-```python
-class CreateAssetUseCase:
-    def __init__(self, asset_repo, portfolio_repo, asset_type_repo): ...
-    def execute(self, command: CreateAssetRequest) -> Asset: ...
-```
-Input is a Pydantic `BaseModel` command/request DTO defined in the same use case file.
+**Tauri** spawns the NestJS backend on `127.0.0.1:3456` and the Astro SSR front on `127.0.0.1:4321` as sidecars. SQLite lives in `~/Library/Application Support/Strata/strata.db` (prod) or `Strata-Dev/` (dev). System Node is required (bundling deferred — see `issues/bundle-node-runtime.md`).
 
-**Route pattern** — routes are static methods inside a class, returned via `get_router()`:
-```python
-class AssetRoutes:
-    @staticmethod
-    def get_router() -> APIRouter: ...
-```
-Registered in `main.py` with `app.include_router(..., prefix="/api/v1")`.
+## Versioning (single source of truth: git tag)
 
-**Validation is layered**:
-1. Shape/types → Pydantic schema (incoming adapter, `schemas/`)
-2. Existence checks → use case
-3. Business invariants → domain entity
-4. Data integrity → DB constraints / repository catches `IntegrityError`
+`scripts/version.mjs` runs `git describe --tags --dirty --always`:
+- `1.2.3` (clean tag) → **production**
+- anything with `-dirty`, `-g`, or `0.0.0-dev` fallback → **development**
 
-**Mappers** exist at two boundaries:
-- `adapters/incoming/api/mappers/api_mapper.py` — domain entity → API response schema
-- `adapters/outgoing/persistence/mappers/` — SQLAlchemy model ↔ domain entity
+Build steps embed the result into the backend (`/api/v1/version`), the frontend footer/About, and the Tauri window title. To release: `git tag vX.Y.Z && git push --tags`.
 
-**Exception handling**: Domain exceptions (e.g. `AssetNotFound`) are defined in `domain/exceptions/Exceptions.py` and mapped to HTTP 404 in `main.py` exception handlers. Add new domain exceptions there and register a handler.
+## Decimal precision (financial data)
 
-**Asset types** are a fixed reference list seeded via Alembic migration. Real codes in the DB: `CHECKING_ACCOUNT`, `SAVINGS_ACCOUNT`, `CASH`, `REAL_ESTATE`, `STOCKS`, `CRYPTO`, `BONDS`, `PERSONAL_PROPERTY`, `VEHICLE`, `LOAN`, `COLLECTIBLES`, `BUSINESS`, `OTHER`.
-
-## Testing Conventions
-
-Tests live in `backend/tests/`. Two suites:
-
-**Unit tests** (`tests/unit/`): zero real DB.
-- Route tests use `app.dependency_overrides` to inject fake use cases.
-- Use case tests use fake in-memory repositories backed by Python dicts (see `conftest.py` for `dummy_asset_repository`, `dummy_portfolio_repository`).
-
-**Integration tests** (`tests/integration/`): use a dedicated `sqlite:///:memory:` engine, call `Base.metadata.create_all(engine)` at setup, and override `get_db_session` via `app.dependency_overrides`. The production `strata.db` is never touched.
-
-When adding a use case, add a corresponding unit test in `tests/unit/app/` before touching adapters.
-
-## ORM vs Domain Entity Rule
-
-**Write use cases must construct ORM models directly** (never Pydantic domain entities) — `session.add()` requires SQLAlchemy ORM instances. See `CreatePortfolioUseCase` and `TakePortfolioSnapshotUseCase` as reference patterns. Example:
-
-```python
-from app.adapters.outgoing.persistence.models.asset import AssetModel
-new_asset = AssetModel(id=str(uuid4()), portfolio_id=str(command.portfolio_id), ...)
-return self.asset_repository.save(new_asset)
-```
-
-## Standard Error Responses
-
-All domain errors return a JSON body with `detail` (string). Domain exceptions (e.g. `AssetNotFound`, `CategoryNotFound`) are defined in `domain/exceptions/Exceptions.py` and mapped to HTTP 404 in `main.py` exception handlers. Add new domain exceptions there and register a handler.
-
-## Current API Endpoints
-
-All routes are under `/api/v1`:
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/portfolios/` | List all portfolios |
-| POST | `/portfolios/` | Create portfolio |
-| GET | `/portfolios/{portfolio_id}` | Get portfolio by ID |
-| DELETE | `/portfolios/{portfolio_id}` | Delete portfolio |
-| POST | `/portfolios/{portfolio_id}/snapshots` | Take portfolio snapshot |
-| GET | `/portfolios/{portfolio_id}/snapshots` | Get portfolio snapshots |
-| GET | `/assets/` | List all assets |
-| POST | `/assets/` | Create asset |
-| GET | `/assets/{asset_id}` | Get asset by ID |
-| PUT | `/assets/{asset_id}` | Update asset |
-| DELETE | `/assets/{asset_id}` | Delete asset |
-
-## Codebase Map
-
-| Concern | Path |
-|---------|------|
-| Domain entities | `backend/app/domain/entities/` |
-| Repository interfaces | `backend/app/domain/ports/repository/` |
-| Use cases | `backend/app/application/use_cases/{asset,portfolio,category,asset_snapshot,asset_type}/` |
-| HTTP routes | `backend/app/adapters/incoming/api/routes/` |
-| Pydantic schemas | `backend/app/adapters/incoming/api/schemas/` |
-| DI providers | `backend/app/adapters/incoming/api/dependencies/` |
-| API mapper | `backend/app/adapters/incoming/api/mappers/api_mapper.py` |
-| Persistence repos | `backend/app/adapters/outgoing/persistence/repository/` |
-| SQLAlchemy models | `backend/app/adapters/outgoing/persistence/models/` |
-| DB migrations | `backend/alembic/versions/` |
-| Tests | `backend/tests/unit/` (unit) · `backend/tests/integration/` (integration) |
-| App entry point | `backend/app/main.py` |
-
-## Config & Secrets
-
-- `DATABASE_URL` env var controls the DB. Defaults to `backend/.data/strata.db`.
-- Local overrides via `backend/.env` (loaded by `python-dotenv`). Never commit secrets.
-- Docker compose mounts `./backend/.data:/app/.data` for persistent SQLite.
-
-## Decimal Precision Conventions
-
-| Field type | SQLAlchemy | Python | Rationale |
+| Field type | Prisma | TS | Why |
 |---|---|---|---|
-| Monetary amounts (snapshot values, net worth) | `Numeric(20, 2)` | `Decimal` | Standard EUR/USD — 2 decimal places |
-| Asset quantities | `Numeric(20, 8)` | `Decimal` | Bitcoin satoshi precision (0.00000001 BTC) |
+| Monetary amounts | `Decimal @db.Decimal(20, 2)` | `Prisma.Decimal` | EUR/USD precision |
+| Asset quantities | `Decimal @db.Decimal(20, 8)` | `Prisma.Decimal` | BTC satoshi precision |
 
-**Rule:** Never use `float` for financial data. Always use `Decimal` / `Numeric`.
+**Never use `number`/`float` for money.** Convert to/from `Decimal` at the persistence boundary.
 
----
-For deep-dive docs: `.github/PRD.md` · `docs/` (live at https://strata.ducatillon.net/docs/)
+## Testing conventions
+
+- **Unit tests** (`*.spec.ts` next to source): no real DB; mock repositories with `jest-mock-extended` or hand-written fakes.
+- **E2E tests** (`backend/test/*.e2e-spec.ts`): full Nest app + an in-memory SQLite via Prisma; reset between tests; `app.dependency_overrides`-style overrides via `Test.createTestingModule({...}).overrideProvider(TOKEN)`.
+- **Frontend e2e**: Playwright; Vitest config in `vitest.config.ts`.
+
+## Endpoints (under `/api/v1`)
+
+| Method | Path |
+|---|---|
+| GET/POST | `/portfolios` |
+| GET/DELETE | `/portfolios/:id` |
+| GET/POST | `/portfolios/:id/snapshots` |
+| GET/POST | `/assets` |
+| GET/PUT/DELETE | `/assets/:id` |
+| GET | `/health` |
+| GET | `/version` |
+
+Use the Bruno collection at `.bruno/Strata/` for ready-to-run requests.
+
+## Config
+
+- `DATABASE_URL` controls the DB (defaults to `backend/prisma/dev.db` in dev, `~/Library/Application Support/Strata*/strata.db` in the desktop app).
+- `backend/.env` for local overrides (loaded by NestJS `ConfigModule`). Never commit secrets.
+- Docker compose mounts a host volume for SQLite persistence in both profiles.
+
+## Doc map
+
+- Live docs: <https://strata.ducatillon.net/docs/>
+- Source: `docs/src/content/docs/*.md`
+- Recovery / backup playbooks: `Recovery.md`, `Backup.md`
+- Versioning philosophy: `Versioning.md`
+- Desktop app deep-dive: `DesktopApp.md`

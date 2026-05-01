@@ -5,10 +5,9 @@
  * (endpoint not yet deployed), falls back to assembling a JSON bundle from
  * the existing per-resource endpoints. Either way, downloads the result.
  */
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   backupApi,
-  portfolioApi,
   assetApi,
   categoryApi,
   tagApi,
@@ -32,8 +31,7 @@ function downloadJson(payload: unknown, filename: string): void {
 }
 
 async function assembleBackupFromResources(): Promise<BackupPayload> {
-  const [portfolios, assets, categories, tags, assetTypes] = await Promise.all([
-    portfolioApi.getAll(),
+  const [assets, categories, tags, assetTypes] = await Promise.all([
     assetApi.getAll(),
     categoryApi.getAll(),
     tagApi.getAll(),
@@ -42,7 +40,7 @@ async function assembleBackupFromResources(): Promise<BackupPayload> {
   return {
     version: '1.0',
     exportedAt: new Date().toISOString(),
-    data: { portfolios, assets, categories, tags, assetTypes },
+    data: { assets, categories, tags, assetTypes },
   };
 }
 
@@ -51,6 +49,13 @@ export function useBackupExport(): {
   exportNow: () => Promise<void>;
 } {
   const [status, setStatus] = useState<ExportStatus>('idle');
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const exportNow = async (): Promise<void> => {
     setStatus('loading');
@@ -62,7 +67,8 @@ export function useBackupExport(): {
     } catch {
       setStatus('error');
     } finally {
-      setTimeout(() => setStatus('idle'), 3000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setStatus('idle'), 3000);
     }
   };
 

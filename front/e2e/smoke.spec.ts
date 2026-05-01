@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Strata Smoke Tests', () => {
   test('homepage loads dashboard', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('text=Dashboard')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
   });
 
   test('navigation links exist', async ({ page }) => {
@@ -17,26 +17,26 @@ test.describe('Strata Smoke Tests', () => {
 
   test('can navigate to portfolios page', async ({ page }) => {
     await page.goto('/portfolios');
-    await expect(page.locator('text=Portfolios')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Portfolios', level: 1 })).toBeVisible();
   });
 
   test('can navigate to assets page', async ({ page }) => {
     await page.goto('/assets');
-    await expect(page.locator('text=Assets')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Assets', level: 1 })).toBeVisible();
   });
 
   test('can navigate to categories page', async ({ page }) => {
     await page.goto('/categories');
-    await expect(page.locator('text=Categories')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Categories', level: 1 })).toBeVisible();
   });
 
   test('can navigate to tags page', async ({ page }) => {
     await page.goto('/tags');
-    await expect(page.locator('text=Tags')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tags', level: 1 })).toBeVisible();
   });
 
   test('can navigate to settings page', async ({ page }) => {
     await page.goto('/settings');
-    await expect(page.locator('text=Settings')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
   });
 });

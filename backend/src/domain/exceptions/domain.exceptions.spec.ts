@@ -1,6 +1,6 @@
 import {
   AssetNotFoundException,
-  PortfolioNotFoundException,
+  PortfolioSnapshotNotFoundException,
   CategoryNotFoundException,
   TagNotFoundException,
   AssetTypeNotFoundException,
@@ -11,7 +11,7 @@ import {
 describe('Domain Exceptions', () => {
   const cases: Array<[string, new (msg: string) => Error]> = [
     ['AssetNotFoundException', AssetNotFoundException],
-    ['PortfolioNotFoundException', PortfolioNotFoundException],
+    ['PortfolioSnapshotNotFoundException', PortfolioSnapshotNotFoundException],
     ['CategoryNotFoundException', CategoryNotFoundException],
     ['TagNotFoundException', TagNotFoundException],
     ['AssetTypeNotFoundException', AssetTypeNotFoundException],

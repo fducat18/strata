@@ -118,30 +118,34 @@ Positive assets increase it; liabilities (LOAN, MORTGAGE) have negative values a
 
 | Area | Decision |
 |------|----------|
-| **Language** | Python 3.12 |
-| **Framework** | FastAPI + Pydantic (validation) |
-| **ORM** | SQLAlchemy |
-| **Migrations** | Alembic |
-| **Database** | SQLite (default); PostgreSQL-ready |
-| **Dependency mgmt** | Poetry |
+| **Backend language** | TypeScript (Node 22) |
+| **Backend framework** | NestJS + class-validator |
+| **ORM** | Prisma |
+| **Migrations** | Prisma Migrate |
+| **Database** | SQLite (default); Prisma supports PostgreSQL/MySQL |
+| **Dependency mgmt** | npm |
 | **Architecture** | Hexagonal (Ports & Adapters) + DDD |
-| **Server** | Uvicorn (ASGI) |
-| **Container** | Docker / Docker Compose |
+| **Frontend** | Astro 6 + React 19 + Tailwind v4 (SSR via @astrojs/node) |
+| **Desktop** | Tauri v2 (Rust shell, Node sidecars) |
+| **Docs site** | Astro Starlight (static) |
+| **Container** | Docker / Docker Compose (single file, profiles) |
+| **Versioning** | git tag (`git describe --tags --dirty`) |
 
 ---
 
 ## 8. Architecture Rules (for agents modifying code)
 
-1. **Domain layer is pure** — no FastAPI, SQLAlchemy, or I/O imports inside `domain/`.
-2. **Use cases orchestrate** — business logic lives in `application/use_cases/`, not in routes.
-3. **Adapters are thin** — routes parse request → call use case → map result to response.
+1. **Domain layer is pure** — no NestJS, Prisma, or I/O imports inside `domain/`.
+2. **Use cases orchestrate** — business logic lives in `application/`, not in controllers.
+3. **Adapters are thin** — controllers parse request → call use case → map result to response.
 4. **Validation is layered**:
-   - Shape / types → Pydantic schema (incoming adapter)
+   - Shape / types → class-validator DTOs (presentation layer)
    - Existence checks → use case
-   - Business invariants → domain entity (`__post_init__`)
-   - Data integrity → DB constraints / repository catches `IntegrityError`
-5. **Schema changes** require an Alembic migration in `alembic/versions/`.
+   - Business invariants → domain entity constructors / methods
+   - Data integrity → Prisma constraints; catch `PrismaClientKnownRequestError`
+5. **Schema changes** require a Prisma migration (`npx prisma migrate dev --name <change>`).
 6. **Never hardcode secrets** — use environment variables / `.env`.
+7. **Imports use `.js` extensions** — `nodenext` module resolution (Jest config strips for tests).
 
 ---
 
@@ -149,16 +153,19 @@ Positive assets increase it; liabilities (LOAN, MORTGAGE) have negative values a
 
 | Concern | Path |
 |---------|------|
-| Domain entities | `backend/app/domain/entities/` |
-| Repository interfaces (ports) | `backend/app/domain/ports/repository/` |
-| Use cases | `backend/app/application/use_cases/{asset,portfolio,category,asset_snapshot,asset_type}/` |
-| HTTP routes | `backend/app/adapters/incoming/api/routes/` |
-| Pydantic schemas | `backend/app/adapters/incoming/api/schemas/` |
-| Persistence (SQLAlchemy) | `backend/app/adapters/outgoing/persistence/` |
-| DB migrations | `backend/alembic/versions/` |
-| Tests | `backend/tests/unit/` |
-| App entry point | `backend/app/main.py` |
-| CLI helpers | `backend/app/cli.py` |
+| Domain entities | `backend/src/modules/<context>/domain/` |
+| Repository ports | `backend/src/modules/<context>/domain/ports/` |
+| Use cases | `backend/src/modules/<context>/application/` |
+| Controllers / DTOs | `backend/src/modules/<context>/presentation/` |
+| Persistence (Prisma) | `backend/src/modules/<context>/infrastructure/` |
+| Prisma schema | `backend/prisma/schema.prisma` |
+| DB migrations | `backend/prisma/migrations/` |
+| Unit tests | next to source (`*.spec.ts`) |
+| E2E tests | `backend/test/*.e2e-spec.ts` |
+| App entry | `backend/src/main.ts` |
+| Frontend | `front/src/` (pages, components, stores, lib) |
+| Desktop shell | `src-tauri/src/lib.rs` |
+| Docs site | `docs/src/content/docs/*.md` |
 
 **Entities:** `Portfolio` · `Asset` · `AssetType` · `AssetSnapshot` · `PortfolioSnapshot` · `Transaction` · `Category` · `Tag`
 
@@ -168,19 +175,20 @@ Positive assets increase it; liabilities (LOAN, MORTGAGE) have negative values a
 
 ## 10. API Surface (current)
 
-Base URL: `http://localhost:8000`  
-Swagger UI: `http://localhost:8000/swagger`
+Base URL: `http://localhost:3000/api/v1`  
+Swagger UI: `http://localhost:3000/swagger` (dev profile only)
 
-| Domain | Route file |
+| Domain | Controller |
 |--------|-----------|
-| Assets | `adapters/incoming/api/routes/asset_routes.py` |
-| Portfolios | `adapters/incoming/api/routes/portfolio_routes.py` |
+| Assets | `backend/src/modules/asset/presentation/asset.controller.ts` |
+| Portfolios | `backend/src/modules/portfolio/presentation/portfolio.controller.ts` |
+| Health / Version | `backend/src/modules/system/presentation/` |
 
 ---
 
 ## 11. Data Model Quick Reference
 
-See [DataModel.md](../docs/docs/DataModel.md) for ER and class diagrams.
+See [datamodel.md](../docs/src/content/docs/datamodel.md) for ER and class diagrams.
 
 Key relationships:
 - `Portfolio` 1→N `Asset`
@@ -196,22 +204,31 @@ Key relationships:
 ## 12. Dev Commands
 
 ```bash
-# Run with Docker (recommended)
-docker-compose up
+# Docker (single compose, profiles)
+docker compose up --build                   # dev profile (default)
+docker compose --profile prod up --build    # prod profile
 
-# Run locally
-cd backend
-poetry install
-poetry run alembic upgrade head
-poetry run uvicorn app.main:app --reload --port 8000
+# Backend locally (cd backend)
+npm install
+npx prisma migrate dev
+npm run start:dev      # :3000
 
-# Tests
-poetry run pytest -q
-poetry run pytest --cov=app --cov-report=term-missing
+# Backend tests
+npm test               # unit
+npm run test:e2e       # e2e
+npm run lint:ci        # zero-error gate
 
-# New migration (after model change)
-poetry run alembic revision --autogenerate -m "describe change"
-poetry run alembic upgrade head
+# Schema changes
+npx prisma migrate dev --name <describe-change>
+
+# Frontend (cd front)
+npm install && npm run dev   # :4321
+npm test                     # Vitest
+npm run test:e2e             # Playwright
+
+# Desktop (repo root)
+./scripts/tauri-dev.sh       # dev with hot reload
+./scripts/tauri-build.sh     # produce .app
 ```
 
 ---
@@ -220,12 +237,13 @@ poetry run alembic upgrade head
 
 When implementing or modifying a feature, verify:
 
-- [ ] Domain entity stays pure (no framework imports)
-- [ ] Use case has a corresponding unit test in `tests/unit/`
-- [ ] Route is thin (parse → use case → response)
-- [ ] Pydantic schema validates input shape at the adapter boundary
-- [ ] Any DB schema change has an Alembic migration
-- [ ] `poetry run pytest -q` passes with no regressions
+- [ ] Domain entity stays pure (no NestJS / Prisma imports)
+- [ ] Use case has a corresponding `*.spec.ts` unit test
+- [ ] Controller is thin (parse → use case → response)
+- [ ] DTO with class-validator validates input at the boundary
+- [ ] Any DB schema change has a Prisma migration
+- [ ] `npm test`, `npm run test:e2e`, and `npm run lint:ci` pass
+- [ ] Frontend `npm test` + `npm run test:e2e` pass when UI changed
 - [ ] No secrets committed
 
 ---

@@ -1,12 +1,31 @@
+# Strata — single Docker Compose file
+#
+# Two flavours, controlled by env vars (set via the npm shortcuts below):
+#
+#   npm run docker:dev   → development (Swagger on, NODE_ENV=development)
+#   npm run docker:prod  → production  (Swagger off, NODE_ENV=production,
+#                                       restart=always)
+#
+# Equivalent raw commands:
+#   docker-compose up --build
+#   NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always \
+#     docker-compose up --build
+#
+# All overrides go through env interpolation so we keep ONE compose file.
+# Resource caps (mem_limit / cpus) are intentionally not set here; add them
+# locally if you run this on a constrained host.
+
 services:
   backend:
     build: ./backend
     container_name: strata-backend
-    restart: unless-stopped
+    restart: ${RESTART_POLICY:-unless-stopped}
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=file:/app/.data/strata.db
+      - DATABASE_URL=file:/app/.data/${DB_FILE:-strata-dev.db}
+      - NODE_ENV=${NODE_ENV:-development}
+      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
     volumes:
       # Bind-mount for local dev. If the non-root container user can't write,
       # run: chmod 777 backend/.data (or chown to UID 1000).
@@ -17,20 +36,18 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    command: >
-      sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"
 
   front:
     build:
       context: ./front
       args:
-        PUBLIC_API_URL: http://backend:3000/api/v1
+        PUBLIC_API_URL: http://localhost:3000/api/v1
     container_name: strata-front
-    restart: unless-stopped
+    restart: ${RESTART_POLICY:-unless-stopped}
     ports:
       - "4321:4321"
     environment:
-      - PUBLIC_API_URL=http://backend:3000/api/v1
+      - NODE_ENV=${NODE_ENV:-development}
     depends_on:
       backend:
         condition: service_healthy
@@ -39,11 +56,11 @@ services:
     build:
       context: ./docs
     container_name: strata-docs
-    restart: unless-stopped
+    restart: ${RESTART_POLICY:-unless-stopped}
     ports:
-      - "8001:8000"
+      - "8001:8001"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8001/docs/"]
       interval: 30s
       timeout: 5s
       retries: 3

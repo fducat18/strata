@@ -6,7 +6,13 @@ import { test, expect } from '@playwright/test';
 test.describe('Theme', () => {
   test('cycle and persist across reload', async ({ page }) => {
     await page.goto('/settings');
-    await page.getByRole('button', { name: /Use Dark theme/i }).click();
+    // Ensure the theme island is fully hydrated before clicking — otherwise
+    // the click can land on the SSR'd HTML before React attaches handlers.
+    const darkBtn = page.getByRole('button', { name: /Use Dark theme/i });
+    await expect(darkBtn).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await darkBtn.click();
+    await expect(darkBtn).toHaveAttribute('aria-pressed', 'true');
     await expect.poll(async () => {
       return await page.evaluate(() => document.documentElement.classList.contains('dark'));
     }).toBe(true);
@@ -17,6 +23,9 @@ test.describe('Theme', () => {
     }).toBe(true);
 
     // restore
-    await page.getByRole('button', { name: /Use Light theme/i }).click();
+    const lightBtn = page.getByRole('button', { name: /Use Light theme/i });
+    await expect(lightBtn).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await lightBtn.click();
   });
 });

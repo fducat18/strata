@@ -1,12 +1,15 @@
 import { PortfolioSnapshot } from '../entities/portfolio-snapshot.entity';
 
 export interface CreatePortfolioSnapshotData {
-  portfolioId: string;
   value: string;
+  currency?: string;
+  notes?: string;
   observedAt: Date;
 }
 
 export abstract class IPortfolioSnapshotRepository {
   abstract save(data: CreatePortfolioSnapshotData): Promise<PortfolioSnapshot>;
-  abstract findByPortfolio(portfolioId: string): Promise<PortfolioSnapshot[]>;
+  abstract findAll(): Promise<PortfolioSnapshot[]>;
+  abstract findById(id: string): Promise<PortfolioSnapshot | null>;
+  abstract delete(id: string): Promise<void>;
 }

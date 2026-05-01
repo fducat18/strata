@@ -10,7 +10,6 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
   dto.name = asset.name;
   dto.quantity = asset.quantity ? asset.quantity.toString() : null;
   dto.disposed = asset.disposed;
-  dto.portfolioId = asset.portfolioId;
   dto.assetTypeId = asset.assetTypeId;
   dto.createdAt = asset.createdAt.toISOString();
   dto.updatedAt = asset.updatedAt.toISOString();
@@ -19,13 +18,6 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
         id: asset.assetType.id,
         code: asset.assetType.code,
         label: asset.assetType.label,
-      }
-    : null;
-  dto.portfolio = asset.portfolio
-    ? {
-        id: asset.portfolio.id,
-        name: asset.portfolio.name,
-        baseCurrency: asset.portfolio.baseCurrency,
       }
     : null;
   dto.categories = (asset.categories ?? []).map((c) => ({

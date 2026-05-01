@@ -74,9 +74,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
 
-      - run: pip install mkdocs-material pymdown-extensions
-      - run: mkdocs build
+      - run: npm ci
+      - run: npm run build

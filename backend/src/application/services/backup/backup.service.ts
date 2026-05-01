@@ -10,7 +10,6 @@ import { Decimal } from 'decimal.js';
  *   exportedAt: <ISO timestamp>,
  *   data: {
  *     assetTypes:         AssetType[],
- *     portfolios:         Portfolio[],
  *     categories:         Category[],
  *     tags:               Tag[],
  *     assets:             Asset[],
@@ -24,6 +23,7 @@ import { Decimal } from 'decimal.js';
  *
  * All `Decimal` values are serialized as decimal strings (no scientific notation).
  * `Date` values are serialized as ISO 8601.
+ * Note: `portfolioSnapshots` are standalone (no portfolioId FK).
  */
 export const BACKUP_SCHEMA_VERSION = '1';
 
@@ -35,7 +35,6 @@ export interface BackupPayload {
 
 export interface BackupData {
   assetTypes: any[];
-  portfolios: any[];
   categories: any[];
   tags: any[];
   assets: any[];
@@ -74,7 +73,6 @@ export class BackupService {
   private async collectAll(): Promise<BackupData> {
     const [
       assetTypes,
-      portfolios,
       categories,
       tags,
       assets,
@@ -85,7 +83,6 @@ export class BackupService {
       tagsOnAssets,
     ] = await Promise.all([
       this.prisma.assetType.findMany(),
-      this.prisma.portfolio.findMany(),
       this.prisma.category.findMany(),
       this.prisma.tag.findMany(),
       this.prisma.asset.findMany(),
@@ -97,7 +94,6 @@ export class BackupService {
     ]);
     return {
       assetTypes,
-      portfolios,
       categories,
       tags,
       assets,
@@ -159,7 +155,6 @@ export class BackupService {
   private coerceData(raw: any): BackupData {
     const empty: BackupData = {
       assetTypes: [],
-      portfolios: [],
       categories: [],
       tags: [],
       assets: [],
@@ -188,7 +183,6 @@ export class BackupService {
     // Categories may self-reference via parentId; delete leaves first.
     await tx.category.deleteMany({ where: { parentId: { not: null } } });
     await tx.category.deleteMany({});
-    await tx.portfolio.deleteMany({});
     await tx.assetType.deleteMany({});
   }
 
@@ -198,7 +192,6 @@ export class BackupService {
   ): Promise<Record<keyof BackupData, number>> {
     const counts: Record<keyof BackupData, number> = {
       assetTypes: await this.upsertAll(tx.assetType, data.assetTypes, 'id'),
-      portfolios: await this.upsertAll(tx.portfolio, data.portfolios, 'id'),
       categories: await this.upsertCategories(tx, data.categories),
       tags: await this.upsertAll(tx.tag, data.tags, 'id'),
       assets: await this.upsertAll(tx.asset, data.assets, 'id'),

@@ -1,9 +1,9 @@
 export {
   AssetNotFoundException,
-  PortfolioNotFoundException,
   CategoryNotFoundException,
   TagNotFoundException,
   AssetTypeNotFoundException,
+  PortfolioSnapshotNotFoundException,
   DuplicateNameException,
   CategoryHasChildrenException,
 } from './domain.exceptions';
