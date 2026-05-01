@@ -9,7 +9,6 @@ import { createIsolatedE2EApp, E2ETestContext } from './helpers/e2e-setup.js';
  */
 describe('Admin backup/restore (e2e)', () => {
   let ctx: E2ETestContext;
-  let portfolioId: string;
   let assetTypeId: string;
   let assetId: string;
   let snapshotId: string;
@@ -23,17 +22,10 @@ describe('Admin backup/restore (e2e)', () => {
     const types = await request(http).get('/api/v1/asset-types').expect(200);
     assetTypeId = types.body[0].id;
 
-    const portfolio = await request(http)
-      .post('/api/v1/portfolios')
-      .send({ name: 'Backup-Roundtrip', baseCurrency: 'EUR' })
-      .expect(201);
-    portfolioId = portfolio.body.id;
-
     const asset = await request(http)
       .post('/api/v1/assets')
       .send({
         name: 'Backup Asset',
-        portfolioId,
         assetTypeId,
         quantity: '0.12345678',
       })
@@ -69,7 +61,6 @@ describe('Admin backup/restore (e2e)', () => {
       .expect(200);
     const payload = exportRes.body;
     expect(payload.schemaVersion).toBe('1');
-    expect(payload.data.portfolios.length).toBeGreaterThanOrEqual(1);
     expect(payload.data.assets.length).toBeGreaterThanOrEqual(1);
 
     // Wipe by sending a replace-restore with empty data.
@@ -78,8 +69,8 @@ describe('Admin backup/restore (e2e)', () => {
       .send({ schemaVersion: '1', data: {}, mode: 'replace' })
       .expect(201);
 
-    // Confirm wipe.
-    const empty = await request(http).get('/api/v1/portfolios').expect(200);
+    // Confirm wipe — assets should be empty.
+    const empty = await request(http).get('/api/v1/assets').expect(200);
     expect(empty.body).toEqual([]);
 
     // Restore from the captured payload.
@@ -91,16 +82,10 @@ describe('Admin backup/restore (e2e)', () => {
         mode: 'replace',
       })
       .expect(201);
-    expect(restore.body.counts.portfolios).toBeGreaterThanOrEqual(1);
     expect(restore.body.counts.assets).toBeGreaterThanOrEqual(1);
     expect(restore.body.counts.tagsOnAssets).toBeGreaterThanOrEqual(1);
 
     // Re-fetch and verify identifiers + decimal precision survived.
-    const portfolio = await request(http)
-      .get(`/api/v1/portfolios/${portfolioId}`)
-      .expect(200);
-    expect(portfolio.body.name).toBe('Backup-Roundtrip');
-
     const asset = await request(http)
       .get(`/api/v1/assets/${assetId}`)
       .expect(200);

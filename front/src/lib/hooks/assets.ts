@@ -8,10 +8,10 @@ import type {
   CreateSnapshotRequest,
 } from '../types';
 
-export function useAssets(portfolioId?: string) {
+export function useAssets() {
   return useQuery({
-    queryKey: queryKeys.assets(portfolioId),
-    queryFn: () => assetApi.getAll(portfolioId),
+    queryKey: queryKeys.assets(),
+    queryFn: () => assetApi.getAll(),
   });
 }
 

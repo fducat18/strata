@@ -38,6 +38,7 @@ import { AdminController } from './presentation/controllers/admin.controller.js'
 import {
   DomainExceptionFilter,
   PrismaExceptionFilter,
+  PrismaValidationExceptionFilter,
 } from './presentation/filters/index.js';
 import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware.js';
 
@@ -80,6 +81,7 @@ import { RequestIdMiddleware } from './infrastructure/middleware/request-id.midd
 
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: PrismaExceptionFilter },
+    { provide: APP_FILTER, useClass: PrismaValidationExceptionFilter },
     { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],
 })

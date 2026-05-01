@@ -38,7 +38,7 @@ export function AssetValueChart({ snapshots }: Props) {
             <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-fg)" />
             <Tooltip
               contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border-color)', borderRadius: '0.375rem' }}
-              formatter={(value: number) => [formatMoney(value, { currency, locale }), 'Value']}
+              formatter={(value) => [formatMoney(Number(value ?? 0), { currency, locale }), 'Value']}
             />
             <Area type="monotone" dataKey="value" stroke="var(--chart-2)" fillOpacity={1} fill="url(#assetGrad)" />
           </AreaChart>

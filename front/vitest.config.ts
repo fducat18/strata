@@ -34,7 +34,6 @@ export default defineConfig({
         'src/lib/types.ts',
         'src/components/assets/AssetDetailPage.tsx',
         'src/components/assets/AssetEditDialog.tsx',
-        'src/components/portfolios/PortfolioDetailPage.tsx',
         'src/components/settings/BackupSection.tsx',
         'src/components/settings/useBackupExport.ts',
         'src/components/settings/useBackupImport.ts',

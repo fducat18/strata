@@ -55,13 +55,7 @@ describe('useAssets', () => {
     const { result } = renderHook(() => useAssets(), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([mockAsset]);
-  });
-
-  it('fetches assets for a portfolio', async () => {
-    mockAssetApi.getAll.mockResolvedValue([mockAsset]);
-    const { result } = renderHook(() => useAssets('p1'), { wrapper: createWrapper() });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockAssetApi.getAll).toHaveBeenCalledWith('p1');
+    expect(mockAssetApi.getAll).toHaveBeenCalledWith();
   });
 });
 
@@ -85,7 +79,7 @@ describe('useAssetSnapshots', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('fetches asset snapshots', async () => {
-    const snapshots = [{ id: 's1', assetId: 'a1', value: '500' }];
+    const snapshots = [{ id: 's1', assetId: 'a1', value: '500', observedAt: '2024-01-01T00:00:00Z', createdAt: '2024-01-01T00:00:00Z' }];
     mockAssetApi.getSnapshots.mockResolvedValue(snapshots);
     const { result } = renderHook(() => useAssetSnapshots('a1'), { wrapper: createWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -146,7 +140,7 @@ describe('useCreateAssetSnapshot', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('creates a snapshot', async () => {
-    const snapshot = { id: 's1', assetId: 'a1', value: '500' };
+    const snapshot = { id: 's1', assetId: 'a1', value: '500', observedAt: '2024-01-01T00:00:00Z', createdAt: '2024-01-01T00:00:00Z' };
     mockAssetApi.createSnapshot.mockResolvedValue(snapshot);
     mockAssetApi.getAll.mockResolvedValue([]);
     const { result } = renderHook(() => useCreateAssetSnapshot(), { wrapper: createWrapper() });

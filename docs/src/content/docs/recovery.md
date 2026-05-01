@@ -19,7 +19,7 @@ git clone https://github.com/francoiducat/strata.git
 cd strata
 ```
 
-Make sure your tooling is installed (Node 20+, npm, optionally Docker
+Make sure your tooling is installed (Node 22+, npm, optionally Docker
 Desktop, optionally Rust + Tauri CLI for the desktop app).
 
 ---
@@ -93,9 +93,9 @@ the entire restore in a single transaction.
 
 After any restore:
 
-- `curl /api/v1/assets | jq length` → expected asset count
-- `curl /api/v1/portfolio-snapshots | jq length` → expected snapshot count
-- `curl /api/v1/version` → confirms which build is running
+- `curl -s http://localhost:3000/api/v1/assets | jq length` → expected asset count
+- `curl -s http://localhost:3000/api/v1/portfolio-snapshots | jq length` → expected snapshot count
+- `curl -s http://localhost:3000/api/v1/version` → confirms which build is running
 - Open dashboard → snapshot timeline + allocation chart render
 
 ---

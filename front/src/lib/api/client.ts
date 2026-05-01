@@ -36,7 +36,7 @@ export function createApiClient(): AxiosInstance {
   });
   client.interceptors.response.use(
     (r) => r,
-    (err: AxiosError) => Promise.reject(normalizeError(err))
+    (err: AxiosError<{ message?: string; code?: string; requestId?: string }>) => Promise.reject(normalizeError(err))
   );
   return client;
 }

@@ -5,8 +5,8 @@
 export const ERROR_RESPONSE_EXAMPLE = {
   statusCode: 404,
   status: 404,
-  code: 'PORTFOLIO_NOT_FOUND',
-  message: 'Portfolio 00000000-0000-0000-0000-000000000000 not found',
+  code: 'PORTFOLIO_SNAPSHOT_NOT_FOUND',
+  message: 'Portfolio snapshot 00000000-0000-0000-0000-000000000000 not found',
   error: 'Not Found',
   requestId: '7ed1c4f8-...',
   timestamp: '2025-01-01T12:00:00.000Z',

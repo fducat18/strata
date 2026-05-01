@@ -10,11 +10,11 @@ Strata follows **Hexagonal Architecture** (Ports & Adapters) with four layers.
 ```
 backend/src/
 ├── domain/              ← Pure TypeScript — no framework imports
-│   ├── entities/        ← Business entities (Portfolio, Asset, etc.)
+│   ├── entities/        ← Business entities (Asset, AssetSnapshot, PortfolioSnapshot, Category, Tag, AssetType)
 │   ├── ports/           ← Repository interfaces (abstract classes)
 │   └── exceptions/      ← Domain-specific exceptions
 ├── application/         ← Use cases as @Injectable() services
-│   └── services/        ← PortfolioService, AssetService, etc.
+│   └── services/        ← AssetService, AssetSnapshotService, PortfolioSnapshotService, CategoryService, TagService, AssetTypeService
 ├── infrastructure/      ← Framework & persistence implementations
 │   ├── prisma/          ← PrismaService, PrismaModule
 │   └── repositories/    ← Prisma repository implementations
@@ -34,30 +34,9 @@ backend/src/
 | Infrastructure | Domain, Application | Presentation |
 | Presentation | Domain, Application | Infrastructure (via DI) |
 
-## API Endpoints
+## API Reference
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/assets` | List all assets |
-| POST | `/api/v1/assets` | Create asset |
-| GET | `/api/v1/assets/:id` | Get asset by ID |
-| PUT | `/api/v1/assets/:id` | Update asset |
-| DELETE | `/api/v1/assets/:id` | Delete asset |
-| GET | `/api/v1/asset-snapshots` | List asset snapshots |
-| POST | `/api/v1/asset-snapshots` | Create asset snapshot |
-| DELETE | `/api/v1/asset-snapshots/:id` | Delete asset snapshot |
-| GET | `/api/v1/portfolio-snapshots` | List all portfolio snapshots |
-| GET | `/api/v1/portfolio-snapshots/current-value` | Compute current net worth |
-| POST | `/api/v1/portfolio-snapshots` | Create snapshot (auto-computes value if omitted) |
-| DELETE | `/api/v1/portfolio-snapshots/:id` | Delete portfolio snapshot |
-| GET | `/api/v1/categories` | List categories |
-| POST | `/api/v1/categories` | Create category |
-| GET | `/api/v1/tags` | List tags |
-| POST | `/api/v1/tags` | Create tag |
-| GET | `/api/v1/admin/backup` | Export full backup (JSON) |
-| POST | `/api/v1/admin/restore` | Restore from backup |
-
-Swagger UI (dev only): `http://localhost:3000/swagger`
+See the live Swagger UI for the full API reference. It is available at `http://localhost:3000/swagger` when running in Docker mode, and `http://localhost:3456/swagger` when running as the desktop app. Swagger is automatically enabled in development mode and disabled in production builds.
 
 > **Note:** `PUBLIC_API_URL` is a **build-time argument** (not a runtime env var). It is baked into the frontend at `npm run build` time. Rebuild the frontend if the API URL changes.
 

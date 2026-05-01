@@ -45,17 +45,6 @@ export interface PortfolioSnapshot {
   createdAt: string;
 }
 
-export interface Transaction {
-  id: string;
-  assetId: string;
-  type: 'ACQUIRE' | 'DISPOSE' | 'ADJUST';
-  unitPrice: string;
-  quantity: string;
-  currency: string;
-  occurredAt: string;
-  createdAt: string;
-}
-
 // Request types
 export interface CreateAssetRequest {
   name: string;

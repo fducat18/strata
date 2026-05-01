@@ -63,14 +63,3 @@ export const useThemeStore = create<ThemeState>()((set) => ({
 export const useTheme = (): Theme => useThemeStore((s) => s.theme);
 export const useSetTheme = (): ((t: Theme) => void) =>
   useThemeStore((s) => s.setTheme);
-
-export function initThemeFromStorage(): void {
-  if (typeof window === 'undefined') return;
-  const current = useThemeStore.getState().theme;
-  applyThemeToDom(current);
-  if (current === 'system') {
-    window
-      .matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', () => applyThemeToDom('system'));
-  }
-}

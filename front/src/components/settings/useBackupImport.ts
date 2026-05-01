@@ -5,6 +5,7 @@
  * counts before the user commits.
  */
 import { useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { backupApi, type ApiError } from '@/lib/api';
 import { useBackupStore, type ParsedBackup } from '@/stores/backupStore';
 
@@ -17,6 +18,7 @@ function isParsedBackup(value: unknown): value is ParsedBackup {
 export function useBackupImport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const store = useBackupStore();
+  const queryClient = useQueryClient();
 
   const openPicker = () => fileInputRef.current?.click();
 
@@ -45,6 +47,7 @@ export function useBackupImport() {
     store.startConfirming();
     try {
       await backupApi.restore(store.parsed);
+      await queryClient.invalidateQueries();
       store.setDone();
     } catch (err) {
       const apiErr = err as ApiError;

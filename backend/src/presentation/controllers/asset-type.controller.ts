@@ -7,6 +7,7 @@ import {
 } from '../filters/index.js';
 import { AssetTypeFullResponseDto } from '../dto/responses/index.js';
 import { mapAssetTypeToResponse } from './mappers/asset-type.mapper.js';
+import { ApiStandardErrors } from './api-standard-errors.decorator.js';
 
 @ApiTags('Asset Types')
 @Controller('api/v1/asset-types')
@@ -17,6 +18,7 @@ export class AssetTypeController {
   @Get()
   @ApiOperation({ summary: 'List all asset types' })
   @ApiResponse({ status: 200, type: [AssetTypeFullResponseDto] })
+  @ApiStandardErrors([500])
   async findAll(): Promise<AssetTypeFullResponseDto[]> {
     const assetTypes = await this.assetTypeService.findAll();
     return assetTypes.map(mapAssetTypeToResponse);
@@ -25,6 +27,7 @@ export class AssetTypeController {
   @Get(':id')
   @ApiOperation({ summary: 'Get asset type by ID' })
   @ApiResponse({ status: 200, type: AssetTypeFullResponseDto })
+  @ApiStandardErrors([404, 500])
   async findById(@Param('id') id: string): Promise<AssetTypeFullResponseDto> {
     const assetType = await this.assetTypeService.findById(id);
     return mapAssetTypeToResponse(assetType);

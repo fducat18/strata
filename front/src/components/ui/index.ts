@@ -9,3 +9,4 @@ export { Select } from './select';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './table';
 export { EmptyState } from './empty-state';
 export { Loading } from './loading';
+export { Toaster } from './Toaster';

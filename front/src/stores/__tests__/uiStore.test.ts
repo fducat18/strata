@@ -15,8 +15,8 @@ describe('uiStore', () => {
   });
 
   it('tracks selected entity ids', () => {
-    useUIStore.getState().setSelectedId('portfolio', 'p1');
-    expect(useUIStore.getState().getSelectedId('portfolio')).toBe('p1');
+    useUIStore.getState().setSelectedId('asset', 'a1');
+    expect(useUIStore.getState().getSelectedId('asset')).toBe('a1');
   });
 
   it('pushes and dismisses toasts', () => {

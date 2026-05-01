@@ -50,7 +50,7 @@ export function TagsPage() {
       setShowCreate(false);
     } catch (err: unknown) {
       const message = (err as any)?.message ?? 'An unexpected error occurred';
-      useUIStore.getState().pushToast({ type: 'error', message });
+      useUIStore.getState().pushToast({ variant: 'error', message });
     }
   });
 
@@ -65,7 +65,7 @@ export function TagsPage() {
         await deleteMutation.mutateAsync(id);
       } catch (err: unknown) {
         const message = (err as any)?.message ?? 'An unexpected error occurred';
-        useUIStore.getState().pushToast({ type: 'error', message });
+        useUIStore.getState().pushToast({ variant: 'error', message });
       }
     }
   };

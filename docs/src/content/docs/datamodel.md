@@ -33,16 +33,14 @@ erDiagram
         boolean disposed
         datetime created_at
         datetime updated_at
-        string created_by
-        string updated_by
     }
 
     ASSET_SNAPSHOT {
         uuid id PK
         uuid asset_id FK
         decimal value
-        string currency
         datetime observed_at
+        datetime created_at
     }
 
     TRANSACTION {
@@ -59,8 +57,6 @@ erDiagram
         uuid id PK
         string code UK
         string label
-        datetime created_at
-        datetime updated_at
     }
 
     CATEGORY {

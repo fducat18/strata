@@ -47,18 +47,26 @@ describe('DashboardPage', () => {
   });
 
   it('shows loading when fetching', () => {
-    mockUseAssets.mockReturnValue({ isLoading: true, data: undefined } as any);
-    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: true, data: undefined } as any);
+    mockUseAssets.mockReturnValue({ isLoading: true, data: undefined, isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: true, data: undefined, isError: false, refetch: vi.fn() } as any);
     render(<DashboardPage />);
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+  });
+
+  it('shows error state when assets fail to load', () => {
+    mockUseAssets.mockReturnValue({ isLoading: false, data: undefined, isError: true, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: undefined, isError: false, refetch: vi.fn() } as any);
+    render(<DashboardPage />);
+    expect(screen.getByText('Failed to load dashboard data.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
   });
 
   it('renders dashboard with data', () => {
     const assets = [
       { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '' },
     ];
-    mockUseAssets.mockReturnValue({ isLoading: false, data: assets } as any);
-    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' } } as any);
+    mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -70,8 +78,8 @@ describe('DashboardPage', () => {
     const assets = [
       { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '' },
     ];
-    mockUseAssets.mockReturnValue({ isLoading: false, data: assets } as any);
-    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' } } as any);
+    mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
 
@@ -84,8 +92,8 @@ describe('DashboardPage', () => {
   });
 
   it('renders Take Snapshot button', () => {
-    mockUseAssets.mockReturnValue({ isLoading: false, data: [] } as any);
-    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' } } as any);
+    mockUseAssets.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
     render(<DashboardPage />);
     const button = screen.getByRole('button', { name: /Take Snapshot/i });
     expect(button).toBeInTheDocument();
@@ -96,8 +104,8 @@ describe('DashboardPage', () => {
       { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '' },
       { id: 'a2', name: 'MSFT', disposed: true, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '' },
     ];
-    mockUseAssets.mockReturnValue({ isLoading: false, data: assets } as any);
-    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' } } as any);
+    mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
     // Only 1 active asset (AAPL)

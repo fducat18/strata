@@ -69,10 +69,11 @@ You track your summer t-shirt collection. These t-shirts are both casual wear AN
 |---------------|-------|----------|--------|
 | 2024-01-01 | 225 | EUR | manual |
 
-!!! note "Asset belongs to THREE categories simultaneously"
-    - Clothing > T-Shirts (hierarchy path)
-    - Athletic Wear (cross-cutting category)
-    - Casual Wear (cross-cutting category)
+:::note[Asset belongs to THREE categories simultaneously]
+- Clothing > T-Shirts (hierarchy path)
+- Athletic Wear (cross-cutting category)
+- Casual Wear (cross-cutting category)
+:::
 
 **Total acquisition cost**: €400 (10×25 + 5×30)  
 **Current value**: €225 (depreciation tracked via snapshot)
@@ -109,10 +110,11 @@ You buy an apartment that serves as both your primary residence AND a rental inv
 | 2018-01-01 | 330,000 | EUR | manual |
 | 2021-01-01 | 380,000 | EUR | manual |
 
-!!! note "Asset belongs to THREE categories simultaneously"
-    - Real Estate > Residential > Apartments (hierarchy path)
-    - Primary Residence (legal classification)
-    - Income Generating Assets (functional classification)
+:::note[Asset belongs to THREE categories simultaneously]
+- Real Estate > Residential > Apartments (hierarchy path)
+- Primary Residence (legal classification)
+- Income Generating Assets (functional classification)
+:::
 
 **Realized gain**: €120,000 (€420k - €300k)
 
@@ -179,10 +181,11 @@ You own 10 identical wooden chairs that serve multiple purposes: dining, office 
 |---------------|-------|----------|--------|
 | 2024-01-01 | 300 | EUR | manual |
 
-!!! note "Asset belongs to THREE categories simultaneously"
-    - Home > Furniture > Dining (primary use)
-    - Office Equipment (secondary use)
-    - Multi-Purpose Items (functional classification)
+:::note[Asset belongs to THREE categories simultaneously]
+- Home > Furniture > Dining (primary use)
+- Office Equipment (secondary use)
+- Multi-Purpose Items (functional classification)
+:::
 
 **Total acquisition cost**: €400 (10×40)  
 **Current value**: €300 (25% depreciation)
@@ -220,11 +223,12 @@ You have a mortgage loan on your primary residence. This is a **liability** (neg
 | 2024-01-01 | -220,000 | EUR | manual | Remaining debt |
 | 2024-02-01 | -219,500 | EUR | manual | After payment |
 
-!!! note "Key Points"
-    - Initial acquisition is **negative** (-€250,000 = you owe this)
-    - DISPOSE transactions are **positive** (principal payments reduce the debt)
-    - Balance snapshots are **negative** (current debt owed)
-    - Net worth impact: This **subtracts** from total net worth
+:::note[Key Points]
+- Initial acquisition is **negative** (-€250,000 = you owe this)
+- DISPOSE transactions are **positive** (principal payments reduce the debt)
+- Balance snapshots are **negative** (current debt owed)
+- Net worth impact: This **subtracts** from total net worth
+:::
 
 ## Liabilities
 

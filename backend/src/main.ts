@@ -44,7 +44,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('Strata API')
       .setDescription(
-        'Universal asset tracking API — manage portfolios, assets, snapshots, categories, and tags.',
+        'Universal asset tracking API — manage assets, snapshots, categories, and tags.',
       )
       .setVersion('1.0.0')
       .build();

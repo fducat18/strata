@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { ErrorBoundary } from './ErrorBoundary';
+import { Toaster } from '@/components/ui';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,7 @@ export function AppShell({ currentPath, children }: AppShellProps) {
           </main>
         </div>
       </div>
+      <Toaster />
     </QueryClientProvider>
   );
 }

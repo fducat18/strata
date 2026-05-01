@@ -40,15 +40,19 @@ Asset management system uses a **two-layer approach** inspired by WordPress:
 **Cardinality**: ~10/15 types maximum  
 **Relationship**: Many-to-one (each asset has exactly ONE type)  
 **Examples**:
-- CHECKING ACCOUNTS
-- SAVINGS_ACCOUNTS
+- CHECKING_ACCOUNT
+- SAVINGS_ACCOUNT
 - CASH
 - REAL_ESTATE
-- STOCKS & FUNDS
+- STOCKS
 - CRYPTO
-- LOANS
-- BUSINESS_OWNERSHIP
+- BONDS
+- LOAN
+- VEHICLE
 - PERSONAL_PROPERTY
+- COLLECTIBLES
+- BUSINESS
+- OTHER
 
 **Think of it as**: "What type of asset is this for accounting/tax purposes?"
 

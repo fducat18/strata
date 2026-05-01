@@ -1,20 +1,32 @@
 import { useAssets, useCurrentPortfolioValue, useCreatePortfolioSnapshot, usePortfolioSnapshots } from '@/lib/hooks';
 import { Card, CardHeader, CardTitle, CardContent, Loading, Button } from '@/components/ui';
-import { Package, TrendingUp, Camera } from 'lucide-react';
+import { Package, TrendingUp, Camera, AlertCircle } from 'lucide-react';
 import { NetWorthChart } from './NetWorthChart';
 import { AllocationChart } from './AllocationChart';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, toDecimal } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export function DashboardPage() {
-  const { data: assets, isLoading: loadingAssets } = useAssets();
-  const { data: currentValue, isLoading: loadingValue } = useCurrentPortfolioValue();
+  const { data: assets, isLoading: loadingAssets, isError: errorAssets, refetch: refetchAssets } = useAssets();
+  const { data: currentValue, isLoading: loadingValue, isError: errorValue, refetch: refetchValue } = useCurrentPortfolioValue();
   const snapshotMutation = useCreatePortfolioSnapshot();
   const locale = useLocale();
   const currency = useCurrency();
 
   if (loadingAssets || loadingValue) return <Loading />;
+
+  if (errorAssets || errorValue) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <AlertCircle className="h-10 w-10 text-destructive" />
+        <p className="text-muted-foreground">Failed to load dashboard data.</p>
+        <Button variant="outline" onClick={() => { refetchAssets(); refetchValue(); }}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   const activeAssets = assets?.filter(a => !a.disposed) || [];
   const totalAssets = activeAssets.length;
@@ -22,12 +34,15 @@ export function DashboardPage() {
   const allocationByType = activeAssets.reduce((acc, asset) => {
     const type = asset.assetType?.code || 'OTHER';
     const label = asset.assetType?.label || 'Other';
-    if (!acc[type]) acc[type] = { code: type, label, count: 0 };
-    acc[type].count += 1;
+    const assetValue = toDecimal((asset as any).currentValue)?.toNumber() ?? 0;
+    if (!acc[type]) acc[type] = { code: type, label, value: 0 };
+    acc[type].value += assetValue;
     return acc;
-  }, {} as Record<string, { code: string; label: string; count: number }>);
+  }, {} as Record<string, { code: string; label: string; value: number }>);
 
-  const allocationData = Object.values(allocationByType).sort((a, b) => b.count - a.count);
+  const allocationData = Object.values(allocationByType)
+    .filter(d => d.value > 0)
+    .sort((a, b) => b.value - a.value);
 
   const handleTakeSnapshot = async () => {
     try {
@@ -86,7 +101,7 @@ export function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{allocationData.length}</div>
+            <div className="text-2xl font-bold">{allocationData.length || Object.keys(allocationByType).length}</div>
           </CardContent>
         </Card>
       </div>

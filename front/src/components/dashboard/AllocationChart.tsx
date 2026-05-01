@@ -1,10 +1,11 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { getAssetTypeIcon } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
+import { useLocale, useCurrency } from '@/stores/settingsStore';
 
 interface AllocationItem {
   code: string;
   label: string;
-  count: number;
+  value: number;
 }
 
 interface Props {
@@ -18,9 +19,14 @@ const COLORS = [
 ];
 
 export function AllocationChart({ data }: Props) {
+  const locale = useLocale();
+  const currency = useCurrency();
+
   if (data.length === 0) {
     return <p className="py-8 text-center text-sm text-muted-foreground">No assets yet.</p>;
   }
+
+  const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <ResponsiveContainer width="100%" height={300}>
@@ -32,8 +38,21 @@ export function AllocationChart({ data }: Props) {
           innerRadius={60}
           outerRadius={100}
           paddingAngle={2}
-          dataKey="count"
+          dataKey="value"
           nameKey="label"
+          label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+            if (percent < 0.05) return null;
+            const RADIAN = Math.PI / 180;
+            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+            return (
+              <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11}>
+                {`${(percent * 100).toFixed(0)}%`}
+              </text>
+            );
+          }}
+          labelLine={false}
         >
           {data.map((_, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -41,7 +60,10 @@ export function AllocationChart({ data }: Props) {
         </Pie>
         <Tooltip
           contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border-color)', borderRadius: '0.375rem' }}
-          formatter={(value, name) => [`${value} asset${value !== 1 ? 's' : ''}`, name]}
+          formatter={(value: number, name: string) => [
+            formatMoney(value, { currency, locale }),
+            name,
+          ]}
         />
         <Legend formatter={(value) => <span style={{ color: 'var(--fg)' }}>{value}</span>} />
       </PieChart>

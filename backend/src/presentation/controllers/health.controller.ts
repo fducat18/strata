@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pkg = require('../../../package.json') as { version: string };
@@ -17,12 +18,18 @@ export class HealthController {
       example: { status: 'ok', db: 'up', version: '0.0.1' },
     },
   })
-  async check(): Promise<{ status: string; db: string; version: string }> {
+  @ApiResponse({ status: 503, description: 'Service unavailable — DB is down' })
+  async check(
+    @Res({ passthrough: true }) res?: Response,
+  ): Promise<{ status: string; db: string; version: string }> {
     let db = 'up';
     try {
       await this.prisma.$queryRaw`SELECT 1`;
     } catch {
       db = 'down';
+    }
+    if (db === 'down') {
+      res?.status(HttpStatus.SERVICE_UNAVAILABLE);
     }
     return { status: 'ok', db, version: pkg.version };
   }

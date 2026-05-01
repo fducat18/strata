@@ -1,10 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
-  Logger,
   Param,
   Post,
   Put,
@@ -38,8 +38,6 @@ import { ApiStandardErrors } from './api-standard-errors.decorator.js';
 @Controller('api/v1/assets')
 @UseFilters(PrismaExceptionFilter, DomainExceptionFilter)
 export class AssetController {
-  private readonly logger = new Logger(AssetController.name);
-
   constructor(
     private readonly assetService: AssetService,
     private readonly assetSnapshotService: AssetSnapshotService,
@@ -129,10 +127,14 @@ export class AssetController {
     @Param('id') id: string,
     @Body() dto: CreateAssetSnapshotDto,
   ): Promise<AssetSnapshotResponseDto> {
+    const date = new Date(dto.observedAt);
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date: observedAt');
+    }
     const snapshot = await this.assetSnapshotService.create({
       assetId: id,
       value: dto.value,
-      observedAt: new Date(dto.observedAt),
+      observedAt: date,
     });
     return mapAssetSnapshotToResponse(snapshot);
   }

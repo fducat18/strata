@@ -38,33 +38,40 @@ describe('CategoriesPage', () => {
   });
 
   it('shows loading when fetching', () => {
-    mockUseCategories.mockReturnValue({ isLoading: true, data: undefined } as any);
+    mockUseCategories.mockReturnValue({ isLoading: true, data: undefined, isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
+  it('shows error state when categories fail to load', () => {
+    mockUseCategories.mockReturnValue({ isLoading: false, data: undefined, isError: true, refetch: vi.fn() } as any);
+    render(<CategoriesPage />);
+    expect(screen.getByText('Failed to load categories.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+  });
+
   it('shows empty state when no categories', () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: [] } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     expect(screen.getByText('No categories yet')).toBeInTheDocument();
   });
 
   it('renders category tree', () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories, isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     expect(screen.getByText('Equities')).toBeInTheDocument();
     expect(screen.getByText('US Stocks')).toBeInTheDocument();
   });
 
   it('opens create dialog', () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: [] } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     fireEvent.click(screen.getByText('New Category'));
     expect(screen.getByRole('heading', { name: 'Create Category' })).toBeInTheDocument();
   });
 
   it('closes dialog on cancel', () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: [] } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     fireEvent.click(screen.getByText('New Category'));
     fireEvent.click(screen.getByText('Cancel'));
@@ -72,7 +79,7 @@ describe('CategoriesPage', () => {
   });
 
   it('validates required name', async () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: [] } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
     fireEvent.click(screen.getByText('New Category'));
     fireEvent.click(screen.getByText('Create'));
@@ -82,7 +89,7 @@ describe('CategoriesPage', () => {
   });
 
   it('creates category on valid submit', async () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories, isError: false, refetch: vi.fn() } as any);
     mockMutation.mutateAsync.mockResolvedValue({ id: 'c3', name: 'Bonds', parentId: null });
     render(<CategoriesPage />);
     fireEvent.click(screen.getByText('New Category'));
@@ -97,7 +104,7 @@ describe('CategoriesPage', () => {
   });
 
   it('deletes a category when confirmed', async () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories, isError: false, refetch: vi.fn() } as any);
     mockMutation.mutateAsync.mockResolvedValue(undefined);
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -111,7 +118,7 @@ describe('CategoriesPage', () => {
   });
 
   it('collapses/expands tree node', () => {
-    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories } as any);
+    mockUseCategories.mockReturnValue({ isLoading: false, data: mockCategories, isError: false, refetch: vi.fn() } as any);
     render(<CategoriesPage />);
 
     const collapseBtn = screen.getByLabelText('Collapse subcategories');

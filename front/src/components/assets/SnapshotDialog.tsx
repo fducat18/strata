@@ -15,8 +15,14 @@ export function SnapshotDialog({ open, pending, onClose, onSave }: Props) {
     await onSave(value);
     setValue('');
   };
+
+  const handleClose = () => {
+    setValue('');
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={handleClose}>
       <DialogHeader><DialogTitle>Record Snapshot</DialogTitle></DialogHeader>
       <div>
         <label htmlFor="snapshot-value" className="text-sm font-medium">Current Value</label>
@@ -31,7 +37,7 @@ export function SnapshotDialog({ open, pending, onClose, onSave }: Props) {
         />
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button variant="outline" onClick={handleClose}>Cancel</Button>
         <Button onClick={handleSave} disabled={!value || pending}>
           {pending ? 'Saving...' : 'Save'}
         </Button>

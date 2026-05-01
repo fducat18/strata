@@ -35,5 +35,20 @@ describe('HealthController', () => {
       expect(result.status).toBe('ok');
       expect(result.db).toBe('down');
     });
+
+    it('sets HTTP 503 when db is down', async () => {
+      const mockRes = { status: jest.fn().mockReturnThis() };
+      prismaService.$queryRaw.mockRejectedValue(new Error('Connection failed'));
+      const result = await controller.check(mockRes as any);
+      expect(result.db).toBe('down');
+      expect(mockRes.status).toHaveBeenCalledWith(503);
+    });
+
+    it('does not set HTTP 503 when db is up', async () => {
+      const mockRes = { status: jest.fn().mockReturnThis() };
+      prismaService.$queryRaw.mockResolvedValue([{ '1': 1 }] as any);
+      await controller.check(mockRes as any);
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
   });
 });

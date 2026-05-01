@@ -2,12 +2,12 @@ export type Theme = 'light' | 'dark' | 'system';
 
 export function getStoredTheme(): Theme {
   if (typeof window === 'undefined') return 'system';
-  return (localStorage.getItem('strata-theme') as Theme) || 'system';
+  return (localStorage.getItem('strata.theme') as Theme) || 'system';
 }
 
 export function setTheme(theme: Theme) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('strata-theme', theme);
+  localStorage.setItem('strata.theme', theme);
   applyTheme(theme);
 }
 

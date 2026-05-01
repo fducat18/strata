@@ -38,6 +38,15 @@ describe('SnapshotDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('resets value to empty when Cancel is clicked', () => {
+    const onClose = vi.fn();
+    render(<SnapshotDialog open={true} pending={false} onClose={onClose} onSave={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Current Value'), { target: { value: '12345' } });
+    expect((screen.getByLabelText('Current Value') as HTMLInputElement).value).toBe('12345');
+    fireEvent.click(screen.getByText('Cancel'));
+    expect((screen.getByLabelText('Current Value') as HTMLInputElement).value).toBe('');
+  });
+
   it('shows Saving... when pending', () => {
     render(<SnapshotDialog open={true} pending={true} onClose={vi.fn()} onSave={vi.fn()} />);
     expect(screen.getByText('Saving...')).toBeInTheDocument();

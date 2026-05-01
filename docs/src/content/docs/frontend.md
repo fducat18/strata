@@ -3,7 +3,7 @@ title: "Frontend"
 ---
 
 
-The Strata frontend is built with **Astro** and **React**, providing a Finary-like asset management interface.
+The Strata frontend is built with **Astro** and **React**, providing a clean, reactive asset management interface.
 
 ## Tech Stack
 

@@ -102,6 +102,49 @@ cannot corrupt your real data. See [Versioning](/docs/versioning/) and
 
 For long-term personal use, treat **prod** as the source of truth and keep recurring backups.
 
+## Common Issues
+
+### Port already in use
+
+If `npm run docker:dev` or `docker:reset` fails because a port is already taken:
+
+```bash
+# Find what's occupying port 3000 (NestJS API)
+lsof -i :3000
+# PID shown in the second column — replace 12345 with the actual PID
+kill 12345
+
+# Same for the frontend (4321) and docs (8001) if needed
+lsof -i :4321
+lsof -i :8001
+```
+
+The most common cause is a **stale local NestJS process** from a previous `npm run start:dev` that wasn't stopped. The `docker:dev` and `docker:reset` commands include an automatic port check that prints the blocking PID and the exact `kill` command to run.
+
+### Demo data not visible after `docker:dev`
+
+`docker:dev` **keeps** the existing dev database — it will show whatever data was there before (including leftover test data). To get clean, freshly seeded demo data:
+
+```bash
+npm run docker:reset
+```
+
+This wipes `strata-dev.db`, rebuilds images from scratch, runs migrations, and re-seeds the 6 demo assets.
+
+### Database is stale after backup import
+
+After importing a backup via Settings → Import, the frontend may show old data from the React Query cache. Refresh the page (Cmd+R) to reload the latest data.
+
+## Expected Build Warnings (Not Errors)
+
+These messages appear in the Docker build output and are **safe to ignore**:
+
+| Warning | Why it appears | Severity |
+|---------|---------------|----------|
+| `Entry docs → 404 was not found` | Astro Starlight always generates a 404 page — this log line is from Astro's build step, not an actual error | Safe to ignore |
+| `npm warn deprecated glob@...` | Transitive dependency of build tools (not Strata's direct dep) — will go away when upstream tools update | Safe to ignore |
+| `WARN Docker Compose requires buildx plugin` | Using standalone `docker-compose` v1/v2 instead of `docker compose` plugin — both work correctly | Safe to ignore |
+
 ## Running Tests
 
 ### Backend Tests

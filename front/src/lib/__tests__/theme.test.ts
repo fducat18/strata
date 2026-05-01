@@ -13,7 +13,7 @@ describe('theme', () => {
     });
 
     it('returns stored theme', () => {
-      localStorage.setItem('strata-theme', 'dark');
+      localStorage.setItem('strata.theme', 'dark');
       expect(getStoredTheme()).toBe('dark');
     });
   });
@@ -21,7 +21,7 @@ describe('theme', () => {
   describe('setTheme', () => {
     it('stores theme in localStorage', () => {
       setTheme('dark');
-      expect(localStorage.getItem('strata-theme')).toBe('dark');
+      expect(localStorage.getItem('strata.theme')).toBe('dark');
     });
   });
 

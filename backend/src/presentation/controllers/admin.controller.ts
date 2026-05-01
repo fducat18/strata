@@ -41,7 +41,17 @@ export class AdminController {
       example: {
         schemaVersion: '1',
         mode: 'replace',
-        counts: { portfolios: 1, assets: 3, assetSnapshots: 5 },
+        counts: {
+          assetTypes: 13,
+          categories: 5,
+          tags: 3,
+          assets: 6,
+          assetSnapshots: 6,
+          portfolioSnapshots: 4,
+          transactions: 6,
+          categoriesOnAssets: 6,
+          tagsOnAssets: 8,
+        },
       },
     },
   })

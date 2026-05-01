@@ -7,7 +7,7 @@ export const queryKeys = {
     currentValue: () => ['portfolio-snapshots', 'current-value'] as const,
   },
 
-  assets: (portfolioId?: string) => ['assets', { portfolioId }] as const,
+  assets: () => ['assets'] as const,
   assetsAll: ['assets'] as const,
   asset: (id: string) => ['assets', id] as const,
   assetSnapshots: (id: string) => ['assets', id, 'snapshots'] as const,

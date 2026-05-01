@@ -23,13 +23,7 @@ describe('assetApi', () => {
   it('getAll calls GET /assets without params', async () => {
     mockGet.mockResolvedValue({ data: [] });
     await assetApi.getAll();
-    expect(mockGet).toHaveBeenCalledWith('/assets', { params: undefined });
-  });
-
-  it('getAll calls GET /assets with portfolioId param', async () => {
-    mockGet.mockResolvedValue({ data: [] });
-    await assetApi.getAll('p1');
-    expect(mockGet).toHaveBeenCalledWith('/assets', { params: { portfolioId: 'p1' } });
+    expect(mockGet).toHaveBeenCalledWith('/assets');
   });
 
   it('getById calls GET /assets/:id', async () => {
@@ -43,7 +37,7 @@ describe('assetApi', () => {
   it('create calls POST /assets', async () => {
     const asset = { id: 'a1', name: 'New Asset' };
     mockPost.mockResolvedValue({ data: asset });
-    const req = { name: 'New Asset', portfolioId: 'p1', assetTypeId: 'at1' };
+    const req = { name: 'New Asset', assetTypeId: 'at1' };
     const result = await assetApi.create(req);
     expect(mockPost).toHaveBeenCalledWith('/assets', req);
     expect(result).toEqual(asset);

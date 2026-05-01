@@ -7,7 +7,7 @@ Astro Starlight site, served at <https://strata.ducatillon.net/docs/>.
 ```bash
 cd docs
 npm install
-npm run dev    # http://localhost:4321
+npm run dev    # http://localhost:4321/docs/
 npm run build  # static output → dist/
 ```
 

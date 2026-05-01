@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 // scripts/sync-readme.mjs — mirror docs index page to root README.md
-//
-// Replaces the previous Python script (assets/scripts/sync_readme.py).
-// Source path is the new Astro Starlight docs root content file.
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';

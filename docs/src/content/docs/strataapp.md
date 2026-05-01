@@ -13,7 +13,6 @@ Strata App is your universal asset tracking solution that helps you:
 - 💰 **Track values and net worth** over time
 - 🏷️ **Organize assets into flexible categories and tags**
 - 📊 **See your complete portfolio** in one place
-- 📈 **Budget and track expenses** 
 
 ## 🎯 Who Is Strata For?
 
@@ -77,17 +76,19 @@ Most apps force you to choose: track investments OR manage collections. Strata t
 
 Asset Types define the nature of what you own:
 
-- `CHECKING_ACCOUNTS`
-- `SAVINGS_ACCOUNTS`
+- `CHECKING_ACCOUNT`
+- `SAVINGS_ACCOUNT`
 - `CASH`
 - `REAL_ESTATE`
 - `LOAN`
-- `STOCKS & FUNDS`
+- `STOCKS`
 - `CRYPTO`
-- `PERSONAL_ITEMS`
-- `COLLECTIONS`
+- `BONDS`
+- `VEHICLE`
+- `PERSONAL_PROPERTY`
+- `COLLECTIBLES`
+- `BUSINESS`
 - `OTHER`
-- any custom type you want to create.
 
 ### Categories (Many-to-Many)
 

@@ -96,3 +96,35 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     }
   }
 }
+
+/**
+ * Catches Prisma validation errors (e.g., invalid data types, impossible dates)
+ * and returns HTTP 400 without exposing raw Prisma internals.
+ */
+@Catch(Prisma.PrismaClientValidationError)
+export class PrismaValidationExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(PrismaValidationExceptionFilter.name);
+
+  catch(
+    exception: Prisma.PrismaClientValidationError,
+    host: ArgumentsHost,
+  ): void {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+
+    this.logger.warn(
+      `[${request.requestId ?? '-'}] PrismaClientValidationError: ${exception.message}`,
+    );
+
+    response.status(HttpStatus.BAD_REQUEST).json({
+      statusCode: HttpStatus.BAD_REQUEST,
+      status: HttpStatus.BAD_REQUEST,
+      code: 'VALIDATION_ERROR',
+      message: 'Invalid data: check your request body.',
+      error: 'Bad Request',
+      requestId: request.requestId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}

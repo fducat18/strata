@@ -27,14 +27,9 @@ describe('Transaction rollback on association failure (e2e)', () => {
     const types = await request(http).get('/api/v1/asset-types').expect(200);
     const assetTypeId = types.body[0].id;
 
-    const p = await request(http)
-      .post('/api/v1/portfolios')
-      .send({ name: `Tx-${Date.now()}`, baseCurrency: 'EUR' })
-      .expect(201);
-
     const a = await request(http)
       .post('/api/v1/assets')
-      .send({ name: 'tx-asset', portfolioId: p.body.id, assetTypeId })
+      .send({ name: `Tx-${Date.now()}`, assetTypeId })
       .expect(201);
 
     const t = await request(http)
@@ -63,13 +58,9 @@ describe('Transaction rollback on association failure (e2e)', () => {
     const types = await request(http).get('/api/v1/asset-types').expect(200);
     const assetTypeId = types.body[0].id;
 
-    const p = await request(http)
-      .post('/api/v1/portfolios')
-      .send({ name: `Tx2-${Date.now()}`, baseCurrency: 'EUR' })
-      .expect(201);
     const a = await request(http)
       .post('/api/v1/assets')
-      .send({ name: 'tx-asset-2', portfolioId: p.body.id, assetTypeId })
+      .send({ name: `Tx2-${Date.now()}`, assetTypeId })
       .expect(201);
 
     await request(http)

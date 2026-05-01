@@ -17,58 +17,63 @@ describe('Strata API (e2e)', () => {
     await cleanup();
   });
 
-  // ─── Portfolio lifecycle ───────────────────────────────────────────
+  // ─── Portfolio Snapshots lifecycle ────────────────────────────────────
 
-  let createdPortfolioId: string;
+  let createdSnapshotId: string;
 
-  describe('Portfolios', () => {
-    it('GET /api/v1/portfolios → returns seeded portfolios', async () => {
+  describe('Portfolio Snapshots', () => {
+    it('GET /api/v1/portfolio-snapshots → returns seeded snapshots', async () => {
       const res = await request(app.getHttpServer())
-        .get('/api/v1/portfolios')
+        .get('/api/v1/portfolio-snapshots')
         .expect(200);
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('POST /api/v1/portfolios → creates a new portfolio', async () => {
+    it('GET /api/v1/portfolio-snapshots/current-value → returns computed net worth', async () => {
       const res = await request(app.getHttpServer())
-        .post('/api/v1/portfolios')
-        .send({ name: `E2E Portfolio ${Date.now()}`, baseCurrency: 'USD' })
+        .get('/api/v1/portfolio-snapshots/current-value')
+        .expect(200);
+      expect(res.body).toHaveProperty('value');
+      expect(res.body).toHaveProperty('currency');
+    });
+
+    it('POST /api/v1/portfolio-snapshots → creates a snapshot (auto-compute)', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/portfolio-snapshots')
+        .send({})
         .expect(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body.baseCurrency).toBe('USD');
-      createdPortfolioId = res.body.id;
+      expect(res.body).toHaveProperty('value');
+      expect(res.body).toHaveProperty('currency');
+      createdSnapshotId = res.body.id;
     });
 
-    it('GET /api/v1/portfolios/:id → returns the created portfolio', async () => {
+    it('POST /api/v1/portfolio-snapshots → creates a snapshot with explicit value', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/api/v1/portfolios/${createdPortfolioId}`)
-        .expect(200);
-      expect(res.body.id).toBe(createdPortfolioId);
-    });
-
-    it('PUT /api/v1/portfolios/:id → updates the portfolio', async () => {
-      const res = await request(app.getHttpServer())
-        .put(`/api/v1/portfolios/${createdPortfolioId}`)
-        .send({ name: 'E2E Updated' })
-        .expect(200);
-      expect(res.body.name).toBe('E2E Updated');
-    });
-
-    it('POST /api/v1/portfolios/:id/snapshots → takes a snapshot', async () => {
-      const res = await request(app.getHttpServer())
-        .post(`/api/v1/portfolios/${createdPortfolioId}/snapshots`)
+        .post('/api/v1/portfolio-snapshots')
+        .send({ value: '100000.00', currency: 'EUR', notes: 'Manual snapshot' })
         .expect(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body.portfolioId).toBe(createdPortfolioId);
+      expect(parseFloat(res.body.value)).toBeCloseTo(100000.0);
+      expect(res.body.notes).toBe('Manual snapshot');
+      // clean up
+      await request(app.getHttpServer())
+        .delete(`/api/v1/portfolio-snapshots/${res.body.id}`)
+        .expect(204);
     });
 
-    it('GET /api/v1/portfolios/:id/snapshots → returns snapshots', async () => {
+    it('DELETE /api/v1/portfolio-snapshots/:id → deletes snapshot', async () => {
+      await request(app.getHttpServer())
+        .delete(`/api/v1/portfolio-snapshots/${createdSnapshotId}`)
+        .expect(204);
+    });
+
+    it('DELETE /api/v1/portfolio-snapshots/nonexistent → 404', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/api/v1/portfolios/${createdPortfolioId}/snapshots`)
-        .expect(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body.length).toBeGreaterThanOrEqual(1);
+        .delete('/api/v1/portfolio-snapshots/00000000-0000-0000-0000-000000000000')
+        .expect(404);
+      expect(res.body.code).toBe('PORTFOLIO_SNAPSHOT_NOT_FOUND');
     });
   });
 
@@ -79,7 +84,6 @@ describe('Strata API (e2e)', () => {
 
   describe('Assets', () => {
     beforeAll(async () => {
-      // Get a valid asset type
       const res = await request(app.getHttpServer())
         .get('/api/v1/asset-types')
         .expect(200);
@@ -91,7 +95,6 @@ describe('Strata API (e2e)', () => {
         .post('/api/v1/assets')
         .send({
           name: 'E2E Asset',
-          portfolioId: createdPortfolioId,
           assetTypeId,
           quantity: '100',
         })
@@ -107,16 +110,6 @@ describe('Strata API (e2e)', () => {
         .expect(200);
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body.length).toBeGreaterThanOrEqual(1);
-    });
-
-    it('GET /api/v1/assets?portfolio_id=... → filters by portfolio', async () => {
-      const res = await request(app.getHttpServer())
-        .get(`/api/v1/assets?portfolio_id=${createdPortfolioId}`)
-        .expect(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      for (const asset of res.body) {
-        expect(asset.portfolioId).toBe(createdPortfolioId);
-      }
     });
 
     it('GET /api/v1/assets/:id → returns the asset', async () => {
@@ -343,25 +336,6 @@ describe('Strata API (e2e)', () => {
         .expect(400);
     });
 
-    it('POST /api/v1/portfolios with duplicate name → 409', async () => {
-      const uniqueName = `Dup-Test-${Date.now()}`;
-      await request(app.getHttpServer())
-        .post('/api/v1/portfolios')
-        .send({ name: uniqueName, baseCurrency: 'EUR' })
-        .expect(201);
-      await request(app.getHttpServer())
-        .post('/api/v1/portfolios')
-        .send({ name: uniqueName, baseCurrency: 'EUR' })
-        .expect(409);
-    });
-
-    it('GET /api/v1/portfolios/nonexistent → 404', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/api/v1/portfolios/00000000-0000-0000-0000-000000000000')
-        .expect(404);
-      expect(res.body.code).toBe('PORTFOLIO_NOT_FOUND');
-    });
-
     it('GET /api/v1/tags/nonexistent → 404', async () => {
       const res = await request(app.getHttpServer())
         .get('/api/v1/tags/00000000-0000-0000-0000-000000000000')
@@ -375,16 +349,9 @@ describe('Strata API (e2e)', () => {
         .expect(404);
       expect(res.body.code).toBe('ASSET_TYPE_NOT_FOUND');
     });
-
-    it('POST /api/v1/portfolios with forbidden field → 400', async () => {
-      await request(app.getHttpServer())
-        .post('/api/v1/portfolios')
-        .send({ name: 'Validate Test', baseCurrency: 'EUR', hackField: 'nope' })
-        .expect(400);
-    });
   });
 
-  // ─── Cleanup: delete the test asset and portfolio ──────────────────
+  // ─── Cleanup: delete the test asset ───────────────────────────────
 
   describe('Cleanup', () => {
     it('DELETE /api/v1/assets/:id → deletes the test asset', async () => {
@@ -392,11 +359,6 @@ describe('Strata API (e2e)', () => {
         .delete(`/api/v1/assets/${createdAssetId}`)
         .expect(204);
     });
-
-    it('DELETE /api/v1/portfolios/:id → deletes the test portfolio', async () => {
-      await request(app.getHttpServer())
-        .delete(`/api/v1/portfolios/${createdPortfolioId}`)
-        .expect(204);
-    });
   });
 });
+

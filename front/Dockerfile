@@ -9,7 +9,7 @@ ARG PUBLIC_API_URL=http://localhost:3000/api/v1
 ENV PUBLIC_API_URL=$PUBLIC_API_URL
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-update-notifier --no-fund --loglevel=warn
 COPY . .
 # Write a fallback version.ts (the host-side `npm run docker:dev`
 # regenerates the real one from `git describe` before the build context

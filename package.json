@@ -7,9 +7,9 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "docker:dev": "node backend/scripts/gen-version.mjs && node front/scripts/gen-version.mjs && docker-compose up --build",
-    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node backend/scripts/gen-version.mjs && node front/scripts/gen-version.mjs && docker-compose up --build -d'",
-    "docker:reset": "rm -f backend/.data/strata-dev.db && node backend/scripts/gen-version.mjs && node front/scripts/gen-version.mjs && docker-compose build --no-cache && docker-compose up",
+    "docker:dev": "node scripts/check-ports.mjs && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose up --build",
+    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose up --build -d'",
+    "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose build --no-cache && docker-compose up",
     "docker:down": "docker-compose down",
     "version": "node scripts/version.mjs",
     "sync-readme": "node scripts/sync-readme.mjs"
