@@ -21,3 +21,7 @@ export function invalidateCategoryQueries(qc: QueryClient): void {
 export function invalidateTagQueries(qc: QueryClient): void {
   qc.invalidateQueries({ queryKey: queryKeys.tags });
 }
+
+export function invalidateAssetTypeQueries(qc: QueryClient): void {
+  qc.invalidateQueries({ queryKey: queryKeys.assetTypes });
+}

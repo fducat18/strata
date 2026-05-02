@@ -3,6 +3,7 @@ export {
   invalidateAssetQueries,
   invalidateCategoryQueries,
   invalidateTagQueries,
+  invalidateAssetTypeQueries,
 } from './invalidation';
 export * from './portfolio-snapshots';
 export * from './assets';
