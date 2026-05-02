@@ -29,7 +29,7 @@ describe('Transaction rollback on association failure (e2e)', () => {
 
     const a = await request(http)
       .post('/api/v1/assets')
-      .send({ name: `Tx-${Date.now()}`, assetTypeId })
+      .send({ name: `Tx-${Date.now()}`, assetTypeId, acquisitionDate: '2025-01-01', acquisitionPrice: '1000.00' })
       .expect(201);
 
     const t = await request(http)
@@ -60,7 +60,7 @@ describe('Transaction rollback on association failure (e2e)', () => {
 
     const a = await request(http)
       .post('/api/v1/assets')
-      .send({ name: `Tx2-${Date.now()}`, assetTypeId })
+      .send({ name: `Tx2-${Date.now()}`, assetTypeId, acquisitionDate: '2025-01-01', acquisitionPrice: '1000.00' })
       .expect(201);
 
     await request(http)

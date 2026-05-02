@@ -98,6 +98,8 @@ describe('Strata API (e2e)', () => {
           name: 'E2E Asset',
           assetTypeId,
           quantity: '100',
+          acquisitionDate: '2025-01-01',
+          acquisitionPrice: '1000.00',
         })
         .expect(201);
       expect(res.body).toHaveProperty('id');
@@ -146,9 +148,10 @@ describe('Strata API (e2e)', () => {
       expect(res.body.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('PUT /api/v1/assets/:id/dispose → disposes the asset', async () => {
+    it('PATCH /api/v1/assets/:id/dispose → disposes the asset', async () => {
       const res = await request(app.getHttpServer())
-        .put(`/api/v1/assets/${createdAssetId}/dispose`)
+        .patch(`/api/v1/assets/${createdAssetId}/dispose`)
+        .send({ disposalDate: '2025-06-01', disposalPrice: '500.00' })
         .expect(200);
       expect(res.body.disposed).toBe(true);
     });

@@ -28,6 +28,8 @@ describe('Admin backup/restore (e2e)', () => {
         name: 'Backup Asset',
         assetTypeId,
         quantity: '0.12345678',
+        acquisitionDate: '2025-01-01',
+        acquisitionPrice: '1000.00',
       })
       .expect(201);
     assetId = asset.body.id;
@@ -124,7 +126,7 @@ describe('Admin backup/restore (e2e)', () => {
       const types = await request(http).get('/api/v1/asset-types').expect(200);
       const newAsset = await request(http)
         .post('/api/v1/assets')
-        .send({ name: 'Merge-Only Asset', assetTypeId: types.body[0].id })
+        .send({ name: 'Merge-Only Asset', assetTypeId: types.body[0].id, acquisitionDate: '2025-01-01', acquisitionPrice: '1000.00' })
         .expect(201);
       const newAssetId: string = newAsset.body.id;
 
