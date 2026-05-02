@@ -112,6 +112,13 @@ export default defineConfig({
             { label: 'ADR-003: Database Strategy', slug: 'adr/adr-003-database-strategy' },
           ],
         },
+        {
+          label: 'Plans',
+          items: [
+            { label: 'All Plans', slug: 'plans/index' },
+            { label: '2025-01 Beta Feedback', slug: 'plans/2025-01-beta-feedback-plan' },
+          ],
+        },
       ],
       customCss: ['./src/styles/custom.css'],
       components: {
