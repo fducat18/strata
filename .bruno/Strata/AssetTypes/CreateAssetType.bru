@@ -1,0 +1,19 @@
+meta {
+  name: CreateAssetType
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:3000/api/v1/asset-types
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "code": "CRYPTO_ETF",
+    "label": "Crypto ETF",
+    "group": "FINANCIAL"
+  }
+}

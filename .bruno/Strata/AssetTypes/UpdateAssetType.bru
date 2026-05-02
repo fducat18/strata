@@ -1,0 +1,22 @@
+meta {
+  name: UpdateAssetType
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:3000/api/v1/asset-types/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: <asset-type-id>
+}
+
+body:json {
+  {
+    "label": "Updated Label",
+    "group": "FINANCIAL"
+  }
+}
