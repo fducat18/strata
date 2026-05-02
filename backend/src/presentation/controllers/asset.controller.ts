@@ -52,6 +52,8 @@ export class AssetController {
       name: dto.name,
       assetTypeId: dto.assetTypeId,
       quantity: dto.quantity,
+      acquisitionDate: dto.acquisitionDate,
+      acquisitionPrice: dto.acquisitionPrice,
     });
     return mapAssetToResponse(asset);
   }

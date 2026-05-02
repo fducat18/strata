@@ -4,12 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { Decimal } from 'decimal.js';
 import { Asset } from '../../domain/entities/index.js';
 import {
   IAssetRepository,
   IAssetTypeRepository,
   ITagRepository,
   ICategoryRepository,
+  ITransactionRepository,
   type CreateAssetData,
   type UpdateAssetData,
 } from '../../domain/ports/index.js';
@@ -19,6 +21,7 @@ import {
   TagNotFoundException,
   CategoryNotFoundException,
 } from '../../domain/exceptions/index.js';
+import { AssetSnapshotService } from './asset-snapshot.service.js';
 
 @Injectable()
 export class AssetService {
@@ -27,6 +30,8 @@ export class AssetService {
     private readonly assetTypeRepository: IAssetTypeRepository,
     private readonly tagRepository: ITagRepository,
     private readonly categoryRepository: ICategoryRepository,
+    private readonly transactionRepository: ITransactionRepository,
+    private readonly assetSnapshotService: AssetSnapshotService,
   ) {}
 
   async create(data: CreateAssetData): Promise<Asset> {
@@ -36,7 +41,25 @@ export class AssetService {
         `Asset type ${data.assetTypeId} not found`,
       );
 
-    return this.assetRepository.save(data);
+    const asset = await this.assetRepository.save(data);
+    const qty = data.quantity ?? '1';
+
+    await this.transactionRepository.save({
+      assetId: asset.id,
+      type: 'ACQUIRE',
+      unitPrice: data.acquisitionPrice,
+      quantity: qty,
+      currency: 'EUR',
+      occurredAt: new Date(data.acquisitionDate),
+    });
+
+    await this.assetSnapshotService.create({
+      assetId: asset.id,
+      value: new Decimal(data.acquisitionPrice).times(new Decimal(qty)).toString(),
+      observedAt: new Date(data.acquisitionDate),
+    });
+
+    return this.assetRepository.findById(asset.id) as Promise<Asset>;
   }
 
   async findById(id: string): Promise<Asset> {

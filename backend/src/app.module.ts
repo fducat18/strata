@@ -10,6 +10,7 @@ import { ITagRepository } from './domain/ports/tag.repository.port.js';
 import { IAssetTypeRepository } from './domain/ports/asset-type.repository.port.js';
 import { IAssetSnapshotRepository } from './domain/ports/asset-snapshot.repository.port.js';
 import { IPortfolioSnapshotRepository } from './domain/ports/portfolio-snapshot.repository.port.js';
+import { ITransactionRepository } from './domain/ports/transaction.repository.port.js';
 
 import { PrismaAssetRepository } from './infrastructure/repositories/prisma-asset.repository.js';
 import { PrismaCategoryRepository } from './infrastructure/repositories/prisma-category.repository.js';
@@ -17,6 +18,7 @@ import { PrismaTagRepository } from './infrastructure/repositories/prisma-tag.re
 import { PrismaAssetTypeRepository } from './infrastructure/repositories/prisma-asset-type.repository.js';
 import { PrismaAssetSnapshotRepository } from './infrastructure/repositories/prisma-asset-snapshot.repository.js';
 import { PrismaPortfolioSnapshotRepository } from './infrastructure/repositories/prisma-portfolio-snapshot.repository.js';
+import { PrismaTransactionRepository } from './infrastructure/repositories/prisma-transaction.repository.js';
 
 import { AssetService } from './application/services/asset.service.js';
 import { PortfolioSnapshotService } from './application/services/portfolio-snapshot.service.js';
@@ -69,6 +71,10 @@ import { RequestIdMiddleware } from './infrastructure/middleware/request-id.midd
     {
       provide: IPortfolioSnapshotRepository,
       useClass: PrismaPortfolioSnapshotRepository,
+    },
+    {
+      provide: ITransactionRepository,
+      useClass: PrismaTransactionRepository,
     },
 
     AssetService,

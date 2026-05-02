@@ -9,3 +9,5 @@ export { IAssetSnapshotRepository } from './asset-snapshot.repository.port';
 export type { CreateAssetSnapshotData } from './asset-snapshot.repository.port';
 export { IPortfolioSnapshotRepository } from './portfolio-snapshot.repository.port';
 export type { CreatePortfolioSnapshotData } from './portfolio-snapshot.repository.port';
+export { ITransactionRepository } from './transaction.repository.port';
+export type { CreateTransactionData } from './transaction.repository.port';

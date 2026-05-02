@@ -28,6 +28,8 @@ export function AssetListPage() {
   const [newName, setNewName] = useState('');
   const [newAssetTypeId, setNewAssetTypeId] = useState('');
   const [newQuantity, setNewQuantity] = useState('');
+  const [newAcquisitionDate, setNewAcquisitionDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [newAcquisitionPrice, setNewAcquisitionPrice] = useState('');
 
   if (isLoading) return <Loading />;
   if (isError) {
@@ -46,15 +48,19 @@ export function AssetListPage() {
   if (filterType) filtered = filtered.filter(a => a.assetType?.code === filterType);
 
   const handleCreate = async () => {
-    if (!newName.trim() || !newAssetTypeId) return;
+    if (!newName.trim() || !newAssetTypeId || !newAcquisitionPrice) return;
     try {
       await createMutation.mutateAsync({
         name: newName.trim(),
         assetTypeId: newAssetTypeId,
         quantity: newQuantity || undefined,
+        acquisitionDate: newAcquisitionDate,
+        acquisitionPrice: newAcquisitionPrice,
       });
       setNewName('');
       setNewQuantity('');
+      setNewAcquisitionDate(new Date().toISOString().slice(0, 10));
+      setNewAcquisitionPrice('');
       setShowCreate(false);
     } catch (err: unknown) {
       const message = (err as any)?.message ?? 'An unexpected error occurred';
@@ -66,6 +72,8 @@ export function AssetListPage() {
     setNewName('');
     setNewAssetTypeId('');
     setNewQuantity('');
+    setNewAcquisitionDate(new Date().toISOString().slice(0, 10));
+    setNewAcquisitionPrice('');
     setShowCreate(false);
   };
 
@@ -194,10 +202,18 @@ export function AssetListPage() {
             <label htmlFor="asset-quantity" className="text-sm font-medium">Quantity (optional)</label>
             <Input id="asset-quantity" type="number" step="any" value={newQuantity} onChange={e => setNewQuantity(e.target.value)} placeholder="e.g. 1.5" className="mt-1" />
           </div>
+          <div>
+            <label htmlFor="asset-acquisition-date" className="text-sm font-medium">Acquisition Date</label>
+            <Input id="asset-acquisition-date" type="date" value={newAcquisitionDate} onChange={e => setNewAcquisitionDate(e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <label htmlFor="asset-acquisition-price" className="text-sm font-medium">Acquisition Price (EUR)</label>
+            <Input id="asset-acquisition-price" type="number" step="0.01" min="0" value={newAcquisitionPrice} onChange={e => setNewAcquisitionPrice(e.target.value)} placeholder="e.g. 10000.00" className="mt-1" />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={resetCreate}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={!newName.trim() || !newAssetTypeId || createMutation.isPending}>
+          <Button onClick={handleCreate} disabled={!newName.trim() || !newAssetTypeId || !newAcquisitionPrice || createMutation.isPending}>
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>

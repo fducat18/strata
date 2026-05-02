@@ -4,6 +4,8 @@ export interface CreateAssetData {
   name: string;
   assetTypeId: string;
   quantity?: string;
+  acquisitionDate: string;
+  acquisitionPrice: string;
 }
 
 export interface UpdateAssetData {

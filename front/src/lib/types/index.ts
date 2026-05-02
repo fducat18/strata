@@ -53,6 +53,8 @@ export interface CreateAssetRequest {
   quantity?: string;
   categoryIds?: string[];
   tagIds?: string[];
+  acquisitionDate: string;
+  acquisitionPrice: string;
 }
 
 export interface UpdateAssetRequest {

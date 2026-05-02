@@ -203,14 +203,20 @@ describe('AssetListPage', () => {
     const typeSelect = screen.getByLabelText('Asset Type');
     fireEvent.change(typeSelect, { target: { value: 'at1' } });
 
+    const priceInput = screen.getByLabelText('Acquisition Price (EUR)');
+    fireEvent.change(priceInput, { target: { value: '10000.00' } });
+
     fireEvent.click(screen.getByText('Create'));
 
     await waitFor(() => {
-      expect(mockMutation.mutateAsync).toHaveBeenCalledWith({
-        name: 'My Asset',
-        assetTypeId: 'at1',
-        quantity: undefined,
-      });
+      expect(mockMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'My Asset',
+          assetTypeId: 'at1',
+          quantity: undefined,
+          acquisitionPrice: '10000.00',
+        }),
+      );
     });
   });
 

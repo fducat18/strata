@@ -7,6 +7,8 @@ import { IAssetRepository } from '../../domain/ports/asset.repository.port.js';
 import { IAssetTypeRepository } from '../../domain/ports/asset-type.repository.port.js';
 import { ITagRepository } from '../../domain/ports/tag.repository.port.js';
 import { ICategoryRepository } from '../../domain/ports/category.repository.port.js';
+import { ITransactionRepository } from '../../domain/ports/transaction.repository.port.js';
+import { AssetSnapshotService } from './asset-snapshot.service.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
 import { AssetType } from '../../domain/entities/asset-type.entity.js';
 import { Tag } from '../../domain/entities/tag.entity.js';
@@ -55,6 +57,15 @@ describe('AssetService', () => {
     findChildren: jest.fn(),
   };
 
+  const mockTransactionRepo = {
+    save: jest.fn(),
+  };
+
+  const mockAssetSnapshotService = {
+    create: jest.fn(),
+    findByAsset: jest.fn(),
+  };
+
   const now = new Date();
   const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks', 'FINANCIAL');
   const sampleTag = new Tag('t1', 'MyTag');
@@ -80,6 +91,8 @@ describe('AssetService', () => {
         { provide: IAssetTypeRepository, useValue: mockAssetTypeRepo },
         { provide: ITagRepository, useValue: mockTagRepo },
         { provide: ICategoryRepository, useValue: mockCategoryRepo },
+        { provide: ITransactionRepository, useValue: mockTransactionRepo },
+        { provide: AssetSnapshotService, useValue: mockAssetSnapshotService },
       ],
     }).compile();
 
@@ -93,19 +106,65 @@ describe('AssetService', () => {
         service.create({
           name: 'A',
           assetTypeId: 'at-unknown',
+          acquisitionDate: '2025-01-15',
+          acquisitionPrice: '100.00',
         }),
       ).rejects.toThrow(AssetTypeNotFoundException);
     });
 
-    it('calls repository.save when valid', async () => {
+    it('creates ACQUIRE transaction and snapshot when valid', async () => {
       mockAssetTypeRepo.findById.mockResolvedValue(sampleAssetType);
       mockAssetRepo.save.mockResolvedValue(sampleAsset);
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTransactionRepo.save.mockResolvedValue({});
+      mockAssetSnapshotService.create.mockResolvedValue({});
 
-      const data = { name: 'My Asset', assetTypeId: 'at1' };
+      const data = {
+        name: 'My Asset',
+        assetTypeId: 'at1',
+        acquisitionDate: '2025-01-15',
+        acquisitionPrice: '100.00',
+      };
       const result = await service.create(data);
 
       expect(mockAssetRepo.save).toHaveBeenCalledWith(data);
+      expect(mockTransactionRepo.save).toHaveBeenCalledWith({
+        assetId: 'a1',
+        type: 'ACQUIRE',
+        unitPrice: '100.00',
+        quantity: '1',
+        currency: 'EUR',
+        occurredAt: new Date('2025-01-15'),
+      });
+      expect(mockAssetSnapshotService.create).toHaveBeenCalledWith({
+        assetId: 'a1',
+        value: '100',
+        observedAt: new Date('2025-01-15'),
+      });
       expect(result).toBe(sampleAsset);
+    });
+
+    it('uses provided quantity in transaction and snapshot', async () => {
+      mockAssetTypeRepo.findById.mockResolvedValue(sampleAssetType);
+      mockAssetRepo.save.mockResolvedValue(sampleAsset);
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTransactionRepo.save.mockResolvedValue({});
+      mockAssetSnapshotService.create.mockResolvedValue({});
+
+      await service.create({
+        name: 'My Asset',
+        assetTypeId: 'at1',
+        quantity: '5',
+        acquisitionDate: '2025-01-15',
+        acquisitionPrice: '200.00',
+      });
+
+      expect(mockTransactionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ quantity: '5' }),
+      );
+      expect(mockAssetSnapshotService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ value: '1000' }),
+      );
     });
   });
 
