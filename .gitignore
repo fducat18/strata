@@ -9,6 +9,7 @@ dist/
 
 # Database files (never commit — use JSON export for backups)
 *.db
+dev.db
 *.db-journal
 *.sqlite3
 .data/

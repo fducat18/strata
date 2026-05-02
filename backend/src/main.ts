@@ -2,6 +2,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { execSync } from 'child_process';
 import { AppModule } from './app.module.js';
 
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:4321', 'tauri://localhost'];
@@ -27,6 +28,17 @@ async function bootstrap() {
         `    Strata requires Node 22.\n` +
         `    Fix: nvm use 22  →  then: npm install\n`,
     );
+    process.exit(1);
+  }
+
+  console.log('⚙️  Running database migrations...');
+  try {
+    execSync('npx prisma migrate deploy', {
+      stdio: 'inherit',
+      env: { ...process.env },
+    });
+  } catch {
+    console.error('❌ Database migration failed. Exiting.');
     process.exit(1);
   }
 
