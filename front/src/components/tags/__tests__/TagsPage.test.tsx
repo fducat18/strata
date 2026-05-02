@@ -114,4 +114,97 @@ describe('TagsPage', () => {
       expect(mockMutation.mutateAsync).toHaveBeenCalledWith('t1');
     });
   });
+
+  it('does not delete when confirm is cancelled', async () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Delete tag growth'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mockMutation.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('opens inline edit mode when pencil is clicked', () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Edit tag growth'));
+    expect(screen.getByLabelText('Edit name for tag growth')).toBeInTheDocument();
+  });
+
+  it('saves inline edit when save button is clicked', async () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    mockMutation.mutateAsync.mockResolvedValue({ id: 't1', name: 'value' });
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Edit tag growth'));
+
+    const editInput = screen.getByLabelText('Edit name for tag growth');
+    fireEvent.change(editInput, { target: { value: 'value' } });
+    fireEvent.click(screen.getByLabelText('Save tag name'));
+
+    await waitFor(() => {
+      expect(mockMutation.mutateAsync).toHaveBeenCalledWith({ id: 't1', name: 'value' });
+    });
+  });
+
+  it('saves inline edit when Enter key is pressed', async () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    mockMutation.mutateAsync.mockResolvedValue({ id: 't1', name: 'updated' });
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Edit tag growth'));
+
+    const editInput = screen.getByLabelText('Edit name for tag growth');
+    fireEvent.change(editInput, { target: { value: 'updated' } });
+    fireEvent.keyDown(editInput, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(mockMutation.mutateAsync).toHaveBeenCalledWith({ id: 't1', name: 'updated' });
+    });
+  });
+
+  it('cancels inline edit when Escape key is pressed', () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Edit tag growth'));
+
+    const editInput = screen.getByLabelText('Edit name for tag growth');
+    fireEvent.keyDown(editInput, { key: 'Escape' });
+    expect(screen.queryByLabelText('Edit name for tag growth')).not.toBeInTheDocument();
+  });
+
+  it('cancels inline edit when cancel button is clicked', () => {
+    const tags = [{ id: 't1', name: 'growth' }];
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: tags, refetch: vi.fn() } as any);
+    render(<TagsPage />);
+    fireEvent.click(screen.getByLabelText('Edit tag growth'));
+    fireEvent.click(screen.getByLabelText('Cancel edit'));
+    expect(screen.queryByLabelText('Edit name for tag growth')).not.toBeInTheDocument();
+  });
+
+  it('shows validation error for empty tag name', async () => {
+    mockUseTags.mockReturnValue({ isLoading: false, isError: false, data: [], refetch: vi.fn() } as any);
+    render(<TagsPage />);
+    fireEvent.click(screen.getByText('New Tag'));
+
+    const nameInput = screen.getByLabelText('Name');
+    fireEvent.change(nameInput, { target: { value: 'a' } });
+    fireEvent.change(nameInput, { target: { value: '' } });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+  });
+
+  it('calls retry on error state button click', () => {
+    const refetch = vi.fn();
+    mockUseTags.mockReturnValue({ isLoading: false, isError: true, data: undefined, refetch } as any);
+    render(<TagsPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalled();
+  });
 });

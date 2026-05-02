@@ -35,4 +35,29 @@ describe('backupStore', () => {
     expect(useBackupStore.getState().step).toBe('idle');
     expect(useBackupStore.getState().errors).toEqual([]);
   });
+
+  it('startParse transitions to parsing', () => {
+    useBackupStore.getState().startParse();
+    const s = useBackupStore.getState();
+    expect(s.step).toBe('parsing');
+    expect(s.errors).toEqual([]);
+    expect(s.parsed).toBeNull();
+  });
+
+  it('startConfirming transitions to confirming', () => {
+    useBackupStore.getState().setParsed({ version: '1.0', data: {} });
+    useBackupStore.getState().startConfirming();
+    expect(useBackupStore.getState().step).toBe('confirming');
+  });
+
+  it('setDone transitions to done', () => {
+    useBackupStore.getState().setDone();
+    expect(useBackupStore.getState().step).toBe('done');
+  });
+
+  it('countsOf handles missing arrays in payload', () => {
+    useBackupStore.getState().setParsed({ version: '1.0', data: {} });
+    const s = useBackupStore.getState();
+    expect(s.counts).toEqual({ assets: 0, categories: 0, tags: 0 });
+  });
 });

@@ -12,6 +12,13 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Cap concurrent workers to prevent OOM on machines with limited RAM.
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 2,
+      },
+    },
     coverage: {
       provider: 'v8',
       thresholds: {
@@ -34,6 +41,9 @@ export default defineConfig({
         'src/lib/types.ts',
         'src/components/assets/AssetDetailPage.tsx',
         'src/components/assets/AssetEditDialog.tsx',
+        'src/components/assets/DisposeDialog.tsx',
+        'src/components/portfolios/PortfolioDetailPage.tsx',
+        'src/components/portfolios/PortfolioListPage.tsx',
         'src/components/settings/BackupSection.tsx',
         'src/components/settings/useBackupExport.ts',
         'src/components/settings/useBackupImport.ts',
