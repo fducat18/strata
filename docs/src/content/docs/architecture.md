@@ -38,8 +38,8 @@ flowchart TD
     Nginx -->|serves| Docs
 ```
 
-> **Dev** (`docker:dev`): backend uses `strata-dev.db` (seeded demo data). nginx and docs are not started.
-> **Prod** (`docker:prod`): backend uses `strata.db` (your real data). nginx serves the pre-built docs site on port 8001.
+> **Dev** (`docker:dev`): backend uses `strata-dev.db` (seeded demo data). Docs are available locally via `npm run dev` in the `docs/` folder (Starlight on port 4321). nginx is not started.
+> **Prod** (`docker:prod`): backend uses `strata.db` (your real data). nginx serves the pre-built static docs site on port 8001.
 
 ## Services at a Glance
 
@@ -59,32 +59,7 @@ Swagger UI (`/swagger`) is enabled by default in **both** environments. Set `ENA
 
 See [Configuration](/docs/configuration/) for the full comparison table.
 
-## Portfolio Snapshot Recalculation
-
-Every time an AssetSnapshot is created, updated, or deleted, Strata automatically recalculates portfolio snapshots. There is **no manual "Take Snapshot" button**.
-
-### How it works
-
-1. `AssetSnapshotService.create/update/delete` → synchronously calls `portfolioSnapshotService.recalculateFromDate(date)`
-2. `recalculateFromDate(fromDate)` upserts a PortfolioSnapshot for `fromDate` and updates all existing PortfolioSnapshots with `observedAt > fromDate`
-
-### Formula
-
-For each date **D**, the portfolio total is:
-
-```
-totalValue(D) = SUM( latest AssetSnapshot.value per non-disposed asset where observedAt ≤ D )
-```
-
-### Why synchronous?
-
-Strata runs on a personal laptop — not a server that stays running 24/7. A cron job or background worker would be unreliable. Synchronous recalculation is simple, testable, and always correct.
-
-### Cascade example
-
-You add an AssetSnapshot for Jan 1st. Strata recalculates the portfolio total for Jan 1st *and* all later dates that already have a PortfolioSnapshot (Feb 1st, Mar 1st…). Historical net worth is always consistent with your asset history.
-
-## Asset Type Taxonomy
+See the [Portfolio Snapshot Recalculation](/docs/technical/portfolio-snapshot-recalculation/) technical guide for details on the algorithm.
 
 Asset types use a two-level hierarchy: **13 type codes** grouped into **6 groups**.
 
@@ -113,7 +88,7 @@ When you create an asset, you provide:
 Strata atomically creates:
 1. The `Asset` record
 2. A `Transaction(type=ACQUIRE, unitPrice=acquisitionPrice, quantity, currency='EUR', occurredAt=acquisitionDate)`
-3. An `AssetSnapshot(value=acquisitionPrice × quantity, observedAt=acquisitionDate)` — which triggers the portfolio cascade (see Portfolio Snapshot Recalculation above)
+3. An `AssetSnapshot(value=acquisitionPrice × quantity, observedAt=acquisitionDate)` — which triggers the portfolio cascade (see [Portfolio Snapshot Recalculation](/docs/technical/portfolio-snapshot-recalculation/))
 
 **Invariant**: Every asset has exactly **1** ACQUIRE transaction. This is enforced at the service level.
 

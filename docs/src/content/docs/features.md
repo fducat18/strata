@@ -5,13 +5,14 @@ title: "✨ Features"
 
 ## Universal Asset Tracking
 
-Track any asset type with a flexible data model:
+Strata organizes assets into **6 groups** (enum field on AssetType):
 
-- **Financial instruments** (cash, stocks, bonds, crypto). 
-- **Physical collections** (LEGO, books, art). 
-- **Real estate** (properties, rentals). 
-- **Personal property** (wardrobe, furniture, household items, electronics). 
-- **Liabilities** (mortgages, loans). 
+- **FINANCIAL** — cash, checking, savings, stocks, bonds, crypto
+- **REAL_ESTATE** — properties, rentals
+- **PHYSICAL_COLLECTIONS** — LEGO, books, art, collectibles
+- **PERSONAL_PROPERTY** — wardrobe, furniture, household items, electronics, vehicles
+- **LIABILITIES** — mortgages, loans
+- **OTHER** — miscellaneous assets 
 
 ## Flexible Organization
 
@@ -41,8 +42,8 @@ The chart shows your portfolio value over time and supports **4 filter modes**:
 | Mode | Description |
 |------|-------------|
 | **Total only** | Single bar per date — total portfolio value |
-| **By group** | Stacked bars by asset group (FINANCIAL, REAL_ESTATE, etc.) |
-| **By asset type** | Stacked bars per asset type code |
+| **By group** | Stacked bars by asset type **group** (FINANCIAL, REAL_ESTATE, PERSONAL_PROPERTY, PHYSICAL_COLLECTIONS, LIABILITIES, OTHER) |
+| **By asset type** | Stacked bars per individual asset type code |
 | **By category** | Stacked bars per user-defined category |
 
 **LIABILITIES group** assets always appear **below the zero axis** (red bars) — reflecting that loans reduce your net worth.

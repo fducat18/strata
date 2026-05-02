@@ -104,6 +104,9 @@ CREATE INDEX "asset_snapshots_asset_id_observed_at_idx" ON "asset_snapshots"("as
 CREATE INDEX "portfolio_snapshots_observed_at_idx" ON "portfolio_snapshots"("observed_at" DESC);
 
 -- CreateIndex
+CREATE UNIQUE INDEX "portfolio_snapshots_observed_at_key" ON "portfolio_snapshots"("observed_at");
+
+-- CreateIndex
 CREATE INDEX "transactions_asset_id_occurred_at_idx" ON "transactions"("asset_id", "occurred_at" DESC);
 
 -- CreateIndex
