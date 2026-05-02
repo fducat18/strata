@@ -8,7 +8,7 @@ const mockAsset: Asset = {
   name: 'Apple Inc.',
   quantity: '10',
   disposed: false,
-  assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' },
+  assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' },
   categories: [],
   tags: [],
   createdAt: '2024-01-01T00:00:00Z',
