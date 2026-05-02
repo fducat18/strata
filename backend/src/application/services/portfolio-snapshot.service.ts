@@ -3,7 +3,7 @@ import { Decimal } from 'decimal.js';
 import { PortfolioSnapshot } from '../../domain/entities/index.js';
 import {
   IPortfolioSnapshotRepository,
-  IAssetRepository,
+  IAssetSnapshotRepository,
 } from '../../domain/ports/index.js';
 import { PortfolioSnapshotNotFoundException } from '../../domain/exceptions/index.js';
 
@@ -18,18 +18,20 @@ export interface CreatePortfolioSnapshotInput {
 export class PortfolioSnapshotService {
   constructor(
     private readonly portfolioSnapshotRepository: IPortfolioSnapshotRepository,
-    private readonly assetRepository: IAssetRepository,
+    private readonly assetSnapshotRepository: IAssetSnapshotRepository,
   ) {}
 
-  /** Sum of latest AssetSnapshot.value for every non-disposed asset. */
+  /**
+   * Sum of the latest AssetSnapshot.value for every non-disposed asset.
+   * Uses a targeted query instead of loading all assets with their relations.
+   */
   async computeCurrentValue(): Promise<Decimal> {
-    const assets = await this.assetRepository.findAll();
-    return assets
-      .filter((a) => !a.disposed)
-      .reduce((sum, a) => {
-        const val = a.currentValue();
-        return val ? sum.plus(val) : sum;
-      }, new Decimal(0));
+    const snapshots =
+      await this.assetSnapshotRepository.findLatestPerNonDisposedAsset();
+    return snapshots.reduce(
+      (sum, s) => sum.plus(s.value),
+      new Decimal(0),
+    );
   }
 
   async create(input: CreatePortfolioSnapshotInput): Promise<PortfolioSnapshot> {

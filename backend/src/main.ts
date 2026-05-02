@@ -16,11 +16,20 @@ function parseAllowedOrigins(): string[] {
 }
 
 function shouldEnableSwagger(): boolean {
-  if (process.env.ENABLE_SWAGGER === 'true') return true;
-  return process.env.NODE_ENV !== 'production';
+  return process.env.ENABLE_SWAGGER !== 'false';
 }
 
 async function bootstrap() {
+  const nodeVersion = parseInt(process.versions.node.split('.')[0], 10);
+  if (nodeVersion !== 22) {
+    console.error(
+      `\n❌  Wrong Node.js version: v${process.versions.node}\n` +
+        `    Strata requires Node 22.\n` +
+        `    Fix: nvm use 22  →  then: npm install\n`,
+    );
+    process.exit(1);
+  }
+
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 

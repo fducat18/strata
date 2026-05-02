@@ -38,6 +38,23 @@ title: "Tech Stack"
 | Documentation | Astro Starlight | Developer docs |
 | CI/CD | GitHub Actions | Automated testing |
 
+## Desktop App
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Shell | Tauri v2 (Rust) | Native macOS window, system webview |
+| Sidecar | NestJS + Astro | Backend and frontend spawned as child processes |
+| Data dir | ~/Library/Application Support/Strata/ | Isolated SQLite for real data |
+
+## Documentation
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Framework | Astro 6 + Starlight 0.38 | Static docs site with built-in search |
+| Search | Pagefind | Zero-JS client-side search, built at compile time |
+| Diagrams | Mermaid.js | Architecture and data flow diagrams |
+| Serving | nginx | Lightweight static file serving |
+
 ## Architecture Principles
 
 - **Hexagonal Architecture** (Ports & Adapters) — domain logic is isolated from frameworks

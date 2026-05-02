@@ -2,6 +2,9 @@
  * Axios instance + interceptors. Single source of HTTP config for the app.
  *
  * - 10s timeout on all requests
+ * - Request interceptor attaches a unique X-Request-ID header (UUID) to every outbound request.
+ *   This enables end-to-end trace correlation: the same ID flows through browser logs,
+ *   NestJS request logs, and error responses. See /docs/request-tracing/ for details.
  * - Response interceptor normalizes errors to ApiError so callers can rely on a stable shape
  */
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
@@ -33,6 +36,13 @@ export function createApiClient(): AxiosInstance {
     baseURL: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000/api/v1',
     headers: { 'Content-Type': 'application/json' },
     timeout: DEFAULT_TIMEOUT_MS,
+  });
+  // Attach a unique X-Request-ID to every outbound request for end-to-end trace correlation.
+  client.interceptors.request.use((config) => {
+    if (!config.headers['X-Request-ID']) {
+      config.headers['X-Request-ID'] = crypto.randomUUID();
+    }
+    return config;
   });
   client.interceptors.response.use(
     (r) => r,

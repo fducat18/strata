@@ -1,6 +1,6 @@
 import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pkg = require('../../../package.json') as { version: string };

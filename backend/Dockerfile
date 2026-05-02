@@ -10,7 +10,7 @@ RUN apk add --no-cache ca-certificates \
     && update-ca-certificates \
     && rm -rf /tmp/strata-certs
 COPY package*.json ./
-RUN npm ci --no-update-notifier --no-fund
+RUN npm ci --no-update-notifier --no-fund --loglevel=warn
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 COPY tsconfig*.json nest-cli.json ./

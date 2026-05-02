@@ -1,0 +1,57 @@
+---
+// DocsSiteTitle.astro — Starlight SiteTitle override with version badge.
+// Displays the site logo/title plus the app version and environment.
+import Default from '@astrojs/starlight/components/SiteTitle.astro';
+import { VERSION } from '../lib/version';
+
+const isDev = VERSION.env === 'development';
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>
+<span class="version-badge" title={`git: ${VERSION.gitSha} · built: ${VERSION.buildTime}`}>
+  <span class="version-text">v{VERSION.version.split('-')[0] === '0.0.0' ? VERSION.version : VERSION.version.split('-')[0]}</span>
+  {isDev && <span class="env-badge dev">DEV</span>}
+  {!isDev && <span class="env-badge prod">PROD</span>}
+</span>
+
+<style>
+  .version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-inline-start: 0.6rem;
+    font-size: 0.7rem;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  .version-text {
+    font-family: var(--sl-font-mono, monospace);
+    color: var(--sl-color-white);
+    font-size: 0.68rem;
+  }
+
+  .env-badge {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .env-badge.dev {
+    background: var(--sl-color-orange-low, #431407);
+    color: var(--sl-color-orange-high, #fdba74);
+    border: 1px solid var(--sl-color-orange, #f97316);
+  }
+
+  .env-badge.prod {
+    background: var(--sl-color-green-low, #052e16);
+    color: var(--sl-color-green-high, #86efac);
+    border: 1px solid var(--sl-color-green, #22c55e);
+  }
+</style>

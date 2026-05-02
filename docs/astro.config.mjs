@@ -15,9 +15,10 @@ export default defineConfig({
       title: 'Strata',
       description: 'Collect. Track. Grow. — Strata personal asset manager.',
       logo: { src: './src/assets/logo.avif', replacesTitle: false },
-      social: {
-        github: 'https://github.com/francoiducat/strata',
-      },
+      favicon: '/favicon-32x32.png',
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/francoiducat/strata' },
+      ],
       head: [
         {
           tag: 'script',
@@ -25,6 +26,35 @@ export default defineConfig({
             type: 'module',
             src: 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs',
           },
+        },
+        {
+          // Initialize Mermaid with a clean theme that works in both light and dark mode.
+          tag: 'script',
+          content: `
+            window.addEventListener('DOMContentLoaded', () => {
+              if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({
+                  startOnLoad: true,
+                  theme: 'base',
+                  themeVariables: {
+                    primaryColor: '#4f46e5',
+                    primaryTextColor: '#1e1b4b',
+                    primaryBorderColor: '#6366f1',
+                    lineColor: '#6366f1',
+                    secondaryColor: '#e0e7ff',
+                    tertiaryColor: '#f5f3ff',
+                    background: '#ffffff',
+                    nodeBorder: '#6366f1',
+                    clusterBkg: '#f0f4ff',
+                    titleColor: '#4f46e5',
+                    edgeLabelBackground: '#f0f4ff',
+                    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                    fontSize: '14px',
+                  },
+                });
+              }
+            });
+          `,
         },
       ],
       sidebar: [
@@ -34,24 +64,44 @@ export default defineConfig({
             { label: 'Overview', slug: 'strataapp' },
             { label: 'Features', slug: 'features' },
             { label: 'Use Cases', slug: 'usecases' },
+            { label: 'Mental Model', slug: 'mentalmodel' },
           ],
         },
         {
-          label: 'Developer Docs',
+          label: 'Getting Started',
           items: [
             { label: 'Quick Start', slug: 'quickstart' },
-            { label: 'Recovery', slug: 'recovery' },
-            { label: 'Versioning', slug: 'versioning' },
-            { label: 'Tech Stack', slug: 'techstack' },
-            { label: 'Architecture', slug: 'architecture' },
-            { label: 'API Reference', slug: 'api' },
-            { label: 'Data Model', slug: 'datamodel' },
+            { label: 'Development Setup', slug: 'dev-setup' },
+            { label: 'Configuration', slug: 'configuration' },
+          ],
+        },
+        {
+          label: 'Architecture',
+          items: [
+            { label: 'Overview', slug: 'architecture' },
+            { label: 'Backend', slug: 'backend' },
             { label: 'Frontend', slug: 'frontend' },
-            { label: 'Migrations', slug: 'migrations' },
-            { label: 'Backup', slug: 'backup' },
+            { label: 'Docs Site', slug: 'docs-site' },
             { label: 'Desktop App', slug: 'desktopapp' },
+            { label: 'Tech Stack', slug: 'techstack' },
+            { label: 'Data Model', slug: 'datamodel' },
+          ],
+        },
+        {
+          label: 'API & Validation',
+          items: [
+            { label: 'API Reference', slug: 'api' },
             { label: 'Validation', slug: 'validation' },
-            { label: 'Mental Model', slug: 'mentalmodel' },
+          ],
+        },
+        {
+          label: 'Operations',
+          items: [
+            { label: 'Backup', slug: 'backup' },
+            { label: 'Recovery', slug: 'recovery' },
+            { label: 'Migrations', slug: 'migrations' },
+            { label: 'Versioning', slug: 'versioning' },
+            { label: 'Request Tracing', slug: 'request-tracing' },
           ],
         },
         {
@@ -64,6 +114,9 @@ export default defineConfig({
         },
       ],
       customCss: ['./src/styles/custom.css'],
+      components: {
+        SiteTitle: './src/components/DocsSiteTitle.astro',
+      },
     }),
   ],
 });

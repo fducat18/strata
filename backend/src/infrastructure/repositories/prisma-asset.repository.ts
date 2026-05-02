@@ -148,10 +148,9 @@ export class PrismaAssetRepository extends IAssetRepository {
     });
   }
 
-  async removeCategory(assetId: string, categoryId: string): Promise<Asset> {
-    return this.prisma.$transaction(async (tx) => {
-      await this.detachCategory(tx, assetId, categoryId);
-      return this.reloadAsset(tx, assetId);
+  async removeCategory(assetId: string, categoryId: string): Promise<void> {
+    await this.prisma.categoriesOnAssets.delete({
+      where: { assetId_categoryId: { assetId, categoryId } },
     });
   }
 
@@ -162,10 +161,9 @@ export class PrismaAssetRepository extends IAssetRepository {
     });
   }
 
-  async removeTag(assetId: string, tagId: string): Promise<Asset> {
-    return this.prisma.$transaction(async (tx) => {
-      await this.detachTag(tx, assetId, tagId);
-      return this.reloadAsset(tx, assetId);
+  async removeTag(assetId: string, tagId: string): Promise<void> {
+    await this.prisma.tagsOnAssets.delete({
+      where: { assetId_tagId: { assetId, tagId } },
     });
   }
 
@@ -177,32 +175,12 @@ export class PrismaAssetRepository extends IAssetRepository {
     await tx.categoriesOnAssets.create({ data: { assetId, categoryId } });
   }
 
-  private async detachCategory(
-    tx: Prisma.TransactionClient,
-    assetId: string,
-    categoryId: string,
-  ): Promise<void> {
-    await tx.categoriesOnAssets.delete({
-      where: { assetId_categoryId: { assetId, categoryId } },
-    });
-  }
-
   private async attachTag(
     tx: Prisma.TransactionClient,
     assetId: string,
     tagId: string,
   ): Promise<void> {
     await tx.tagsOnAssets.create({ data: { assetId, tagId } });
-  }
-
-  private async detachTag(
-    tx: Prisma.TransactionClient,
-    assetId: string,
-    tagId: string,
-  ): Promise<void> {
-    await tx.tagsOnAssets.delete({
-      where: { assetId_tagId: { assetId, tagId } },
-    });
   }
 
   private async reloadAsset(

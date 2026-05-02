@@ -5,15 +5,39 @@ title: "Frontend"
 
 The Strata frontend is built with **Astro** and **React**, providing a clean, reactive asset management interface.
 
-## Tech Stack
+## Stack
 
-- **Astro 6** — page routing and SSR
-- **React 19** — interactive UI components
-- **Tailwind CSS 4** — utility-first styling
-- **shadcn/ui-inspired** — accessible component primitives
-- **Recharts** — charts and data visualization
-- **TanStack React Query** — server state management
-- **Axios** — HTTP client
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Framework | Astro 6 | SSR routing, static page generation |
+| UI Library | React 19 | Interactive component islands (`client:load`) |
+| Styling | Tailwind CSS 4 | Utility-first CSS, `@theme` custom properties |
+| Components | shadcn/ui-inspired | Accessible, unstyled UI primitives |
+| Charts | Recharts | Data visualization (net worth timeline, allocation pie) |
+| State | TanStack React Query | Server state, caching, background refetch |
+| HTTP | Axios | Typed API client |
+| Testing | Vitest + Playwright | Unit (306) + E2E tests |
+
+## Directory Structure
+
+```
+front/src/
+├── components/
+│   ├── ui/              ← Reusable UI primitives (Button, Card, Table, Badge…)
+│   ├── layout/          ← AppShell, Sidebar, Header, VersionBadge
+│   ├── dashboard/       ← Dashboard widgets (NetWorthChart, AllocationChart, SnapshotTable)
+│   ├── assets/          ← Asset list, detail, create/edit forms
+│   ├── categories/      ← Category tree with CRUD
+│   ├── tags/            ← Tag list with CRUD
+│   └── settings/        ← Theme toggle, backup export/import, About
+├── pages/               ← Astro .astro page routes
+├── layouts/             ← MainLayout.astro
+├── lib/
+│   ├── api/             ← Axios API clients (assets, snapshots, categories…)
+│   ├── hooks/           ← React Query hooks
+│   └── version.ts       ← Auto-generated version info (git-ignored)
+└── stores/              ← Zustand stores (theme, backup state)
+```
 
 ## Pages
 
@@ -43,15 +67,15 @@ The dashboard's **Take Snapshot** button (or `POST /api/v1/portfolio-snapshots`)
 
 Pages are Astro routes that render React components as interactive islands:
 
-```
-Astro Page (.astro) → React Component (client:load)
-                          ↓
-                    React Query Hook (useAssets, usePortfolioSnapshots, etc.)
-                          ↓
-                    API Client (Axios → http://localhost:3000/api/v1)
+```mermaid
+flowchart TD
+    A[Astro Page\n.astro route] --> B[React Component\nclient:load island]
+    B --> C[React Query Hook\nuseAssets, useSnapshots, etc.]
+    C --> D[API Client\nAxios]
+    D --> E[NestJS Backend\nhttp://localhost:3000/api/v1]
 ```
 
-## Running
+## Running Locally
 
 ```bash
 cd front

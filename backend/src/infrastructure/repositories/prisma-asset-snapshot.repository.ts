@@ -50,4 +50,17 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     });
     return result ? this.mapToEntity(result) : null;
   }
+
+  /**
+   * Returns the single latest snapshot per non-disposed asset.
+   * Uses distinct + orderBy to get one snapshot per assetId efficiently.
+   */
+  async findLatestPerNonDisposedAsset(): Promise<AssetSnapshot[]> {
+    const results = await this.prisma.assetSnapshot.findMany({
+      where: { asset: { disposed: false } },
+      orderBy: { observedAt: 'desc' },
+      distinct: ['assetId'],
+    });
+    return results.map((r) => this.mapToEntity(r));
+  }
 }

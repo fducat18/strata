@@ -1,113 +1,61 @@
 ---
-title: "Architecture"
+title: "Architecture Overview"
+description: System-level overview of how Strata's three services connect.
 ---
 
+> 🏗️ **How does Strata work?** Three loosely coupled services: a NestJS hexagonal backend, an Astro+React frontend, and a static Starlight docs site.
 
-Strata follows **Hexagonal Architecture** (Ports & Adapters) with four layers.
+Strata is composed of three services that work together. Each service has its own dedicated page:
 
-## Directory Structure
-
-```
-backend/src/
-├── domain/              ← Pure TypeScript — no framework imports
-│   ├── entities/        ← Business entities (Asset, AssetSnapshot, PortfolioSnapshot, Category, Tag, AssetType)
-│   ├── ports/           ← Repository interfaces (abstract classes)
-│   └── exceptions/      ← Domain-specific exceptions
-├── application/         ← Use cases as @Injectable() services
-│   └── services/        ← AssetService, AssetSnapshotService, PortfolioSnapshotService, CategoryService, TagService, AssetTypeService
-├── infrastructure/      ← Framework & persistence implementations
-│   ├── prisma/          ← PrismaService, PrismaModule
-│   └── repositories/    ← Prisma repository implementations
-└── presentation/        ← HTTP layer
-    ├── controllers/     ← NestJS @Controller() with Swagger decorators
-    ├── dto/             ← Request DTOs (class-validator)
-    │   └── responses/   ← Response DTOs (@ApiProperty)
-    └── filters/         ← Domain exception → HTTP error mapping
-```
-
-## Layer Rules
-
-| Layer | Can Import | Cannot Import |
-|-------|-----------|---------------|
-| Domain | Nothing (pure TS) | NestJS, Prisma, any framework |
-| Application | Domain | Infrastructure, Presentation |
-| Infrastructure | Domain, Application | Presentation |
-| Presentation | Domain, Application | Infrastructure (via DI) |
-
-## API Reference
-
-See the live Swagger UI for the full API reference. It is available at `http://localhost:3000/swagger` when running in Docker mode, and `http://localhost:3456/swagger` when running as the desktop app. Swagger is automatically enabled in development mode and disabled in production builds.
-
-> **Note:** `PUBLIC_API_URL` is a **build-time argument** (not a runtime env var). It is baked into the frontend at `npm run build` time. Rebuild the frontend if the API URL changes.
-
-## Dependency Injection
-
-NestJS modules wire abstract ports to concrete implementations:
-
-```typescript
-// app.module.ts
-{
-  provide: IAssetRepository,        // abstract class (port)
-  useClass: PrismaAssetRepository,  // concrete implementation
-}
-```
-
-Controllers receive services via constructor injection. Services receive repository ports via constructor injection. The DI container resolves the full dependency graph.
-
-## Frontend Architecture
-
-```
-front/src/
-├── components/
-│   ├── ui/              ← Reusable UI primitives (Button, Card, Table, etc.)
-│   ├── layout/          ← AppShell, Sidebar, Header
-│   ├── dashboard/       ← Dashboard-specific components
-│   ├── assets/          ← Asset CRUD components
-│   ├── categories/      ← Category tree components
-│   ├── tags/            ← Tag management components
-│   └── settings/        ← Settings & backup components
-├── pages/               ← Astro page routes
-├── layouts/             ← Astro layouts (MainLayout)
-├── lib/                 ← API client, React Query hooks, utilities
-└── styles/              ← Global CSS + Tailwind theme
-```
-
-The frontend uses **Astro** for routing and page rendering, with **React islands** (`client:load`) for interactive components. Data fetching uses **TanStack React Query** with typed hooks wrapping the Axios API client.
-
-## Documentation Site (Astro Starlight)
-
-The documentation lives in `docs/`. It is built with [Astro Starlight](https://starlight.astro.build/) and served as a static site via nginx. In development (`docker:dev`), it is available at `http://localhost:8001/docs/`. In production (`docker:prod`), it is served at `http://localhost:8001/docs/` as well — the docs image is rebuilt with the latest content on every deploy.
-
-## Request tracing (X-Request-ID)
-
-Backend HTTP requests pass through `RequestIdMiddleware` (`backend/src/infrastructure/middleware/request-id.middleware.ts`).
-
-- If the client sends `X-Request-ID`, Strata reuses it.
-- Otherwise, Strata generates one.
-- The value is attached to the request context and echoed in response headers.
-- Error filters include this ID in JSON error payloads for easier debugging and support.
-
-This enables end-to-end correlation across browser logs, API logs, and error responses.
+- [Backend →](/docs/backend/) — NestJS hexagonal architecture, Prisma, layers, DI
+- [Frontend →](/docs/frontend/) — Astro + React islands, state management, data flow
+- [Docs Site →](/docs/docs-site/) — Astro Starlight, nginx, Mermaid, local dev
 
 ## Data Flow
 
-```
-User (Browser / Tauri Shell)
-        ↓
-    Astro + React Frontend (port 4321 in dev)
-        ↓ HTTP/REST
-    NestJS Backend (port 3000 in dev)
-        ↓ Prisma ORM
-    SQLite Database (strata-dev.db in dev / strata.db in prod)
+```mermaid
+flowchart TD
+    You["👤 You"]
+    Browser["🌐 Browser or Tauri App"]
+    Front["🖥️ Astro + React — Frontend\nport 4321"]
+    Back["⚙️ NestJS — Backend\nport 3000"]
+
+    subgraph dev["  🧪 Dev mode  —  npm run docker:dev  "]
+        DevDB[("🗄️ strata-dev.db\npre-seeded demo data")]
+    end
+
+    subgraph prod["  🚀 Prod mode  —  npm run docker:prod  "]
+        ProdDB[("🗄️ strata.db\nyour real data")]
+        Nginx["🔁 nginx\nport 8001"]
+        Docs["📖 Docs Site\nstatic HTML"]
+    end
+
+    You -->|opens| Browser
+    Browser -->|loads app| Front
+    Front -->|HTTP /api/v1| Back
+    Back -->|reads & writes| DevDB
+    Back -->|reads & writes| ProdDB
+    Nginx -->|serves| Docs
 ```
 
-## Dev vs Production Configuration
+> **Dev** (`docker:dev`): backend uses `strata-dev.db` (seeded demo data). nginx and docs are not started.
+> **Prod** (`docker:prod`): backend uses `strata.db` (your real data). nginx serves the pre-built docs site on port 8001.
 
-| | Development (`docker:dev`) | Production (`docker:prod`) |
-|---|---|---|
-| DB file | `strata-dev.db` | `strata.db` |
-| Swagger UI | ✅ `http://localhost:3000/swagger` | ❌ disabled |
-| NODE_ENV | `development` | `production` |
-| Seed data | Demo assets seeded on first start | Real personal data |
-| Version badge | Shows `DEV` badge | Shows clean version |
-| Reset DB | `npm run docker:reset` | ⚠️ Manual only (backup first!) |
+## Services at a Glance
+
+| Service | Technology | Dev Port | Prod Port | Source |
+|---------|-----------|----------|-----------|--------|
+| Backend | NestJS + Prisma + SQLite | `3000` | `3000` | `backend/` |
+| Frontend | Astro 6 + React 19 | `4321` | `4321` | `front/` |
+| Docs | Astro Starlight + nginx | `8001` | `8001` | `docs/` |
+
+## Dev vs Production
+
+The key difference between dev and prod is the **database file**:
+- **Dev** — uses `strata-dev.db` (pre-seeded demo data)
+- **Prod** — uses `strata.db` (your real data)
+
+Swagger UI (`/swagger`) is enabled by default in **both** environments. Set `ENABLE_SWAGGER=false` to disable it.
+
+See [Configuration](/docs/configuration/) for the full comparison table.
+

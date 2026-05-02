@@ -48,6 +48,12 @@ describe('PrismaAssetRepository', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    categoriesOnAssets: {
+      delete: jest.fn(),
+    },
+    tagsOnAssets: {
+      delete: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -343,15 +349,13 @@ describe('PrismaAssetRepository', () => {
   });
 
   describe('removeTag', () => {
-    it('runs within a transaction', async () => {
-      const reloadedRow = makeAssetRow({ tags: [] });
-      mockPrismaService.$transaction.mockImplementation((fn: any) => {
-        mockTx.asset.findUniqueOrThrow.mockResolvedValue(reloadedRow);
-        return fn(mockTx);
+    it('deletes the tag join row directly', async () => {
+      mockPrismaService.tagsOnAssets.delete.mockResolvedValue({});
+      await repository.removeTag('a1', 't1');
+      expect(mockPrismaService.tagsOnAssets.delete).toHaveBeenCalledWith({
+        where: { assetId_tagId: { assetId: 'a1', tagId: 't1' } },
       });
-      const result = await repository.removeTag('a1', 't1');
-      expect(mockPrismaService.$transaction).toHaveBeenCalled();
-      expect(result.tags).toHaveLength(0);
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
     });
   });
 
@@ -373,15 +377,13 @@ describe('PrismaAssetRepository', () => {
   });
 
   describe('removeCategory', () => {
-    it('runs within a transaction', async () => {
-      const reloadedRow = makeAssetRow({ categories: [] });
-      mockPrismaService.$transaction.mockImplementation((fn: any) => {
-        mockTx.asset.findUniqueOrThrow.mockResolvedValue(reloadedRow);
-        return fn(mockTx);
+    it('deletes the category join row directly', async () => {
+      mockPrismaService.categoriesOnAssets.delete.mockResolvedValue({});
+      await repository.removeCategory('a1', 'c1');
+      expect(mockPrismaService.categoriesOnAssets.delete).toHaveBeenCalledWith({
+        where: { assetId_categoryId: { assetId: 'a1', categoryId: 'c1' } },
       });
-      const result = await repository.removeCategory('a1', 'c1');
-      expect(mockPrismaService.$transaction).toHaveBeenCalled();
-      expect(result.categories).toHaveLength(0);
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
     });
   });
 });

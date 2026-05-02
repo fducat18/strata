@@ -1,5 +1,6 @@
 ---
 title: "Strata App Overview"
+description: Most people don't know their real net worth. Strata fixes that — one place to track every asset you own, whatever it is.
 ---
 
 

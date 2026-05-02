@@ -5,14 +5,15 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "prebuild": "node ../scripts/gen-version.mjs backend",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "prestart:dev": "node ../scripts/gen-version.mjs backend",
+    "prestart:dev": "node -e \"const v=parseInt(process.versions.node);if(v!==22){console.error('\\x1b[31m\\n\\u274c Wrong Node.js version: v'+process.versions.node+'\\n   Strata requires Node 22. Run: nvm use 22\\n   Then re-run: npm install  (to rebuild native modules)\\n\\x1b[0m');process.exit(1);}\" && node ../scripts/gen-version.mjs backend",
     "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "lint:ci": "eslint \"{src,apps,libs,test}/**/*.ts\"",
@@ -21,7 +22,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "pretest:e2e": "node ../scripts/gen-version.mjs backend",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
@@ -69,6 +69,9 @@
     "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "overrides": {
+    "test-exclude": "^7.0.0"
   },
   "jest": {
     "moduleFileExtensions": [

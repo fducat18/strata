@@ -107,4 +107,43 @@ describe('Admin backup/restore (e2e)', () => {
       .send({ schemaVersion: '99', data: {} })
       .expect(400);
   });
+
+  describe('merge mode', () => {
+    it('adds new records without wiping existing ones', async () => {
+      const http = ctx.app.getHttpServer() as unknown as App;
+
+      // Capture the current state as a baseline.
+      const exportRes = await request(http)
+        .get('/api/v1/admin/backup')
+        .expect(200);
+      const originalPayload = exportRes.body;
+      const originalAssetCount: number = originalPayload.data.assets.length;
+      expect(originalAssetCount).toBeGreaterThan(0);
+
+      // Create a new asset that is NOT yet in the backup.
+      const types = await request(http).get('/api/v1/asset-types').expect(200);
+      const newAsset = await request(http)
+        .post('/api/v1/assets')
+        .send({ name: 'Merge-Only Asset', assetTypeId: types.body[0].id })
+        .expect(201);
+      const newAssetId: string = newAsset.body.id;
+
+      // Restore the original backup in merge mode (should not wipe the new asset).
+      const mergeRes = await request(http)
+        .post('/api/v1/admin/restore')
+        .send({
+          schemaVersion: '1',
+          data: originalPayload.data,
+          mode: 'merge',
+        })
+        .expect(201);
+      expect(mergeRes.body.mode).toBe('merge');
+
+      // Both the original assets AND the new asset must still exist.
+      const afterMerge = await request(http).get('/api/v1/assets').expect(200);
+      const ids: string[] = afterMerge.body.map((a: any) => a.id);
+      expect(ids).toContain(newAssetId);
+      expect(afterMerge.body.length).toBeGreaterThanOrEqual(originalAssetCount + 1);
+    }, 30_000);
+  });
 });

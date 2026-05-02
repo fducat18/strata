@@ -3,8 +3,6 @@ title: "ADR-003: Dev vs Production Database Strategy"
 description: How Strata separates development/demo data from real user data.
 ---
 
-# ADR-003: Dev vs Production Database Strategy
-
 **Status:** Accepted  
 **Date:** 2024
 
@@ -17,6 +15,14 @@ Strata is a personal asset tracker. It stores real financial data (account balan
 ---
 
 ## Decision
+
+## Decision Summary
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Single DB file** | Simple; no mistakes possible | Risk of seeding over real data |
+| **Two DB files: dev + prod (chosen)** | Complete isolation; `docker:reset` is always safe | Two files to document and manage |
+| **DB flag / schema separation** | One file | Complex queries; risk of data leak between schemas |
 
 **Two SQLite files, never mixed:**
 

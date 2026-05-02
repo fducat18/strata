@@ -20,7 +20,7 @@ export abstract class IAssetRepository {
   abstract delete(id: string): Promise<void>;
   abstract dispose(id: string): Promise<Asset>;
   abstract addCategory(assetId: string, categoryId: string): Promise<Asset>;
-  abstract removeCategory(assetId: string, categoryId: string): Promise<Asset>;
+  abstract removeCategory(assetId: string, categoryId: string): Promise<void>;
   abstract addTag(assetId: string, tagId: string): Promise<Asset>;
-  abstract removeTag(assetId: string, tagId: string): Promise<Asset>;
+  abstract removeTag(assetId: string, tagId: string): Promise<void>;
 }

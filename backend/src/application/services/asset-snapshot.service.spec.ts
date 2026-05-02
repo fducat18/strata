@@ -21,7 +21,6 @@ describe('AssetSnapshotService', () => {
     save: jest.fn(),
     findById: jest.fn(),
     findAll: jest.fn(),
-    findByPortfolio: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
     dispose: jest.fn(),

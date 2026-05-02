@@ -85,12 +85,6 @@ export class PrismaCategoryRepository extends ICategoryRepository {
     await this.prisma.category.delete({ where: { id } });
   }
 
-  async countAssets(id: string): Promise<number> {
-    return this.prisma.categoriesOnAssets.count({
-      where: { categoryId: id },
-    });
-  }
-
   async countChildren(id: string): Promise<number> {
     return this.prisma.category.count({
       where: { parentId: id },

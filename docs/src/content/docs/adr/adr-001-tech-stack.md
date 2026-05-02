@@ -3,12 +3,12 @@ title: "ADR-001: Technology Stack"
 description: Technology choices and rationale for the Strata stack.
 ---
 
-# ADR-001: Technology Stack
-
 **Status:** Accepted  
 **Date:** 2024
 
 ---
+
+> 🧭 **Why did we make these choices?** Each ADR captures the context, alternatives considered, and rationale behind a major technical decision.
 
 ## Context
 
@@ -22,6 +22,17 @@ Strata is a personal, single-user, local-first asset tracker. The primary constr
 ---
 
 ## Decisions
+
+## Decision Summary
+
+| Choice | Selected | Alternative(s) | Key Trade-off |
+|--------|---------|----------------|---------------|
+| Backend language | NestJS (TypeScript) | FastAPI (Python) | Single-language codebase vs Python ecosystem |
+| Backend architecture | Hexagonal | NestJS feature modules | Clean domain isolation vs less boilerplate |
+| ORM | Prisma 7 | TypeORM, Drizzle | Schema-first + type safety vs decorator-based |
+| Database | SQLite | PostgreSQL | Zero-server portability vs concurrent write scale |
+| Frontend | Astro + React | Next.js, Remix | Islands architecture vs full SSR complexity |
+| Desktop | Tauri | Electron | ~10 MB bundle vs ~200 MB; Rust security vs Node.js |
 
 ### Backend: NestJS over FastAPI (Python)
 

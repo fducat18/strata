@@ -2,6 +2,7 @@
 title: "Backup & Restore"
 ---
 
+> 🛡️ **How do I operate Strata?** Backup, recovery, migrations, and versioning — everything you need to keep your data safe and the app running.
 
 ## Why backups exist
 

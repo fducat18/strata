@@ -46,6 +46,7 @@ describe('Strata API (e2e)', () => {
       expect(res.body).toHaveProperty('id');
       expect(res.body).toHaveProperty('value');
       expect(res.body).toHaveProperty('currency');
+      expect(parseFloat(res.body.value)).toBeCloseTo(239200, 0);
       createdSnapshotId = res.body.id;
     });
 

@@ -60,6 +60,7 @@ model AssetSnapshot {
   asset      Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@index([assetId, observedAt(sort: Desc)])
   @@map("asset_snapshots")
 }
 
@@ -73,6 +74,7 @@ model PortfolioSnapshot {
   observedAt DateTime @map("observed_at")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@index([observedAt(sort: Desc)])
   @@map("portfolio_snapshots")
 }
 
@@ -93,6 +95,7 @@ model Transaction {
   asset      Asset           @relation(fields: [assetId], references: [id], onDelete: Cascade)
   createdAt  DateTime        @default(now()) @map("created_at")
 
+  @@index([assetId, occurredAt(sort: Desc)])
   @@map("transactions")
 }
 
@@ -103,6 +106,7 @@ model CategoriesOnAssets {
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([assetId, categoryId])
+  @@index([categoryId])
   @@map("asset_categories")
 }
 
@@ -113,5 +117,6 @@ model TagsOnAssets {
   tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([assetId, tagId])
+  @@index([tagId])
   @@map("asset_tags")
 }

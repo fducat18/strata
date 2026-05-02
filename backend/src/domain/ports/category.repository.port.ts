@@ -11,6 +11,5 @@ export abstract class ICategoryRepository {
   abstract findAll(): Promise<Category[]>;
   abstract findChildren(parentId: string): Promise<Category[]>;
   abstract delete(id: string): Promise<void>;
-  abstract countAssets(id: string): Promise<number>;
   abstract countChildren(id: string): Promise<number>;
 }

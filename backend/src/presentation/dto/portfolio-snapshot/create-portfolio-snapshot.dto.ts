@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsISO8601 } from 'class-validator';
+import { IsOptional, IsString, IsISO8601, Length, Matches } from 'class-validator';
 import { IsDecimalString } from '../validators/is-decimal-string.validator.js';
 
 export class CreatePortfolioSnapshotDto {
@@ -13,11 +13,15 @@ export class CreatePortfolioSnapshotDto {
   value?: string;
 
   @ApiPropertyOptional({
-    description: 'Currency code (default: EUR)',
+    description: 'Currency code (default: EUR). Must be a 3-letter ISO 4217 code.',
     example: 'EUR',
   })
   @IsOptional()
   @IsString()
+  @Length(3, 3)
+  @Matches(/^[A-Z]{3}$/, {
+    message: 'currency must be a 3-letter ISO 4217 code (e.g. EUR, USD)',
+  })
   currency?: string;
 
   @ApiPropertyOptional({

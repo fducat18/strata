@@ -8,16 +8,10 @@ test.describe('Strata Smoke Tests', () => {
 
   test('navigation links exist', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('a[href="/portfolios"]')).toBeVisible();
     await expect(page.locator('a[href="/assets"]')).toBeVisible();
     await expect(page.locator('a[href="/categories"]')).toBeVisible();
     await expect(page.locator('a[href="/tags"]')).toBeVisible();
     await expect(page.locator('a[href="/settings"]')).toBeVisible();
-  });
-
-  test('can navigate to portfolios page', async ({ page }) => {
-    await page.goto('/portfolios');
-    await expect(page.getByRole('heading', { name: 'Portfolios', level: 1 })).toBeVisible();
   });
 
   test('can navigate to assets page', async ({ page }) => {

@@ -4,15 +4,13 @@
   "private": true,
   "description": "Strata — universal asset-tracking & net-worth dashboard",
   "scripts": {
-    "tauri": "tauri",
+    "setup": "node scripts/check-prereqs.mjs",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "docker:dev": "node scripts/check-ports.mjs && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose up --build",
-    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose up --build -d'",
-    "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && docker-compose build --no-cache && docker-compose up",
-    "docker:down": "docker-compose down",
-    "version": "node scripts/version.mjs",
-    "sync-readme": "node scripts/sync-readme.mjs"
+    "docker:dev": "node scripts/check-ports.mjs && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose up --build",
+    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose up --build -d'",
+    "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose build --no-cache && docker-compose up",
+    "docker:down": "docker-compose down"
   },
   "repository": {
     "type": "git",

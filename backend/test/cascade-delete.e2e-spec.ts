@@ -35,11 +35,7 @@ describe('Cascade delete (e2e)', () => {
     expect(await prisma.asset.count({ where: { id: assetId } })).toBe(1);
     expect(await prisma.assetSnapshot.count({ where: { assetId } })).toBe(1);
 
-    // Manual cascade: snapshots first (FK), then asset.
-    await prisma.assetSnapshot.deleteMany({ where: { assetId } });
-    await prisma.transaction.deleteMany({ where: { assetId } });
-    await prisma.tagsOnAssets.deleteMany({ where: { assetId } });
-    await prisma.categoriesOnAssets.deleteMany({ where: { assetId } });
+    // Delete asset — DB cascade should remove related records automatically.
     await request(http).delete(`/api/v1/assets/${assetId}`).expect(204);
 
     expect(await prisma.asset.count({ where: { id: assetId } })).toBe(0);

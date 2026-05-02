@@ -67,21 +67,4 @@ describe('PrismaAssetTypeRepository', () => {
       expect(result).toEqual([]);
     });
   });
-
-  describe('findByCode', () => {
-    it('returns mapped asset type when found', async () => {
-      mockPrismaService.assetType.findUnique.mockResolvedValue(assetTypeRow);
-      const result = await repository.findByCode('STOCKS');
-      expect(mockPrismaService.assetType.findUnique).toHaveBeenCalledWith({
-        where: { code: 'STOCKS' },
-      });
-      expect(result?.id).toBe('at1');
-    });
-
-    it('returns null when code not found', async () => {
-      mockPrismaService.assetType.findUnique.mockResolvedValue(null);
-      const result = await repository.findByCode('UNKNOWN');
-      expect(result).toBeNull();
-    });
-  });
 });

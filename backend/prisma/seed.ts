@@ -118,6 +118,8 @@ const DEMO_ASSETS: {
     name: 'Home Loan — BNP',
     typeCode: 'LOAN',
     quantity: 1,
+    // unitPrice reflects outstanding loan balance; snapshotValue is negative
+    // because a loan is a liability that reduces net worth.
     unitPrice: 180000.0,
     snapshotValue: -180000.0,
     currency: 'EUR',

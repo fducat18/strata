@@ -7,11 +7,12 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Database
+# Database files (never commit — use JSON export for backups)
 *.db
+*.db-journal
+*.sqlite3
 .data/
 backend/.data/
-*.sqlite3
 
 # OS-specific
 .DS_Store
@@ -28,16 +29,13 @@ docs/node_modules/
 
 # Generated version files (created at build time from git describe)
 front/src/lib/version.ts
+docs/src/lib/version.ts
 backend/src/_generated/
 src-tauri/.version
 
 # Test coverage
 coverage/
 .nyc_output/
-
-# Prisma
-prisma/*.db
-prisma/*.db-journal
 
 # Tauri
 src-tauri/target/
@@ -51,3 +49,6 @@ front/test-results/
 
 # Local CA certs (corporate proxy, never commit)
 backend/certs/*.crt
+
+# Plan / working notes (session artifacts)
+issues/

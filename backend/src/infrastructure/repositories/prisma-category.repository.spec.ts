@@ -163,14 +163,6 @@ describe('PrismaCategoryRepository', () => {
     });
   });
 
-  describe('countAssets', () => {
-    it('counts categoriesOnAssets', async () => {
-      mockPrismaService.categoriesOnAssets.count.mockResolvedValue(3);
-      const result = await repository.countAssets('c1');
-      expect(result).toBe(3);
-    });
-  });
-
   describe('countChildren', () => {
     it('counts child categories', async () => {
       mockPrismaService.category.count.mockResolvedValue(2);

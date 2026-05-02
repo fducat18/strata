@@ -3,8 +3,6 @@ title: "ADR-002: Portfolio Entity Removal"
 description: Why the Portfolio entity was removed and what replaced it.
 ---
 
-# ADR-002: Portfolio Entity Removal
-
 **Status:** Accepted  
 **Date:** 2024
 
@@ -30,7 +28,15 @@ As the app evolved, it became clear that for a single-user personal finance trac
 
 ## Decision
 
-**Remove the Portfolio entity entirely.** Assets are first-class citizens. Net worth is computed as the sum of the latest `AssetSnapshot.value` for all non-disposed assets.
+## Decision Summary
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Keep Portfolio entity** | Familiar container model; enables multi-portfolio | Forces a named container before any asset; redundant for single user |
+| **Remove Portfolio (chosen)** | Single-step asset creation; simpler API; net worth = all assets | No per-portfolio filtering; would need re-adding for multi-user v2 |
+| **Make Portfolio optional** | Backwards compatible | More complex logic; two code paths for everything |
+
+**Remove the Portfolio entity entirely.** Net worth is computed as the sum of the latest `AssetSnapshot.value` for all non-disposed assets.
 
 **Replaced by:**
 

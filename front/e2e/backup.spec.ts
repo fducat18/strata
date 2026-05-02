@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 let backendOk = false;
 test.beforeAll(async ({ request }) => {
   try {
-    const res = await request.get('http://localhost:3000/api/v1/portfolios', { timeout: 2000 });
+    const res = await request.get('http://localhost:3000/api/v1/assets', { timeout: 2000 });
     backendOk = res.ok();
   } catch {
     backendOk = false;
@@ -34,15 +34,17 @@ test('import opens confirm dialog with parsed counts', async ({ page }) => {
   const fileChooserPromise = page.waitForEvent('filechooser');
   await importBtn.click();
   const chooser = await fileChooserPromise;
+  // Backup format: { version, data: { assets, categories, tags, assetTypes } }
+  // (portfolios were removed in ADR-002)
   const payload = JSON.stringify({
     version: '1.0',
-    data: { portfolios: [{}, {}], assets: [{}], categories: [], tags: [{}, {}, {}] },
+    data: { assets: [{}, {}], categories: [{}], tags: [{}, {}, {}], assetTypes: [] },
   });
   await chooser.setFiles({
     name: 'fake-backup.json',
     mimeType: 'application/json',
     buffer: Buffer.from(payload),
   });
-  await expect(page.getByText(/2 portfolios/)).toBeVisible();
+  await expect(page.getByText(/2 assets/)).toBeVisible();
   await expect(page.getByText(/3 tags/)).toBeVisible();
 });

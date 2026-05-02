@@ -59,6 +59,15 @@ export class PortfolioSnapshotController {
     return this.portfolioSnapshotService.getCurrentValue();
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a portfolio snapshot by ID' })
+  @ApiResponse({ status: 200, type: PortfolioSnapshotResponseDto })
+  @ApiStandardErrors([404, 500])
+  async findById(@Param('id') id: string): Promise<PortfolioSnapshotResponseDto> {
+    const snapshot = await this.portfolioSnapshotService.findById(id);
+    return mapPortfolioSnapshotToResponse(snapshot);
+  }
+
   @Post()
   @ApiOperation({
     summary:

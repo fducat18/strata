@@ -22,7 +22,6 @@ describe('BackupService', () => {
 
   const mockPrismaService = {
     assetType: { findMany: jest.fn(), upsert: jest.fn() },
-    portfolio: { findMany: jest.fn(), upsert: jest.fn() },
     category: {
       findMany: jest.fn(),
       upsert: jest.fn(),
@@ -84,7 +83,6 @@ describe('BackupService', () => {
         }
       }
       mockPrismaService.assetType.findMany.mockResolvedValue([]);
-      mockPrismaService.portfolio.findMany.mockResolvedValue([]);
       mockPrismaService.category.findMany.mockResolvedValue([]);
       mockPrismaService.tag.findMany.mockResolvedValue([]);
       mockPrismaService.asset.findMany.mockResolvedValue([]);
@@ -105,7 +103,6 @@ describe('BackupService', () => {
 
     it('serializes Decimal values as strings in export', async () => {
       mockPrismaService.assetType.findMany.mockResolvedValue([]);
-      mockPrismaService.portfolio.findMany.mockResolvedValue([]);
       mockPrismaService.category.findMany.mockResolvedValue([]);
       mockPrismaService.tag.findMany.mockResolvedValue([]);
       mockPrismaService.asset.findMany.mockResolvedValue([
@@ -149,7 +146,6 @@ describe('BackupService', () => {
           asset: { deleteMany: jest.fn(), upsert: jest.fn() },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -185,7 +181,6 @@ describe('BackupService', () => {
           asset: { deleteMany: jest.fn(), upsert: jest.fn() },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -216,7 +211,6 @@ describe('BackupService', () => {
           asset: { upsert: jest.fn() },
           tag: { upsert: jest.fn() },
           category: { upsert: jest.fn() },
-          portfolio: { upsert: jest.fn() },
           assetType: { upsert: jest.fn() },
         };
         return fn(txMock);
@@ -257,7 +251,6 @@ describe('BackupService', () => {
               return Promise.resolve(create);
             }),
           },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -295,7 +288,6 @@ describe('BackupService', () => {
           asset: { deleteMany: jest.fn(), upsert: jest.fn() },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -328,7 +320,6 @@ describe('BackupService', () => {
           asset: { deleteMany: jest.fn(), upsert: jest.fn() },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -368,7 +359,6 @@ describe('BackupService', () => {
             }),
           },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -412,7 +402,6 @@ describe('BackupService', () => {
           },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);
@@ -459,7 +448,6 @@ describe('BackupService', () => {
           asset: { deleteMany: jest.fn(), upsert: jest.fn() },
           tag: { deleteMany: jest.fn(), upsert: jest.fn() },
           category: { deleteMany: jest.fn(), upsert: jest.fn() },
-          portfolio: { deleteMany: jest.fn(), upsert: jest.fn() },
           assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
         };
         return fn(txMock);

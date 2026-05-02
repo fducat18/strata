@@ -3,7 +3,7 @@ title: API Reference
 description: How to access the Strata API documentation
 ---
 
-# API Reference
+> 🔌 **What can Strata do?** A REST API for managing assets, snapshots, categories, tags and backups — always documented live in Swagger UI.
 
 Strata's API is documented live via **Swagger UI** — the authoritative, always-up-to-date reference for all endpoints, request/response schemas, and examples.
 

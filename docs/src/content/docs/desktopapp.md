@@ -15,11 +15,11 @@ that start/stop automatically with the app.
 │  ┌───────────────────────────────┐  │
 │  │   Astro SSR (localhost:4321)  │  │
 │  └──────────────┬────────────────┘  │
-│                 │ HTTP               │
+│                 │ HTTP              │
 │  ┌──────────────▼────────────────┐  │
 │  │  NestJS API (localhost:3456)  │  │
 │  └──────────────┬────────────────┘  │
-│                 │                    │
+│                 │                   │
 │  ┌──────────────▼────────────────┐  │
 │  │  SQLite (~/Library/App Sup…)  │  │
 │  └───────────────────────────────┘  │
@@ -27,6 +27,7 @@ that start/stop automatically with the app.
 ```
 
 On launch, the Tauri app:
+
 1. Creates `~/Library/Application Support/Strata/` if needed
 2. Runs `prisma migrate deploy` and `prisma db seed`
 3. Starts the NestJS backend on port 3456
@@ -58,6 +59,7 @@ npx tauri dev
 ```
 
 Or use the convenience script:
+
 ```bash
 ./scripts/tauri-dev.sh
 ```
@@ -69,6 +71,7 @@ Or use the convenience script:
 ```
 
 Output:
+
 - `.app` → `src-tauri/target/release/bundle/macos/Strata.app`
 
 ### ⚠️ Unsigned App (Gatekeeper)
@@ -131,21 +134,26 @@ This separation prevents accidental corruption of your real data during local te
 ## Troubleshooting
 
 ### Backend fails to start
+
 - Check that `backend/dist/main.js` exists (`cd backend && npm run build`)
 - Check logs in `~/Library/Logs/Strata/`
 - Ensure port 3456 is free: `lsof -i :3456`
 
 ### Frontend fails to start
+
 - Check that `front/dist/server/entry.mjs` exists (`cd front && npm run build`)
 - Ensure port 4321 is free: `lsof -i :4321`
 
 ### API URL mismatch
+
 The frontend's API URL is baked at build time. Rebuild with:
+
 ```bash
 cd front && PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build
 ```
 
 ### Leftover processes after crash
+
 ```bash
 lsof -i :3456 -t | xargs kill -9
 lsof -i :4321 -t | xargs kill -9

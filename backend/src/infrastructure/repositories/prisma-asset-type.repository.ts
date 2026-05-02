@@ -25,11 +25,4 @@ export class PrismaAssetTypeRepository extends IAssetTypeRepository {
     const results = await this.prisma.assetType.findMany();
     return results.map((r) => this.mapToEntity(r));
   }
-
-  async findByCode(code: string): Promise<AssetType | null> {
-    const result = await this.prisma.assetType.findUnique({
-      where: { code },
-    });
-    return result ? this.mapToEntity(result) : null;
-  }
 }
