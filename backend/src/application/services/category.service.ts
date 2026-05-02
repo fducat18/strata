@@ -40,6 +40,11 @@ export class CategoryService {
     return this.categoryRepository.findChildren(parentId);
   }
 
+  async update(id: string, name: string): Promise<Category> {
+    await this.findById(id);
+    return this.categoryRepository.update(id, { name });
+  }
+
   async delete(id: string): Promise<void> {
     await this.findById(id);
 

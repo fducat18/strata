@@ -24,6 +24,11 @@ export class TagService {
     return this.tagRepository.findAll();
   }
 
+  async update(id: string, name: string): Promise<Tag> {
+    await this.findById(id);
+    return this.tagRepository.update(id, { name });
+  }
+
   async delete(id: string): Promise<void> {
     await this.findById(id);
     return this.tagRepository.delete(id);

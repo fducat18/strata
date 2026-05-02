@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Body,
   Param,
@@ -14,7 +15,7 @@ import {
   DomainExceptionFilter,
   PrismaExceptionFilter,
 } from '../filters/index.js';
-import { CreateTagDto } from '../dto/index.js';
+import { CreateTagDto, UpdateTagDto } from '../dto/index.js';
 import { TagResponseDto } from '../dto/responses/index.js';
 import { mapTagToResponse } from './mappers/tag.mapper.js';
 import { ApiStandardErrors } from './api-standard-errors.decorator.js';
@@ -49,6 +50,18 @@ export class TagController {
   @ApiStandardErrors([404, 500])
   async findById(@Param('id') id: string): Promise<TagResponseDto> {
     const tag = await this.tagService.findById(id);
+    return mapTagToResponse(tag);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Rename a tag' })
+  @ApiResponse({ status: 200, type: TagResponseDto })
+  @ApiStandardErrors([400, 404, 409, 500])
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTagDto,
+  ): Promise<TagResponseDto> {
+    const tag = await this.tagService.update(id, dto.name);
     return mapTagToResponse(tag);
   }
 

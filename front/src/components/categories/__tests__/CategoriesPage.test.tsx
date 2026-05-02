@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 vi.mock('@/lib/hooks', () => ({
   useCategories: vi.fn(),
   useCreateCategory: vi.fn(),
+  useUpdateCategory: vi.fn(),
   useDeleteCategory: vi.fn(),
 }));
 
@@ -14,10 +15,11 @@ vi.mock('@/stores/uiStore', () => ({
 }));
 
 import { CategoriesPage } from '../CategoriesPage';
-import { useCategories, useCreateCategory, useDeleteCategory } from '@/lib/hooks';
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '@/lib/hooks';
 
 const mockUseCategories = vi.mocked(useCategories);
 const mockUseCreateCategory = vi.mocked(useCreateCategory);
+const mockUseUpdateCategory = vi.mocked(useUpdateCategory);
 const mockUseDeleteCategory = vi.mocked(useDeleteCategory);
 
 const mockMutation = {
@@ -34,6 +36,7 @@ describe('CategoriesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseCreateCategory.mockReturnValue(mockMutation as any);
+    mockUseUpdateCategory.mockReturnValue(mockMutation as any);
     mockUseDeleteCategory.mockReturnValue(mockMutation as any);
   });
 

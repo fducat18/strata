@@ -5,8 +5,13 @@ export interface CreateCategoryData {
   parentId?: string;
 }
 
+export interface UpdateCategoryData {
+  name: string;
+}
+
 export abstract class ICategoryRepository {
   abstract save(data: CreateCategoryData): Promise<Category>;
+  abstract update(id: string, data: UpdateCategoryData): Promise<Category>;
   abstract findById(id: string): Promise<Category | null>;
   abstract findAll(): Promise<Category[]>;
   abstract findChildren(parentId: string): Promise<Category[]>;

@@ -14,6 +14,7 @@ import { api } from '../client';
 
 const mockGet = vi.mocked(api.get);
 const mockPost = vi.mocked(api.post);
+const mockPut = vi.mocked(api.put);
 const mockDelete = vi.mocked(api.delete);
 
 describe('tagApi', () => {
@@ -40,6 +41,14 @@ describe('tagApi', () => {
     mockPost.mockResolvedValue({ data: tag });
     const result = await tagApi.create({ name: 'growth' });
     expect(mockPost).toHaveBeenCalledWith('/tags', { name: 'growth' });
+    expect(result).toEqual(tag);
+  });
+
+  it('update calls PUT /tags/:id', async () => {
+    const tag = { id: 't1', name: 'updated' };
+    mockPut.mockResolvedValue({ data: tag });
+    const result = await tagApi.update('t1', 'updated');
+    expect(mockPut).toHaveBeenCalledWith('/tags/t1', { name: 'updated' });
     expect(result).toEqual(tag);
   });
 

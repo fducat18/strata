@@ -1,0 +1,17 @@
+meta {
+  name: UpdateCategory
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:3000/api/v1/categories/{{categoryId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Category Name"
+  }
+}

@@ -6,5 +6,7 @@ export const tagApi = {
   getById: (id: string) => api.get<Tag>(`/tags/${id}`).then((r) => r.data),
   create: (data: CreateTagRequest) =>
     api.post<Tag>('/tags', data).then((r) => r.data),
+  update: (id: string, name: string) =>
+    api.put<Tag>(`/tags/${id}`, { name }).then((r) => r.data),
   delete: (id: string) => api.delete(`/tags/${id}`).then((r) => r.data),
 };

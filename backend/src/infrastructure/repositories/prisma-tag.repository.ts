@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   ITagRepository,
   CreateTagData,
+  UpdateTagData,
 } from '../../domain/ports/tag.repository.port.js';
 import { Tag } from '../../domain/entities/tag.entity.js';
 import { DuplicateNameException } from '../../domain/exceptions/index.js';
@@ -21,6 +22,26 @@ export class PrismaTagRepository extends ITagRepository {
   async save(data: CreateTagData): Promise<Tag> {
     try {
       const result = await this.prisma.tag.create({
+        data: { name: data.name },
+      });
+      return this.mapToEntity(result);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new DuplicateNameException(
+          `Tag with name '${data.name}' already exists`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async update(id: string, data: UpdateTagData): Promise<Tag> {
+    try {
+      const result = await this.prisma.tag.update({
+        where: { id },
         data: { name: data.name },
       });
       return this.mapToEntity(result);

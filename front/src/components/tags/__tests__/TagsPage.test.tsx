@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 vi.mock('@/lib/hooks', () => ({
   useTags: vi.fn(),
   useCreateTag: vi.fn(),
+  useUpdateTag: vi.fn(),
   useDeleteTag: vi.fn(),
 }));
 
@@ -14,10 +15,11 @@ vi.mock('@/stores/uiStore', () => ({
 }));
 
 import { TagsPage } from '../TagsPage';
-import { useTags, useCreateTag, useDeleteTag } from '@/lib/hooks';
+import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from '@/lib/hooks';
 
 const mockUseTags = vi.mocked(useTags);
 const mockUseCreateTag = vi.mocked(useCreateTag);
+const mockUseUpdateTag = vi.mocked(useUpdateTag);
 const mockUseDeleteTag = vi.mocked(useDeleteTag);
 
 const mockMutation = {
@@ -29,6 +31,7 @@ describe('TagsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseCreateTag.mockReturnValue(mockMutation as any);
+    mockUseUpdateTag.mockReturnValue(mockMutation as any);
     mockUseDeleteTag.mockReturnValue(mockMutation as any);
   });
 

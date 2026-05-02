@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Body,
   Param,
@@ -14,7 +15,7 @@ import {
   DomainExceptionFilter,
   PrismaExceptionFilter,
 } from '../filters/index.js';
-import { CreateCategoryDto } from '../dto/index.js';
+import { CreateCategoryDto, UpdateCategoryDto } from '../dto/index.js';
 import { CategoryResponseDto } from '../dto/responses/index.js';
 import { mapCategoryToResponse } from './mappers/category.mapper.js';
 import { ApiStandardErrors } from './api-standard-errors.decorator.js';
@@ -52,6 +53,18 @@ export class CategoryController {
   @ApiStandardErrors([404, 500])
   async findById(@Param('id') id: string): Promise<CategoryResponseDto> {
     const category = await this.categoryService.findById(id);
+    return mapCategoryToResponse(category);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Rename a category' })
+  @ApiResponse({ status: 200, type: CategoryResponseDto })
+  @ApiStandardErrors([400, 404, 409, 500])
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): Promise<CategoryResponseDto> {
+    const category = await this.categoryService.update(id, dto.name);
     return mapCategoryToResponse(category);
   }
 

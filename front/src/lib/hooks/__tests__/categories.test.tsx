@@ -8,6 +8,7 @@ vi.mock('@/lib/api', () => ({
     getAll: vi.fn(),
     getById: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
     getChildren: vi.fn(),
   },
@@ -18,6 +19,7 @@ import {
   useCategory,
   useCategoryChildren,
   useCreateCategory,
+  useUpdateCategory,
   useDeleteCategory,
 } from '../categories';
 import { categoryApi } from '@/lib/api';
@@ -81,6 +83,19 @@ describe('useCreateCategory', () => {
     const { result } = renderHook(() => useCreateCategory(), { wrapper: createWrapper() });
     await result.current.mutateAsync({ name: 'Equities' });
     expect(mockCategoryApi.create).toHaveBeenCalledWith({ name: 'Equities' });
+  });
+});
+
+describe('useUpdateCategory', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('updates a category', async () => {
+    const updated = { id: 'c1', name: 'Updated', parentId: null };
+    mockCategoryApi.update.mockResolvedValue(updated);
+    mockCategoryApi.getAll.mockResolvedValue([updated]);
+    const { result } = renderHook(() => useUpdateCategory(), { wrapper: createWrapper() });
+    await result.current.mutateAsync({ id: 'c1', name: 'Updated' });
+    expect(mockCategoryApi.update).toHaveBeenCalledWith('c1', 'Updated');
   });
 });
 

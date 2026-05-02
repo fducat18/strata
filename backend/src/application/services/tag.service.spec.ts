@@ -9,6 +9,7 @@ describe('TagService', () => {
 
   const mockTagRepo = {
     save: jest.fn(),
+    update: jest.fn(),
     findById: jest.fn(),
     findAll: jest.fn(),
     delete: jest.fn(),
@@ -50,6 +51,26 @@ describe('TagService', () => {
       await expect(service.findById('unknown')).rejects.toThrow(
         TagNotFoundException,
       );
+    });
+  });
+
+  describe('update', () => {
+    it('throws TagNotFoundException when not found', async () => {
+      mockTagRepo.findById.mockResolvedValue(null);
+      await expect(service.update('unknown', 'new-name')).rejects.toThrow(
+        TagNotFoundException,
+      );
+    });
+
+    it('updates and returns the tag', async () => {
+      const updated = new Tag('t1', 'new-name');
+      mockTagRepo.findById.mockResolvedValue(sampleTag);
+      mockTagRepo.update.mockResolvedValue(updated);
+      const result = await service.update('t1', 'new-name');
+      expect(mockTagRepo.update).toHaveBeenCalledWith('t1', {
+        name: 'new-name',
+      });
+      expect(result).toBe(updated);
     });
   });
 

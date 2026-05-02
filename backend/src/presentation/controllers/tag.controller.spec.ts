@@ -12,6 +12,7 @@ describe('TagController', () => {
   beforeEach(async () => {
     const mockTagService = {
       create: jest.fn(),
+      update: jest.fn(),
       findAll: jest.fn(),
       findById: jest.fn(),
       delete: jest.fn(),
@@ -34,6 +35,17 @@ describe('TagController', () => {
       expect(tagService.create).toHaveBeenCalledWith({ name: 'crypto' });
       expect(result.id).toBe('t1');
       expect(result.name).toBe('crypto');
+    });
+  });
+
+  describe('update', () => {
+    it('calls tagService.update and returns mapped response', async () => {
+      const updated = new Tag('t1', 'updated-tag');
+      tagService.update.mockResolvedValue(updated);
+      const result = await controller.update('t1', { name: 'updated-tag' } as any);
+      expect(tagService.update).toHaveBeenCalledWith('t1', 'updated-tag');
+      expect(result.id).toBe('t1');
+      expect(result.name).toBe('updated-tag');
     });
   });
 

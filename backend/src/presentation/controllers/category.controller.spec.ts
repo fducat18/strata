@@ -13,6 +13,7 @@ describe('CategoryController', () => {
   beforeEach(async () => {
     const mockCategoryService = {
       create: jest.fn(),
+      update: jest.fn(),
       findAll: jest.fn(),
       findById: jest.fn(),
       delete: jest.fn(),
@@ -50,6 +51,17 @@ describe('CategoryController', () => {
         parentId: 'c1',
       });
       expect(result.id).toBe('c2');
+    });
+  });
+
+  describe('update', () => {
+    it('calls categoryService.update and returns mapped response', async () => {
+      const updated = new Category('c1', 'Updated', null);
+      categoryService.update.mockResolvedValue(updated);
+      const result = await controller.update('c1', { name: 'Updated' } as any);
+      expect(categoryService.update).toHaveBeenCalledWith('c1', 'Updated');
+      expect(result.id).toBe('c1');
+      expect(result.name).toBe('Updated');
     });
   });
 

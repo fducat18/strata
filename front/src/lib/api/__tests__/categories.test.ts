@@ -14,6 +14,7 @@ import { api } from '../client';
 
 const mockGet = vi.mocked(api.get);
 const mockPost = vi.mocked(api.post);
+const mockPut = vi.mocked(api.put);
 const mockDelete = vi.mocked(api.delete);
 
 describe('categoryApi', () => {
@@ -40,6 +41,14 @@ describe('categoryApi', () => {
     mockPost.mockResolvedValue({ data: cat });
     const result = await categoryApi.create({ name: 'Equities' });
     expect(mockPost).toHaveBeenCalledWith('/categories', { name: 'Equities' });
+    expect(result).toEqual(cat);
+  });
+
+  it('update calls PUT /categories/:id', async () => {
+    const cat = { id: 'c1', name: 'Updated', parentId: null };
+    mockPut.mockResolvedValue({ data: cat });
+    const result = await categoryApi.update('c1', 'Updated');
+    expect(mockPut).toHaveBeenCalledWith('/categories/c1', { name: 'Updated' });
     expect(result).toEqual(cat);
   });
 

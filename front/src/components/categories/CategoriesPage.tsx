@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCategories, useCreateCategory, useDeleteCategory } from '@/lib/hooks';
+import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from '@/lib/hooks';
 import {
   Button, Card, CardContent,
   Dialog, DialogHeader, DialogTitle, DialogFooter,
@@ -24,6 +24,7 @@ export function CategoriesPage() {
   const { data: categories, isLoading, isError, refetch } = useCategories();
   const createMutation = useCreateCategory();
   const deleteMutation = useDeleteCategory();
+  const updateMutation = useUpdateCategory();
   const [showCreate, setShowCreate] = useState(false);
 
   const {
@@ -68,6 +69,15 @@ export function CategoriesPage() {
     }
   });
 
+  const handleEdit = async (id: string, newName: string) => {
+    try {
+      await updateMutation.mutateAsync({ id, name: newName });
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ variant: 'error', message });
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm('Delete this category?')) {
       try {
@@ -96,7 +106,7 @@ export function CategoriesPage() {
           {tree.length > 0 ? (
             <div className="space-y-0.5">
               {tree.map(node => (
-                <CategoryTreeNodeView key={node.id} node={node} onDelete={handleDelete} level={0} />
+                <CategoryTreeNodeView key={node.id} node={node} onDelete={handleDelete} onEdit={handleEdit} level={0} />
               ))}
             </div>
           ) : (

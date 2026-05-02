@@ -24,6 +24,15 @@ export function useCreateTag() {
   });
 }
 
+export function useUpdateTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      tagApi.update(id, name),
+    onSuccess: () => invalidateTagQueries(qc),
+  });
+}
+
 export function useDeleteTag() {
   const qc = useQueryClient();
   return useMutation({

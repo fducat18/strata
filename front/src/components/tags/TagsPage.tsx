@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useTags, useCreateTag, useDeleteTag } from '@/lib/hooks';
+import { useTags, useCreateTag, useDeleteTag, useUpdateTag } from '@/lib/hooks';
 import {
   Button, Card, CardHeader, CardTitle, CardContent,
   Dialog, DialogHeader, DialogTitle, DialogFooter,
   Input, Badge, Loading, EmptyState,
 } from '@/components/ui';
-import { Plus, Tags as TagsIcon, Trash2 } from 'lucide-react';
+import { Plus, Tags as TagsIcon, Trash2, Pencil, Check, X } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 
 const tagSchema = z.object({
@@ -20,7 +20,10 @@ export function TagsPage() {
   const { data: tags, isLoading, isError, refetch } = useTags();
   const createMutation = useCreateTag();
   const deleteMutation = useDeleteTag();
+  const updateMutation = useUpdateTag();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   const {
     register,
@@ -53,6 +56,18 @@ export function TagsPage() {
       useUIStore.getState().pushToast({ variant: 'error', message });
     }
   });
+
+  const handleEdit = async (id: string) => {
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    try {
+      await updateMutation.mutateAsync({ id, name: trimmed });
+      setEditingId(null);
+    } catch (err: unknown) {
+      const message = (err as any)?.message ?? 'An unexpected error occurred';
+      useUIStore.getState().pushToast({ variant: 'error', message });
+    }
+  };
 
   const handleClose = () => {
     reset();
@@ -92,15 +107,57 @@ export function TagsPage() {
                   className="group flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-accent transition-colors"
                 >
                   <TagsIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{tag.name}</span>
-                  <button
-                    onClick={() => handleDelete(tag.id)}
-                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
-                    title="Delete tag"
-                    aria-label={`Delete tag ${tag.name}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  {editingId === tag.id ? (
+                    <>
+                      <input
+                        className="text-sm font-medium border rounded px-1 py-0.5 bg-background w-32"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleEdit(tag.id);
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
+                        autoFocus
+                        aria-label={`Edit name for tag ${tag.name}`}
+                      />
+                      <button
+                        onClick={() => handleEdit(tag.id)}
+                        className="text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                        aria-label="Save tag name"
+                        title="Save"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                        aria-label="Cancel edit"
+                        title="Cancel"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium">{tag.name}</span>
+                      <button
+                        onClick={() => { setEditValue(tag.name); setEditingId(tag.id); }}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary transition-opacity cursor-pointer"
+                        title="Edit tag"
+                        aria-label={`Edit tag ${tag.name}`}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(tag.id)}
+                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity cursor-pointer"
+                        title="Delete tag"
+                        aria-label={`Delete tag ${tag.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

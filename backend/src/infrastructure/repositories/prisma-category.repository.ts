@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   ICategoryRepository,
   CreateCategoryData,
+  UpdateCategoryData,
 } from '../../domain/ports/category.repository.port.js';
 import { Category } from '../../domain/entities/category.entity.js';
 import { DuplicateNameException } from '../../domain/exceptions/index.js';
@@ -42,6 +43,27 @@ export class PrismaCategoryRepository extends ICategoryRepository {
           name: data.name,
           parentId: data.parentId ?? null,
         },
+        include: this.includeRelations,
+      });
+      return this.mapToEntity(result);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new DuplicateNameException(
+          `Category with name '${data.name}' already exists`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async update(id: string, data: UpdateCategoryData): Promise<Category> {
+    try {
+      const result = await this.prisma.category.update({
+        where: { id },
+        data: { name: data.name },
         include: this.includeRelations,
       });
       return this.mapToEntity(result);

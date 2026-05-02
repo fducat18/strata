@@ -12,6 +12,7 @@ describe('CategoryService', () => {
 
   const mockCategoryRepo = {
     save: jest.fn(),
+    update: jest.fn(),
     findById: jest.fn(),
     findAll: jest.fn(),
     findChildren: jest.fn(),
@@ -71,6 +72,26 @@ describe('CategoryService', () => {
       await expect(service.findById('unknown')).rejects.toThrow(
         CategoryNotFoundException,
       );
+    });
+  });
+
+  describe('update', () => {
+    it('throws CategoryNotFoundException when not found', async () => {
+      mockCategoryRepo.findById.mockResolvedValue(null);
+      await expect(service.update('unknown', 'New Name')).rejects.toThrow(
+        CategoryNotFoundException,
+      );
+    });
+
+    it('updates and returns the category', async () => {
+      const updated = new Category('c1', 'New Name', null);
+      mockCategoryRepo.findById.mockResolvedValue(sampleCategory);
+      mockCategoryRepo.update.mockResolvedValue(updated);
+      const result = await service.update('c1', 'New Name');
+      expect(mockCategoryRepo.update).toHaveBeenCalledWith('c1', {
+        name: 'New Name',
+      });
+      expect(result).toBe(updated);
     });
   });
 

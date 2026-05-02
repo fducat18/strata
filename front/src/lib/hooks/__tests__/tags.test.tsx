@@ -8,11 +8,12 @@ vi.mock('@/lib/api', () => ({
     getAll: vi.fn(),
     getById: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
   },
 }));
 
-import { useTags, useTag, useCreateTag, useDeleteTag } from '../tags';
+import { useTags, useTag, useCreateTag, useUpdateTag, useDeleteTag } from '../tags';
 import { tagApi } from '@/lib/api';
 
 const mockTagApi = vi.mocked(tagApi);
@@ -63,6 +64,19 @@ describe('useCreateTag', () => {
     const { result } = renderHook(() => useCreateTag(), { wrapper: createWrapper() });
     await result.current.mutateAsync({ name: 'growth' });
     expect(mockTagApi.create).toHaveBeenCalledWith({ name: 'growth' });
+  });
+});
+
+describe('useUpdateTag', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('updates a tag', async () => {
+    const updated = { id: 't1', name: 'updated' };
+    mockTagApi.update.mockResolvedValue(updated);
+    mockTagApi.getAll.mockResolvedValue([updated]);
+    const { result } = renderHook(() => useUpdateTag(), { wrapper: createWrapper() });
+    await result.current.mutateAsync({ id: 't1', name: 'updated' });
+    expect(mockTagApi.update).toHaveBeenCalledWith('t1', 'updated');
   });
 });
 

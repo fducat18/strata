@@ -1,0 +1,17 @@
+meta {
+  name: UpdateTag
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:3000/api/v1/tags/{{tagId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "updated-tag-name"
+  }
+}

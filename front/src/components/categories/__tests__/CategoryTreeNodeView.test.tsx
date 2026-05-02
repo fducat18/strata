@@ -37,6 +37,41 @@ describe('CategoryTreeNodeView', () => {
     expect(onDelete).toHaveBeenCalledWith('c1');
   });
 
+  it('renders edit button when onEdit is provided', () => {
+    render(<CategoryTreeNodeView node={leafNode} onDelete={vi.fn()} onEdit={vi.fn()} level={0} />);
+    expect(screen.getByLabelText('Edit category Tech')).toBeInTheDocument();
+  });
+
+  it('does not render edit button when onEdit is not provided', () => {
+    render(<CategoryTreeNodeView node={leafNode} onDelete={vi.fn()} level={0} />);
+    expect(screen.queryByLabelText('Edit category Tech')).not.toBeInTheDocument();
+  });
+
+  it('shows inline edit input when edit button is clicked', () => {
+    render(<CategoryTreeNodeView node={leafNode} onDelete={vi.fn()} onEdit={vi.fn()} level={0} />);
+    fireEvent.click(screen.getByLabelText('Edit category Tech'));
+    expect(screen.getByLabelText('Edit name for category Tech')).toBeInTheDocument();
+  });
+
+  it('calls onEdit with new name on save', () => {
+    const onEdit = vi.fn();
+    render(<CategoryTreeNodeView node={leafNode} onDelete={vi.fn()} onEdit={onEdit} level={0} />);
+    fireEvent.click(screen.getByLabelText('Edit category Tech'));
+    const input = screen.getByLabelText('Edit name for category Tech');
+    fireEvent.change(input, { target: { value: 'Updated Tech' } });
+    fireEvent.click(screen.getByLabelText('Save category name'));
+    expect(onEdit).toHaveBeenCalledWith('c1', 'Updated Tech');
+  });
+
+  it('cancels edit without calling onEdit', () => {
+    const onEdit = vi.fn();
+    render(<CategoryTreeNodeView node={leafNode} onDelete={vi.fn()} onEdit={onEdit} level={0} />);
+    fireEvent.click(screen.getByLabelText('Edit category Tech'));
+    fireEvent.click(screen.getByLabelText('Cancel edit'));
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(screen.getByText('Tech')).toBeInTheDocument();
+  });
+
   it('renders children when parent node', () => {
     render(<CategoryTreeNodeView node={parentNode} onDelete={vi.fn()} level={0} />);
     expect(screen.getByText('Equities')).toBeInTheDocument();
