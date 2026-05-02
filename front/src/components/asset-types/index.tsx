@@ -1,0 +1,1 @@
+export { AssetTypesPage } from './AssetTypesPage';
