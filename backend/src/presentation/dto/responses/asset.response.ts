@@ -44,4 +44,7 @@ export class AssetResponseDto {
   currentValue!: string | null;
   @ApiProperty({ type: [AssetSnapshotNestedResponseDto] })
   snapshots!: AssetSnapshotNestedResponseDto[];
+  /** ISO date string derived from the ACQUIRE transaction, if present. */
+  @ApiPropertyOptional({ type: String, nullable: true })
+  acquisitionDate?: string | null;
 }

@@ -12,6 +12,7 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
   currentValue: string | null;
+  acquisitionDate?: string | null;
 }
 
 export interface AssetType {

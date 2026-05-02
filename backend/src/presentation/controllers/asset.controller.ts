@@ -91,6 +91,9 @@ export class AssetController {
       name: dto.name,
       quantity: dto.quantity,
       assetTypeId: dto.assetTypeId,
+      categoryIds: dto.categoryIds,
+      tagIds: dto.tagIds,
+      acquisitionDate: dto.acquisitionDate,
     });
     return mapAssetToResponse(asset);
   }

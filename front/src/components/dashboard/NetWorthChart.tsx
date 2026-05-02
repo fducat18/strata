@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -12,26 +12,42 @@ import {
 } from 'recharts';
 import { formatMoney, formatDate } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
-import { FILTER_MODES, type FilterMode, useNetWorthBreakdown } from '@/lib/hooks';
+import { FILTER_MODES, TIME_RANGES, type FilterMode, type TimeRange, useNetWorthBreakdown } from '@/lib/hooks';
 
 const MODE_LABELS: Record<FilterMode, string> = {
-  total: 'Total',
+  total: 'Net Worth',
   'by-group': 'By Group',
   'by-type': 'By Type',
   'by-category': 'By Category',
 };
 
+function getSinceDate(range: TimeRange): Date | undefined {
+  const now = new Date();
+  switch (range) {
+    case '1D': { const d = new Date(now); d.setDate(d.getDate() - 1); return d; }
+    case '7D': { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+    case '1M': { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+    case '3M': { const d = new Date(now); d.setMonth(d.getMonth() - 3); return d; }
+    case 'YTD': return new Date(now.getFullYear(), 0, 1);
+    case '1Y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d; }
+    case 'ALL': return undefined;
+  }
+}
+
 export function NetWorthChart() {
   const [mode, setMode] = useState<FilterMode>('total');
+  const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
   const locale = useLocale();
   const currency = useCurrency();
-  const { data, keys, keyColors } = useNetWorthBreakdown(mode);
+  const since = useMemo(() => getSinceDate(timeRange), [timeRange]);
+  const { data, keys, keyColors } = useNetWorthBreakdown(mode, since);
 
   const fmtOpts = { currency, locale };
 
   if (!data || data.length === 0) {
     return (
       <div>
+        <TimeRangeToggle range={timeRange} onRangeChange={setTimeRange} />
         <FilterToggle mode={mode} onModeChange={setMode} />
         <p className="py-8 text-center text-sm text-muted-foreground">
           No portfolio history yet. Add assets with acquisition dates to start tracking your net worth.
@@ -47,15 +63,18 @@ export function NetWorthChart() {
 
   return (
     <div className="space-y-3">
+      <TimeRangeToggle range={timeRange} onRangeChange={setTimeRange} />
       <FilterToggle mode={mode} onModeChange={setMode} />
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={chartData} stackOffset="sign">
+        <AreaChart data={chartData} stackOffset={mode === 'total' ? 'none' : 'sign'}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
           <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="var(--muted-fg)" />
           <YAxis
             tick={{ fontSize: 12 }}
             stroke="var(--muted-fg)"
-            tickFormatter={(v) => formatMoney(v as number, fmtOpts)}
+            tickFormatter={(v) => formatMoney(v as number, { ...fmtOpts, minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            domain={['auto', 'auto']}
+            width={90}
           />
           <Tooltip
             contentStyle={{
@@ -83,6 +102,32 @@ export function NetWorthChart() {
           ))}
         </AreaChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+function TimeRangeToggle({
+  range,
+  onRangeChange,
+}: {
+  range: TimeRange;
+  onRangeChange: (r: TimeRange) => void;
+}) {
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {TIME_RANGES.map((r) => (
+        <button
+          key={r}
+          onClick={() => onRangeChange(r)}
+          className={`px-2.5 py-0.5 text-xs rounded border transition-colors ${
+            range === r
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
+          }`}
+        >
+          {r}
+        </button>
+      ))}
     </div>
   );
 }

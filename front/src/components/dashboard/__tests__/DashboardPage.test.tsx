@@ -6,6 +6,7 @@ vi.mock('@/lib/hooks', () => ({
   useCurrentPortfolioValue: vi.fn(),
   usePortfolioSnapshots: vi.fn(),
   FILTER_MODES: ['total', 'by-group', 'by-type', 'by-category'],
+  TIME_RANGES: ['1D', '7D', '1M', '3M', 'YTD', '1Y', 'ALL'],
   useNetWorthBreakdown: vi.fn(() => ({ data: [], keys: [], keyColors: {} })),
 }));
 
@@ -61,32 +62,34 @@ describe('DashboardPage', () => {
 
   it('renders dashboard with data', () => {
     const assets = [
-      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '' },
+      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '', currentValue: '50000' },
     ];
     mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
     mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Net Worth')).toBeInTheDocument();
-    expect(screen.getByText('Active Assets')).toBeInTheDocument();
+    // 'Net Worth' appears as stat card title and as chart mode button
+    expect(screen.getAllByText('Net Worth').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Total Assets')).toBeInTheDocument();
+    expect(screen.getByText('Total Liabilities')).toBeInTheDocument();
   });
 
-  it('renders clickable link on Active Assets card', () => {
+  it('renders clickable link on Total Assets card', () => {
     const assets = [
-      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '' },
+      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' }, categories: [], tags: [], quantity: '10', createdAt: '', updatedAt: '', currentValue: '50000' },
     ];
     mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
     mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '50000', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
 
-    const assetsLink = screen.getByText('Active Assets').closest('a');
+    const assetsLink = screen.getByText('Total Assets').closest('a');
     expect(assetsLink).toHaveAttribute('href', '/assets');
 
-    // Asset Types card should also be wrapped in a link (IMP-2)
-    const assetTypesCard = screen.getByText('Asset Types').closest('a');
-    expect(assetTypesCard).toHaveAttribute('href', '/asset-types');
+    // Total Liabilities card should also be wrapped in a link
+    const liabLink = screen.getByText('Total Liabilities').closest('a');
+    expect(liabLink).toHaveAttribute('href', '/asset-types');
   });
 
   it('does not render a Take Snapshot button', () => {
@@ -98,15 +101,30 @@ describe('DashboardPage', () => {
 
   it('filters out disposed assets', () => {
     const assets = [
-      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '' },
-      { id: 'a2', name: 'MSFT', disposed: true, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '' },
+      { id: 'a1', name: 'AAPL', disposed: false, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '', currentValue: null },
+      { id: 'a2', name: 'MSFT', disposed: true, assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '', currentValue: null },
     ];
     mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
     mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
 
     render(<DashboardPage />);
-    // Only 1 active asset (AAPL)
-    const cards = screen.getAllByText('1');
-    expect(cards.length).toBeGreaterThan(0);
+    // 1 active asset (AAPL), shown in subtitle "1 active asset"
+    expect(screen.getByText('1 active asset')).toBeInTheDocument();
+  });
+
+  it('shows liabilities as negative value in Total Liabilities card', () => {
+    const assets = [
+      { id: 'a1', name: 'Savings', disposed: false, assetType: { code: 'SAVINGS', label: 'Savings', group: 'FINANCIAL' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '', currentValue: '100000' },
+      { id: 'a2', name: 'Mortgage', disposed: false, assetType: { code: 'MORTGAGE', label: 'Mortgage', group: 'LIABILITIES' }, categories: [], tags: [], quantity: null, createdAt: '', updatedAt: '', currentValue: '200000' },
+    ];
+    mockUseAssets.mockReturnValue({ isLoading: false, data: assets, isError: false, refetch: vi.fn() } as any);
+    mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '-100000', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
+
+    render(<DashboardPage />);
+    // Liabilities card should show negative indicator
+    const liabCard = screen.getByText('Total Liabilities').closest('a');
+    expect(liabCard).toBeInTheDocument();
+    // The liability value should have the negative prefix (−)
+    expect(screen.getByText(/−/)).toBeInTheDocument();
   });
 });

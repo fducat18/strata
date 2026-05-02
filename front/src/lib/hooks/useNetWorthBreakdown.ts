@@ -6,6 +6,9 @@ import type { Asset, AssetSnapshot } from '../types';
 export const FILTER_MODES = ['total', 'by-group', 'by-type', 'by-category'] as const;
 export type FilterMode = (typeof FILTER_MODES)[number];
 
+export const TIME_RANGES = ['1D', '7D', '1M', '3M', 'YTD', '1Y', 'ALL'] as const;
+export type TimeRange = (typeof TIME_RANGES)[number];
+
 export const GROUP_COLORS: Record<string, string> = {
   FINANCIAL: '#3b82f6',
   REAL_ESTATE: '#22c55e',
@@ -35,7 +38,7 @@ function isLiability(asset: Asset): boolean {
 
 export type BreakdownDataPoint = Record<string, number | string> & { date: string };
 
-export function useNetWorthBreakdown(mode: FilterMode): {
+export function useNetWorthBreakdown(mode: FilterMode, since?: Date): {
   data: BreakdownDataPoint[];
   keys: string[];
   keyColors: Record<string, string>;
@@ -50,7 +53,12 @@ export function useNetWorthBreakdown(mode: FilterMode): {
 
     const activeAssets = assets.filter((a) => !a.disposed);
 
-    const sortedSnapshots = [...portfolioSnapshots].sort(
+    // Apply time-range filter if provided
+    const filteredSnapshots = since
+      ? portfolioSnapshots.filter((s) => new Date(s.observedAt) >= since)
+      : portfolioSnapshots;
+
+    const sortedSnapshots = [...filteredSnapshots].sort(
       (a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime(),
     );
 
@@ -62,22 +70,22 @@ export function useNetWorthBreakdown(mode: FilterMode): {
       const point: BreakdownDataPoint = { date: dateStr };
 
       if (mode === 'total') {
-        let positive = 0;
-        let negative = 0;
+        let assets_sum = 0;
+        let liabilities_sum = 0;
         for (const asset of activeAssets) {
           const val = getLatestSnapshotValueAtDate(asset, dateStr);
           if (isLiability(asset)) {
-            negative += val;
+            liabilities_sum += val;
           } else {
-            positive += val;
+            assets_sum += val;
           }
         }
-        point['positive'] = positive;
-        point['negative'] = negative > 0 ? -negative : 0;
-        allKeys.add('positive');
-        allKeys.add('negative');
-        keyColorsMap['positive'] = '#22c55e';
-        keyColorsMap['negative'] = '#ef4444';
+        point['Assets'] = assets_sum;
+        point['Liabilities'] = liabilities_sum > 0 ? -liabilities_sum : 0;
+        allKeys.add('Assets');
+        allKeys.add('Liabilities');
+        keyColorsMap['Assets'] = '#22c55e';
+        keyColorsMap['Liabilities'] = '#ef4444';
       } else if (mode === 'by-group') {
         for (const asset of activeAssets) {
           const group = asset.assetType?.group ?? 'OTHER';
@@ -120,5 +128,5 @@ export function useNetWorthBreakdown(mode: FilterMode): {
     });
 
     return { data, keys: Array.from(allKeys), keyColors: keyColorsMap };
-  }, [assets, portfolioSnapshots, mode]);
+  }, [assets, portfolioSnapshots, mode, since]);
 }

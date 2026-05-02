@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('@/lib/hooks', () => ({
   FILTER_MODES: ['total', 'by-group', 'by-type', 'by-category'],
+  TIME_RANGES: ['1D', '7D', '1M', '3M', 'YTD', '1Y', 'ALL'],
   useNetWorthBreakdown: vi.fn(),
 }));
 
@@ -60,19 +61,23 @@ describe('NetWorthChart', () => {
     expect(screen.queryByText(/Take Snapshot/)).not.toBeInTheDocument();
   });
 
-  it('shows 4 filter toggle buttons', () => {
+  it('shows 4 filter mode buttons and 7 time range buttons', () => {
     render(<NetWorthChart />, { wrapper: createWrapper() });
-    expect(screen.getByRole('button', { name: 'Total' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Net Worth' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'By Group' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'By Type' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'By Category' })).toBeInTheDocument();
+    // Time range buttons
+    expect(screen.getByRole('button', { name: '1D' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '7D' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ALL' })).toBeInTheDocument();
   });
 
   it('renders chart container when data exists', () => {
     mockUseNetWorthBreakdown.mockReturnValue({
-      data: [{ date: '2024-01-01T00:00:00Z', positive: 10000, negative: 0 }],
-      keys: ['positive', 'negative'],
-      keyColors: { positive: '#22c55e', negative: '#ef4444' },
+      data: [{ date: '2024-01-01T00:00:00Z', Assets: 10000, Liabilities: 0 }],
+      keys: ['Assets', 'Liabilities'],
+      keyColors: { Assets: '#22c55e', Liabilities: '#ef4444' },
     });
     render(<NetWorthChart />, { wrapper: createWrapper() });
     expect(screen.getByTestId('chart-container')).toBeInTheDocument();
@@ -82,6 +87,6 @@ describe('NetWorthChart', () => {
     render(<NetWorthChart />, { wrapper: createWrapper() });
     const byGroupBtn = screen.getByRole('button', { name: 'By Group' });
     fireEvent.click(byGroupBtn);
-    expect(mockUseNetWorthBreakdown).toHaveBeenCalledWith('by-group');
+    expect(mockUseNetWorthBreakdown).toHaveBeenCalledWith('by-group', undefined);
   });
 });

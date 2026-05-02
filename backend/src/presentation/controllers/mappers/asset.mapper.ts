@@ -33,6 +33,8 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
     value: s.value.toString(),
     observedAt: s.observedAt.toISOString(),
   }));
+  const acquireTx = (asset.transactions ?? []).find((t) => t.type === 'ACQUIRE');
+  dto.acquisitionDate = acquireTx ? acquireTx.occurredAt.toISOString() : null;
   return dto;
 }
 

@@ -97,13 +97,13 @@ describe('useNetWorthBreakdown', () => {
     mockUseAssets.mockReturnValue({ data: mockAssets } as any);
     mockUsePortfolioSnapshots.mockReturnValue({ data: mockPortfolioSnapshots } as any);
     const { result } = renderHook(() => useNetWorthBreakdown('total'), { wrapper: createWrapper() });
-    expect(result.current.keys).toContain('positive');
-    expect(result.current.keys).toContain('negative');
+    expect(result.current.keys).toContain('Assets');
+    expect(result.current.keys).toContain('Liabilities');
     expect(result.current.data).toHaveLength(2);
-    expect(result.current.data[0].positive).toBe(5000);
-    expect(result.current.data[0].negative).toBe(-50000);
-    expect(result.current.keyColors['positive']).toBe('#22c55e');
-    expect(result.current.keyColors['negative']).toBe('#ef4444');
+    expect(result.current.data[0].Assets).toBe(5000);
+    expect(result.current.data[0].Liabilities).toBe(-50000);
+    expect(result.current.keyColors['Assets']).toBe('#22c55e');
+    expect(result.current.keyColors['Liabilities']).toBe('#ef4444');
   });
 
   it('computes by-group mode', () => {
@@ -161,7 +161,7 @@ describe('useNetWorthBreakdown', () => {
     mockUsePortfolioSnapshots.mockReturnValue({ data: mockPortfolioSnapshots } as any);
     const { result } = renderHook(() => useNetWorthBreakdown('total'), { wrapper: createWrapper() });
     // disposed asset's value should NOT be included
-    expect(result.current.data[0].positive).toBe(5000);
+    expect(result.current.data[0].Assets).toBe(5000);
   });
 
   it('returns 0 for asset with no snapshots at or before the date', () => {
@@ -185,6 +185,23 @@ describe('useNetWorthBreakdown', () => {
     mockUsePortfolioSnapshots.mockReturnValue({ data: mockPortfolioSnapshots } as any);
     const { result } = renderHook(() => useNetWorthBreakdown('total'), { wrapper: createWrapper() });
     // snapshot is in 2026, portfolio snapshot dates are 2025-01 and 2025-02 → value = 0
-    expect(result.current.data[0].positive).toBe(0);
+    expect(result.current.data[0].Assets).toBe(0);
+  });
+
+  it('filters portfolio snapshots by since date (time range filter)', () => {
+    mockUseAssets.mockReturnValue({ data: mockAssets } as any);
+    mockUsePortfolioSnapshots.mockReturnValue({ data: mockPortfolioSnapshots } as any);
+    // since = 2025-02-01 → only the second snapshot (2025-02-01) should be included
+    const since = new Date('2025-02-01T00:00:00.000Z');
+    const { result } = renderHook(() => useNetWorthBreakdown('total', since), { wrapper: createWrapper() });
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data[0].date).toContain('2025-02-01');
+  });
+
+  it('returns all snapshots when since is undefined (ALL range)', () => {
+    mockUseAssets.mockReturnValue({ data: mockAssets } as any);
+    mockUsePortfolioSnapshots.mockReturnValue({ data: mockPortfolioSnapshots } as any);
+    const { result } = renderHook(() => useNetWorthBreakdown('total', undefined), { wrapper: createWrapper() });
+    expect(result.current.data).toHaveLength(2);
   });
 });

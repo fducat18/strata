@@ -1,6 +1,6 @@
 # AGENTS.md — Project-Level Conventions for AI Agents
 
-This document defines **8 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
+This document defines **9 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
 
 ## 1. Documentation Philosophy
 
@@ -82,14 +82,30 @@ These are **service-level invariants**, not DB constraints. The repository layer
 
 ---
 
+## 9. Full-Stack Coverage Rule
+
+**Every frontend bug fix or UI improvement must be accompanied by:**
+
+1. **Automated tests** — unit test for the component/hook logic changed, AND an e2e test if the interaction involves a user flow (form submit, navigation, data persistence).
+2. **Backend verification** — before implementing any frontend change that reads or writes data, verify the relevant API route and backend logic exists and works correctly. If any route is missing, incomplete, or broken, implement the full backend fix (controller → service → repository) following the same hexagonal architecture rules, before touching the frontend.
+
+**Examples:**
+- Fixing "category not saved on asset create" → verify `PUT /assets/:id` actually passes `categoryIds` to the service; if not, fix the controller first. Write an e2e test that proves categories persist after PUT.
+- Adding a "value history" UI component → verify `GET /assets/:id/snapshots` exists and returns the expected shape; if not, add the endpoint first.
+
+This rule prevents frontend work from silently depending on unimplemented or broken backend logic.
+
+---
+
 ## Summary
 
-These 8 conventions ensure:
+These 9 conventions ensure:
 - **Consistency** across all AI-assisted work
 - **Quality gates** prevent incomplete releases
 - **Traceability** through plans and decision history
 - **Test coverage** and regression prevention
 - **Documentation parity** with implementation
 - **Data integrity** through invariant enforcement
+- **Full-stack coverage** preventing frontend/backend mismatches
 
 When in doubt, ask the project maintainer. When clear, follow these rules strictly.

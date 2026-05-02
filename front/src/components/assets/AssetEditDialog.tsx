@@ -38,7 +38,7 @@ export function AssetEditDialog({ open, asset, assetTypes, allCategories, allTag
       setCategoryIds(asset.categories?.map(c => c.id) ?? []);
       setTagIds(asset.tags?.map(t => t.id) ?? []);
       const acquireTx = asset.transactions?.find(t => t.type === 'ACQUIRE');
-      setAcquisitionDate(acquireTx ? acquireTx.occurredAt.slice(0, 10) : '');
+      setAcquisitionDate(asset.acquisitionDate?.slice(0, 10) ?? (acquireTx ? acquireTx.occurredAt.slice(0, 10) : ''));
     }
   }, [open, asset]);
 
