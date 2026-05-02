@@ -104,7 +104,11 @@ export function AssetDetailPage({ assetId }: Props) {
       });
       setShowSnapshot(false);
     } catch (err: unknown) {
-      useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
+      const status = (err as any)?.response?.status;
+      const message = status === 409
+        ? 'A snapshot already exists for this date. Edit the existing snapshot to change the value.'
+        : ((err as any)?.response?.data?.message ?? (err as any)?.message ?? 'An unexpected error occurred');
+      useUIStore.getState().pushToast({ variant: 'error', message });
     }
   };
 
@@ -136,6 +140,7 @@ export function AssetDetailPage({ assetId }: Props) {
       </div>
 
       <AssetSnapshotsList
+        assetId={assetId}
         snapshots={snapshots}
         onAddSnapshot={() => setShowSnapshot(true)}
       />

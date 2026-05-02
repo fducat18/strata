@@ -77,6 +77,7 @@ async function seedDemoTags(): Promise<void> {
 }
 
 // Seed values validated: 4250 + 22950 + 385000 - 180000 + 5000 + 2000 = 239200
+// LIABILITIES (Home Loan) are stored as positive values; PortfolioSnapshotService subtracts them.
 const DEMO_ASSETS: {
   name: string;
   typeCode: string;
@@ -118,10 +119,10 @@ const DEMO_ASSETS: {
     name: 'Home Loan — BNP',
     typeCode: 'LOAN',
     quantity: 1,
-    // unitPrice reflects outstanding loan balance; snapshotValue is negative
-    // because a loan is a liability that reduces net worth.
+    // unitPrice reflects outstanding loan balance; snapshotValue is positive
+    // because the LIABILITIES group is subtracted from net worth in computation.
     unitPrice: 180000.0,
-    snapshotValue: -180000.0,
+    snapshotValue: 180000.0,
     currency: 'EUR',
     tags: ['illiquid'],
     categories: ['Mortgages'],

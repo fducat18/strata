@@ -16,6 +16,8 @@ vi.mock('@/stores/settingsStore', () => ({
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+  AreaChart: ({ children }: any) => <div>{children}</div>,
+  Area: () => null,
   BarChart: ({ children }: any) => <div>{children}</div>,
   Bar: () => null,
   XAxis: () => null,
@@ -82,9 +84,9 @@ describe('DashboardPage', () => {
     const assetsLink = screen.getByText('Active Assets').closest('a');
     expect(assetsLink).toHaveAttribute('href', '/assets');
 
-    // Asset Types card should NOT be wrapped in a link
+    // Asset Types card should also be wrapped in a link (IMP-2)
     const assetTypesCard = screen.getByText('Asset Types').closest('a');
-    expect(assetTypesCard).toBeNull();
+    expect(assetTypesCard).toHaveAttribute('href', '/asset-types');
   });
 
   it('does not render a Take Snapshot button', () => {

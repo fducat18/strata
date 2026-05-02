@@ -17,13 +17,9 @@ const makeSnapshot = (id: string, value: string, currency = 'EUR', observedAt?: 
   updatedAt: new Date('2024-01-01T00:00:00.000Z'),
 });
 
-const makeAssetSnapshot = (id: string, assetId: string, value: string) => ({
-  id,
-  assetId,
+const makeGroupSnapshot = (value: string, group: string = 'FINANCIAL') => ({
   value: new Decimal(value),
-  observedAt: new Date('2024-01-01T00:00:00.000Z'),
-  createdAt: new Date('2024-01-01T00:00:00.000Z'),
-  updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+  group,
 });
 
 describe('PortfolioSnapshotService', () => {
@@ -45,6 +41,8 @@ describe('PortfolioSnapshotService', () => {
     findLatestByAsset: jest.fn(),
     findLatestPerNonDisposedAsset: jest.fn(),
     findLatestPerNonDisposedAssetAsOf: jest.fn(),
+    findLatestPerNonDisposedAssetWithGroup: jest.fn(),
+    findLatestPerNonDisposedAssetAsOfWithGroup: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -68,27 +66,37 @@ describe('PortfolioSnapshotService', () => {
   });
 
   describe('computeCurrentValue', () => {
-    it('sums values from findLatestPerNonDisposedAsset', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([
-        makeAssetSnapshot('s1', 'a1', '100000.00'),
-        makeAssetSnapshot('s2', 'a2', '-50000.00'),
-        makeAssetSnapshot('s3', 'a3', '25000.00'),
+    it('sums values from findLatestPerNonDisposedAssetWithGroup', async () => {
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([
+        makeGroupSnapshot('100000.00', 'FINANCIAL'),
+        makeGroupSnapshot('50000.00', 'FINANCIAL'),
+        makeGroupSnapshot('25000.00', 'REAL_ESTATE'),
       ]);
 
       const result = await service.computeCurrentValue();
-      expect(result.toString()).toBe('75000');
+      expect(result.toString()).toBe('175000');
+    });
+
+    it('subtracts LIABILITIES group from net worth', async () => {
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([
+        makeGroupSnapshot('200000.00', 'REAL_ESTATE'),
+        makeGroupSnapshot('150000.00', 'LIABILITIES'),
+      ]);
+
+      const result = await service.computeCurrentValue();
+      expect(result.toString()).toBe('50000');
     });
 
     it('returns 0 when there are no snapshots', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([]);
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([]);
 
       const result = await service.computeCurrentValue();
       expect(result.toString()).toBe('0');
     });
 
-    it('handles negative-only totals', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([
-        makeAssetSnapshot('s1', 'a1', '-180000.00'),
+    it('handles all-LIABILITIES totals', async () => {
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([
+        makeGroupSnapshot('180000.00', 'LIABILITIES'),
       ]);
 
       const result = await service.computeCurrentValue();
@@ -98,8 +106,8 @@ describe('PortfolioSnapshotService', () => {
 
   describe('create', () => {
     it('auto-computes value when no value provided', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([
-        makeAssetSnapshot('s1', 'a1', '239200.00'),
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([
+        makeGroupSnapshot('239200.00', 'FINANCIAL'),
       ]);
       const saved = makeSnapshot('ps1', '239200');
       mockPortfolioSnapshotRepo.save.mockResolvedValue(saved);
@@ -118,14 +126,14 @@ describe('PortfolioSnapshotService', () => {
 
       await service.create({ value: '100000.00', currency: 'USD', notes: 'manual' });
 
-      expect(mockAssetSnapshotRepo.findLatestPerNonDisposedAsset).not.toHaveBeenCalled();
+      expect(mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup).not.toHaveBeenCalled();
       expect(mockPortfolioSnapshotRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ value: '100000.00', currency: 'USD', notes: 'manual' }),
       );
     });
 
     it('defaults currency to EUR', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([]);
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([]);
       mockPortfolioSnapshotRepo.save.mockResolvedValue(makeSnapshot('ps1', '0'));
 
       await service.create({});
@@ -137,7 +145,7 @@ describe('PortfolioSnapshotService', () => {
 
     it('uses provided observedAt when given', async () => {
       const observedAt = new Date('2024-06-01T12:00:00.000Z');
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([]);
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([]);
       mockPortfolioSnapshotRepo.save.mockResolvedValue(makeSnapshot('ps1', '0'));
 
       await service.create({ observedAt });
@@ -201,8 +209,8 @@ describe('PortfolioSnapshotService', () => {
 
   describe('getCurrentValue', () => {
     it('returns current value and currency', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAsset.mockResolvedValue([
-        makeAssetSnapshot('s1', 'a1', '239200.00'),
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetWithGroup.mockResolvedValue([
+        makeGroupSnapshot('239200.00', 'FINANCIAL'),
       ]);
 
       const result = await service.getCurrentValue();
@@ -214,8 +222,8 @@ describe('PortfolioSnapshotService', () => {
     const fromDate = new Date('2024-06-01T00:00:00.000Z');
 
     it('upserts a portfolio snapshot for fromDate', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf.mockResolvedValue([
-        makeAssetSnapshot('s1', 'a1', '100000.00'),
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOfWithGroup.mockResolvedValue([
+        makeGroupSnapshot('100000.00', 'FINANCIAL'),
       ]);
       mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '100000', 'EUR', fromDate));
       mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([]);
@@ -227,9 +235,9 @@ describe('PortfolioSnapshotService', () => {
 
     it('updates all future snapshots', async () => {
       const futureDate = new Date('2024-07-01T00:00:00.000Z');
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf
-        .mockResolvedValueOnce([makeAssetSnapshot('s1', 'a1', '100000.00')])  // for fromDate
-        .mockResolvedValueOnce([makeAssetSnapshot('s2', 'a1', '110000.00')]); // for futureDate
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOfWithGroup
+        .mockResolvedValueOnce([makeGroupSnapshot('100000.00', 'FINANCIAL')])
+        .mockResolvedValueOnce([makeGroupSnapshot('110000.00', 'FINANCIAL')]);
       mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '100000', 'EUR', fromDate));
       mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([
         makeSnapshot('ps2', '95000', 'EUR', futureDate),
@@ -242,7 +250,7 @@ describe('PortfolioSnapshotService', () => {
     });
 
     it('handles no future snapshots', async () => {
-      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf.mockResolvedValue([]);
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOfWithGroup.mockResolvedValue([]);
       mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '0', 'EUR', fromDate));
       mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([]);
 

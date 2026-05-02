@@ -36,7 +36,7 @@ describe('Admin backup/restore (e2e)', () => {
 
     const snap = await request(http)
       .post(`/api/v1/assets/${assetId}/snapshots`)
-      .send({ value: '1234.56', observedAt: '2025-01-01T00:00:00.000Z' })
+      .send({ value: '1234.56', observedAt: '2025-02-01T00:00:00.000Z' })
       .expect(201);
     snapshotId = snap.body.id;
 

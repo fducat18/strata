@@ -17,6 +17,8 @@ vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => (
     <div data-testid="chart-container">{children}</div>
   ),
+  AreaChart: ({ children }: any) => <div>{children}</div>,
+  Area: () => null,
   BarChart: ({ children }: any) => <div>{children}</div>,
   Bar: () => null,
   XAxis: () => null,

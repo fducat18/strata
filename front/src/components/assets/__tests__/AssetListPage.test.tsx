@@ -6,6 +6,7 @@ vi.mock('@/lib/hooks', () => ({
   useCategories: vi.fn(),
   useTags: vi.fn(),
   useCreateAsset: vi.fn(),
+  useUpdateAsset: vi.fn(),
 }));
 
 vi.mock('@/stores/uiStore', () => ({
@@ -21,6 +22,7 @@ import {
   useCategories,
   useTags,
   useCreateAsset,
+  useUpdateAsset,
 } from '@/lib/hooks';
 
 const mockUseAssets = vi.mocked(useAssets);
@@ -28,6 +30,7 @@ const mockUseAssetTypes = vi.mocked(useAssetTypes);
 const mockUseCategories = vi.mocked(useCategories);
 const mockUseTags = vi.mocked(useTags);
 const mockUseCreateAsset = vi.mocked(useCreateAsset);
+const mockUseUpdateAsset = vi.mocked(useUpdateAsset);
 
 const mockAssets = [
   {
@@ -67,6 +70,7 @@ describe('AssetListPage', () => {
     mockUseCategories.mockReturnValue({ data: [] } as any);
     mockUseTags.mockReturnValue({ data: [] } as any);
     mockUseCreateAsset.mockReturnValue(mockMutation as any);
+    mockUseUpdateAsset.mockReturnValue(mockMutation as any);
   });
 
   it('shows loading state', () => {

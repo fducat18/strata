@@ -7,7 +7,7 @@ export type { CreateTagData } from './tag.repository.port';
 export { IAssetTypeRepository } from './asset-type.repository.port';
 export type { CreateAssetTypeData, UpdateAssetTypeData } from './asset-type.repository.port';
 export { IAssetSnapshotRepository } from './asset-snapshot.repository.port';
-export type { CreateAssetSnapshotData } from './asset-snapshot.repository.port';
+export type { CreateAssetSnapshotData, AssetSnapshotWithGroup, UpdateAssetSnapshotData } from './asset-snapshot.repository.port';
 export { IPortfolioSnapshotRepository } from './portfolio-snapshot.repository.port';
 export type { CreatePortfolioSnapshotData } from './portfolio-snapshot.repository.port';
 export { ITransactionRepository } from './transaction.repository.port';

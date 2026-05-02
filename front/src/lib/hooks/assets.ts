@@ -6,6 +6,7 @@ import type {
   CreateAssetRequest,
   UpdateAssetRequest,
   CreateSnapshotRequest,
+  UpdateSnapshotRequest,
   DisposeAssetRequest,
 } from '../types';
 
@@ -72,6 +73,15 @@ export function useCreateAssetSnapshot() {
     mutationFn: ({ id, data }: { id: string; data: CreateSnapshotRequest }) =>
       assetApi.createSnapshot(id, data),
     onSuccess: (_, { id }) => invalidateAssetQueries(qc, id),
+  });
+}
+
+export function useUpdateAssetSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ assetId, snapshotId, data }: { assetId: string; snapshotId: string; data: UpdateSnapshotRequest }) =>
+      assetApi.updateSnapshot(assetId, snapshotId, data),
+    onSuccess: (_, { assetId }) => invalidateAssetQueries(qc, assetId),
   });
 }
 

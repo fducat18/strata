@@ -86,6 +86,11 @@ export interface CreateSnapshotRequest {
   observedAt: string;
 }
 
+export interface UpdateSnapshotRequest {
+  value?: string;
+  observedAt?: string;
+}
+
 export interface CreateCategoryRequest {
   name: string;
   parentId?: string;

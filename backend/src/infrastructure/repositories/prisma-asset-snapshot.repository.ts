@@ -5,6 +5,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   IAssetSnapshotRepository,
   CreateAssetSnapshotData,
+  UpdateAssetSnapshotData,
+  AssetSnapshotWithGroup,
 } from '../../domain/ports/asset-snapshot.repository.port.js';
 import { AssetSnapshot } from '../../domain/entities/asset-snapshot.entity.js';
 
@@ -88,6 +90,63 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     const result = await this.prisma.assetSnapshot.update({
       where: { id },
       data: { observedAt },
+    });
+    return this.mapToEntity(result);
+  }
+
+  async findLatestPerNonDisposedAssetWithGroup(): Promise<AssetSnapshotWithGroup[]> {
+    const results = await this.prisma.assetSnapshot.findMany({
+      where: { asset: { disposed: false } },
+      orderBy: { observedAt: 'desc' },
+      distinct: ['assetId'],
+      include: { asset: { include: { assetType: true } } },
+    });
+    return results.map((r) => ({
+      value: new Decimal(r.value.toString()),
+      group: (r.asset as any).assetType?.group ?? 'OTHER',
+    }));
+  }
+
+  async findLatestPerNonDisposedAssetAsOfWithGroup(beforeDate: Date): Promise<AssetSnapshotWithGroup[]> {
+    const results = await this.prisma.assetSnapshot.findMany({
+      where: {
+        asset: { disposed: false },
+        observedAt: { lte: beforeDate },
+      },
+      orderBy: { observedAt: 'desc' },
+      distinct: ['assetId'],
+      include: { asset: { include: { assetType: true } } },
+    });
+    return results.map((r) => ({
+      value: new Decimal(r.value.toString()),
+      group: (r.asset as any).assetType?.group ?? 'OTHER',
+    }));
+  }
+
+  async findByAssetAndDate(assetId: string, date: Date): Promise<AssetSnapshot | null> {
+    const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const dayEnd = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1));
+    const result = await this.prisma.assetSnapshot.findFirst({
+      where: {
+        assetId,
+        observedAt: { gte: dayStart, lt: dayEnd },
+      },
+    });
+    return result ? this.mapToEntity(result) : null;
+  }
+
+  async findById(id: string): Promise<AssetSnapshot | null> {
+    const result = await this.prisma.assetSnapshot.findUnique({ where: { id } });
+    return result ? this.mapToEntity(result) : null;
+  }
+
+  async update(id: string, data: UpdateAssetSnapshotData): Promise<AssetSnapshot> {
+    const updateData: Record<string, unknown> = {};
+    if (data.value !== undefined) updateData['value'] = new Decimal(data.value);
+    if (data.observedAt !== undefined) updateData['observedAt'] = data.observedAt;
+    const result = await this.prisma.assetSnapshot.update({
+      where: { id },
+      data: updateData,
     });
     return this.mapToEntity(result);
   }

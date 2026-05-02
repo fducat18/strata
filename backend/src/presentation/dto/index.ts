@@ -2,7 +2,7 @@ export { CreateAssetDto, UpdateAssetDto, DisposeAssetDto } from './asset/index.j
 export { CreatePortfolioSnapshotDto } from './portfolio-snapshot/index.js';
 export { CreateCategoryDto, UpdateCategoryDto } from './category/index.js';
 export { CreateTagDto, UpdateTagDto } from './tag/index.js';
-export { CreateAssetSnapshotDto } from './asset-snapshot/index.js';
+export { CreateAssetSnapshotDto, UpdateAssetSnapshotDto } from './asset-snapshot/index.js';
 export { RestoreBackupDto } from './admin/index.js';
 export type { RestoreMode } from './admin/index.js';
 export { IsDecimalString } from './validators/is-decimal-string.validator.js';

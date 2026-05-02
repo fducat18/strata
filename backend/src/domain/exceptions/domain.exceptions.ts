@@ -60,3 +60,10 @@ export class AssetTypeInUseException extends Error {
     this.name = 'AssetTypeInUseException';
   }
 }
+
+export class AssetSnapshotNotFoundException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AssetSnapshotNotFoundException';
+  }
+}

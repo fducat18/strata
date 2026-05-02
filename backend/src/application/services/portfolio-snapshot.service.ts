@@ -23,13 +23,13 @@ export class PortfolioSnapshotService {
 
   /**
    * Sum of the latest AssetSnapshot.value for every non-disposed asset.
-   * Uses a targeted query instead of loading all assets with their relations.
+   * LIABILITIES group values are subtracted (loans reduce net worth).
    */
   async computeCurrentValue(): Promise<Decimal> {
     const snapshots =
-      await this.assetSnapshotRepository.findLatestPerNonDisposedAsset();
+      await this.assetSnapshotRepository.findLatestPerNonDisposedAssetWithGroup();
     return snapshots.reduce(
-      (sum, s) => sum.plus(s.value),
+      (sum, s) => s.group === 'LIABILITIES' ? sum.minus(s.value) : sum.plus(s.value),
       new Decimal(0),
     );
   }
@@ -90,7 +90,10 @@ export class PortfolioSnapshotService {
   }
 
   private async computeValueAsOf(date: Date): Promise<Decimal> {
-    const snapshots = await this.assetSnapshotRepository.findLatestPerNonDisposedAssetAsOf(date);
-    return snapshots.reduce((sum, s) => sum.plus(s.value), new Decimal(0));
+    const snapshots = await this.assetSnapshotRepository.findLatestPerNonDisposedAssetAsOfWithGroup(date);
+    return snapshots.reduce(
+      (sum, s) => s.group === 'LIABILITIES' ? sum.minus(s.value) : sum.plus(s.value),
+      new Decimal(0),
+    );
   }
 }

@@ -8,6 +8,7 @@ import {
   CategoryHasChildrenException,
   AssetAlreadyDisposedException,
   AssetTypeInUseException,
+  AssetSnapshotNotFoundException,
 } from '../../domain/exceptions/index.js';
 import { HttpStatus } from '@nestjs/common';
 
@@ -39,6 +40,8 @@ export class DomainExceptionMapper {
       return this.assetAlreadyDisposed();
     if (exception instanceof AssetTypeInUseException)
       return this.assetTypeInUse();
+    if (exception instanceof AssetSnapshotNotFoundException)
+      return this.assetSnapshotNotFound();
     return this.unknown();
   }
 
@@ -71,6 +74,9 @@ export class DomainExceptionMapper {
   }
   private static assetTypeInUse(): MappedDomainException {
     return { status: HttpStatus.CONFLICT, code: 'ASSET_TYPE_IN_USE' };
+  }
+  private static assetSnapshotNotFound(): MappedDomainException {
+    return { status: HttpStatus.NOT_FOUND, code: 'ASSET_SNAPSHOT_NOT_FOUND' };
   }
   private static unknown(): MappedDomainException {
     return {

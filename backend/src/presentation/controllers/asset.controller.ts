@@ -19,6 +19,7 @@ import {
 import {
   CreateAssetDto,
   CreateAssetSnapshotDto,
+  UpdateAssetSnapshotDto,
   UpdateAssetDto,
   DisposeAssetDto,
 } from '../dto/index.js';
@@ -129,7 +130,7 @@ export class AssetController {
   @Post(':id/snapshots')
   @ApiOperation({ summary: 'Create a snapshot for an asset' })
   @ApiResponse({ status: 201, type: AssetSnapshotResponseDto })
-  @ApiStandardErrors([400, 404, 500])
+  @ApiStandardErrors([400, 404, 409, 500])
   async createSnapshot(
     @Param('id') id: string,
     @Body() dto: CreateAssetSnapshotDto,
@@ -143,6 +144,26 @@ export class AssetController {
       value: dto.value,
       observedAt: date,
     });
+    return mapAssetSnapshotToResponse(snapshot);
+  }
+
+  @Put(':id/snapshots/:snapshotId')
+  @ApiOperation({ summary: 'Update a snapshot for an asset' })
+  @ApiResponse({ status: 200, type: AssetSnapshotResponseDto })
+  @ApiStandardErrors([400, 404, 500])
+  async updateSnapshot(
+    @Param('id') _assetId: string,
+    @Param('snapshotId') snapshotId: string,
+    @Body() dto: UpdateAssetSnapshotDto,
+  ): Promise<AssetSnapshotResponseDto> {
+    const updateData: { value?: string; observedAt?: Date } = {};
+    if (dto.value !== undefined) updateData.value = dto.value;
+    if (dto.observedAt !== undefined) {
+      const date = new Date(dto.observedAt);
+      if (isNaN(date.getTime())) throw new BadRequestException('Invalid date: observedAt');
+      updateData.observedAt = date;
+    }
+    const snapshot = await this.assetSnapshotService.update(snapshotId, updateData);
     return mapAssetSnapshotToResponse(snapshot);
   }
 

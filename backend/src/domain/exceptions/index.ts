@@ -8,4 +8,5 @@ export {
   CategoryHasChildrenException,
   AssetAlreadyDisposedException,
   AssetTypeInUseException,
+  AssetSnapshotNotFoundException,
 } from './domain.exceptions';

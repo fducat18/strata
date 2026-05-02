@@ -1,0 +1,23 @@
+meta {
+  name: Update Asset Snapshot
+  type: http
+  seq: 9
+}
+
+put {
+  url: http://localhost:3000/api/v1/assets/:assetId/snapshots/:snapshotId
+  body: json
+  auth: none
+}
+
+params:path {
+  assetId: {{asset_id}}
+  snapshotId: {{snapshot_id}}
+}
+
+body:json {
+  {
+    "value": "250000.00",
+    "observedAt": "2025-12-31T00:00:00.000Z"
+  }
+}

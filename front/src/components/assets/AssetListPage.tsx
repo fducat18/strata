@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  useAssets, useAssetTypes, useCategories, useTags, useCreateAsset,
+  useAssets, useAssetTypes, useCategories, useTags, useCreateAsset, useUpdateAsset,
 } from '@/lib/hooks';
 import {
   Button, Card, CardContent, Input, Select, Badge,
@@ -8,9 +8,11 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
   Loading, EmptyState,
 } from '@/components/ui';
-import { Plus, Package, Search } from 'lucide-react';
+import { Plus, Package, Search, Pencil } from 'lucide-react';
 import { formatQuantity, getAssetTypeIcon, formatMoney } from '@/lib/format';
 import { useUIStore } from '@/stores/uiStore';
+import { AssetEditDialog } from './AssetEditDialog';
+import type { Asset } from '@/lib/types';
 
 export function AssetListPage() {
   const { data: assets, isLoading, isError, refetch } = useAssets();
@@ -18,11 +20,13 @@ export function AssetListPage() {
   const { data: categories } = useCategories();
   const { data: tags } = useTags();
   const createMutation = useCreateAsset();
+  const updateMutation = useUpdateAsset();
 
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
   const [showDisposed, setShowDisposed] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -30,6 +34,8 @@ export function AssetListPage() {
   const [newQuantity, setNewQuantity] = useState('');
   const [newAcquisitionDate, setNewAcquisitionDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [newAcquisitionPrice, setNewAcquisitionPrice] = useState('');
+  const [newCategoryIds, setNewCategoryIds] = useState<string[]>([]);
+  const [newTagIds, setNewTagIds] = useState<string[]>([]);
 
   if (isLoading) return <Loading />;
   if (isError) {
@@ -50,17 +56,28 @@ export function AssetListPage() {
   const handleCreate = async () => {
     if (!newName.trim() || !newAssetTypeId || !newAcquisitionPrice) return;
     try {
-      await createMutation.mutateAsync({
+      const createdAsset = await createMutation.mutateAsync({
         name: newName.trim(),
         assetTypeId: newAssetTypeId,
         quantity: newQuantity || undefined,
         acquisitionDate: newAcquisitionDate,
         acquisitionPrice: newAcquisitionPrice,
       });
+      if ((newCategoryIds.length > 0 || newTagIds.length > 0) && createdAsset) {
+        await updateMutation.mutateAsync({
+          id: createdAsset.id,
+          data: {
+            categoryIds: newCategoryIds,
+            tagIds: newTagIds,
+          },
+        });
+      }
       setNewName('');
       setNewQuantity('');
       setNewAcquisitionDate(new Date().toISOString().slice(0, 10));
       setNewAcquisitionPrice('');
+      setNewCategoryIds([]);
+      setNewTagIds([]);
       setShowCreate(false);
     } catch (err: unknown) {
       const message = (err as any)?.message ?? 'An unexpected error occurred';
@@ -74,6 +91,8 @@ export function AssetListPage() {
     setNewQuantity('');
     setNewAcquisitionDate(new Date().toISOString().slice(0, 10));
     setNewAcquisitionPrice('');
+    setNewCategoryIds([]);
+    setNewTagIds([]);
     setShowCreate(false);
   };
 
@@ -133,6 +152,7 @@ export function AssetListPage() {
                   <TableHead>Categories</TableHead>
                   <TableHead>Tags</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -156,7 +176,7 @@ export function AssetListPage() {
                       </span>
                     </TableCell>
                     <TableCell className="font-mono font-medium">
-                      {formatMoney(asset.currentValue)}
+                      {formatMoney(asset.currentValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
@@ -172,6 +192,16 @@ export function AssetListPage() {
                       {asset.disposed
                         ? <Badge variant="destructive">Disposed</Badge>
                         : <Badge variant="default">Active</Badge>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <button
+                        onClick={() => setEditingAsset(asset)}
+                        className="text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                        aria-label={`Edit ${asset.name}`}
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -219,6 +249,52 @@ export function AssetListPage() {
             <label htmlFor="asset-acquisition-price" className="text-sm font-medium">Acquisition Price (EUR)</label>
             <Input id="asset-acquisition-price" type="number" step="0.01" min="0" value={newAcquisitionPrice} onChange={e => setNewAcquisitionPrice(e.target.value)} placeholder="e.g. 10000.00" className="mt-1" />
           </div>
+          {categories && categories.length > 0 && (
+            <div>
+              <label className="text-sm font-medium">Categories (optional)</label>
+              <div className="mt-1 space-y-1 max-h-32 overflow-y-auto border border-input rounded-md p-2">
+                {categories.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newCategoryIds.includes(c.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewCategoryIds(prev => [...prev, c.id]);
+                        } else {
+                          setNewCategoryIds(prev => prev.filter(id => id !== c.id));
+                        }
+                      }}
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {tags && tags.length > 0 && (
+            <div>
+              <label className="text-sm font-medium">Tags (optional)</label>
+              <div className="mt-1 space-y-1 max-h-32 overflow-y-auto border border-input rounded-md p-2">
+                {tags.map(t => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newTagIds.includes(t.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewTagIds(prev => [...prev, t.id]);
+                        } else {
+                          setNewTagIds(prev => prev.filter(id => id !== t.id));
+                        }
+                      }}
+                    />
+                    {t.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={resetCreate}>Cancel</Button>
@@ -227,6 +303,26 @@ export function AssetListPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {editingAsset && assetTypes && categories && tags && (
+        <AssetEditDialog
+          asset={editingAsset}
+          open={!!editingAsset}
+          assetTypes={assetTypes}
+          allCategories={categories}
+          allTags={tags}
+          onClose={() => setEditingAsset(null)}
+          onSave={async (values) => {
+            try {
+              await updateMutation.mutateAsync({ id: editingAsset.id, data: values });
+              setEditingAsset(null);
+            } catch (err: unknown) {
+              const message = (err as any)?.message ?? 'An unexpected error occurred';
+              useUIStore.getState().pushToast({ variant: 'error', message });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

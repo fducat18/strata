@@ -9,6 +9,7 @@ import {
   DuplicateNameException,
   PortfolioSnapshotNotFoundException,
   TagNotFoundException,
+  AssetSnapshotNotFoundException,
 } from '../../domain/exceptions/index.js';
 import { DomainExceptionMapper } from './domain-exception.mapper.js';
 
@@ -21,6 +22,7 @@ import { DomainExceptionMapper } from './domain-exception.mapper.js';
   DuplicateNameException,
   CategoryHasChildrenException,
   AssetTypeInUseException,
+  AssetSnapshotNotFoundException,
 )
 export class DomainExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(DomainExceptionFilter.name);

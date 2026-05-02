@@ -79,15 +79,17 @@ export function DashboardPage() {
           </Card>
         </a>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Asset Types</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{allocationData.length || Object.keys(allocationByType).length}</div>
-          </CardContent>
-        </Card>
+        <a href="/asset-types" className="block">
+          <Card className="hover:bg-accent transition-colors cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Asset Types</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{allocationData.length || Object.keys(allocationByType).length}</div>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       {/* Charts */}

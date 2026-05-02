@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { AssetSnapshotService } from './asset-snapshot.service.js';
 import {
@@ -7,7 +8,10 @@ import {
 } from '../../domain/ports/index.js';
 import { AssetSnapshot } from '../../domain/entities/asset-snapshot.entity.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
-import { AssetNotFoundException } from '../../domain/exceptions/index.js';
+import {
+  AssetNotFoundException,
+  AssetSnapshotNotFoundException,
+} from '../../domain/exceptions/index.js';
 import { PortfolioSnapshotService } from './portfolio-snapshot.service.js';
 
 describe('AssetSnapshotService', () => {
@@ -16,6 +20,9 @@ describe('AssetSnapshotService', () => {
   const mockAssetSnapshotRepo = {
     save: jest.fn(),
     findByAsset: jest.fn(),
+    findByAssetAndDate: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockAssetRepo = {
@@ -80,8 +87,9 @@ describe('AssetSnapshotService', () => {
       ).rejects.toThrow(AssetNotFoundException);
     });
 
-    it('saves snapshot when asset exists', async () => {
+    it('saves snapshot when asset exists and no duplicate', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockAssetSnapshotRepo.findByAssetAndDate.mockResolvedValue(null);
       mockAssetSnapshotRepo.save.mockResolvedValue(sampleSnapshot);
       mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
       const data = { assetId: 'a1', value: '1000', observedAt: now };
@@ -90,8 +98,17 @@ describe('AssetSnapshotService', () => {
       expect(result).toBe(sampleSnapshot);
     });
 
+    it('throws ConflictException when snapshot already exists for same day', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockAssetSnapshotRepo.findByAssetAndDate.mockResolvedValue(sampleSnapshot);
+      await expect(
+        service.create({ assetId: 'a1', value: '1000', observedAt: now }),
+      ).rejects.toThrow(ConflictException);
+    });
+
     it('triggers portfolio recalculation after save', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockAssetSnapshotRepo.findByAssetAndDate.mockResolvedValue(null);
       mockAssetSnapshotRepo.save.mockResolvedValue(sampleSnapshot);
       mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
       await service.create({ assetId: 'a1', value: '1000', observedAt: now });
@@ -113,6 +130,36 @@ describe('AssetSnapshotService', () => {
       const result = await service.findByAsset('a1');
       expect(mockAssetSnapshotRepo.findByAsset).toHaveBeenCalledWith('a1');
       expect(result).toEqual([sampleSnapshot]);
+    });
+  });
+
+  describe('update', () => {
+    it('throws AssetSnapshotNotFoundException when snapshot does not exist', async () => {
+      mockAssetSnapshotRepo.findById.mockResolvedValue(null);
+      await expect(
+        service.update('unknown', { value: '2000' }),
+      ).rejects.toThrow(AssetSnapshotNotFoundException);
+    });
+
+    it('updates snapshot and triggers portfolio recalculation', async () => {
+      const updatedSnapshot = new AssetSnapshot('s1', 'a1', new Decimal('2000'), now, now);
+      mockAssetSnapshotRepo.findById.mockResolvedValue(sampleSnapshot);
+      mockAssetSnapshotRepo.update.mockResolvedValue(updatedSnapshot);
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+      const result = await service.update('s1', { value: '2000' });
+      expect(mockAssetSnapshotRepo.update).toHaveBeenCalledWith('s1', { value: '2000' });
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(now);
+      expect(result).toBe(updatedSnapshot);
+    });
+
+    it('uses earlier of old and new date for recalculation when date changes', async () => {
+      const olderDate = new Date('2023-06-01T00:00:00.000Z');
+      const updatedSnapshot = new AssetSnapshot('s1', 'a1', new Decimal('2000'), olderDate, now);
+      mockAssetSnapshotRepo.findById.mockResolvedValue(sampleSnapshot);
+      mockAssetSnapshotRepo.update.mockResolvedValue(updatedSnapshot);
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+      await service.update('s1', { value: '2000', observedAt: olderDate });
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(olderDate);
     });
   });
 });

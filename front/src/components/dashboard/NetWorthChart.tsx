@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -49,7 +49,7 @@ export function NetWorthChart() {
     <div className="space-y-3">
       <FilterToggle mode={mode} onModeChange={setMode} />
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} stackOffset="sign">
+        <AreaChart data={chartData} stackOffset="sign">
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
           <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="var(--muted-fg)" />
           <YAxis
@@ -69,14 +69,19 @@ export function NetWorthChart() {
           <Legend />
           <ReferenceLine y={0} stroke="var(--muted-fg)" />
           {keys.map((key) => (
-            <Bar
+            <Area
               key={key}
+              type="monotone"
               dataKey={key}
-              stackId="stack"
+              stackId={mode === 'total' ? undefined : 'stack'}
+              stroke={keyColors[key] ?? '#6b7280'}
               fill={keyColors[key] ?? '#6b7280'}
+              fillOpacity={0.4}
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
             />
           ))}
-        </BarChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
