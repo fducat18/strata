@@ -15,6 +15,7 @@ import { AssetTagsCard } from './AssetTagsCard';
 import { AssetCategoriesCard } from './AssetCategoriesCard';
 import { AssetEditDialog } from './AssetEditDialog';
 import { SnapshotDialog } from './SnapshotDialog';
+import { DisposeDialog } from './DisposeDialog';
 
 interface Props {
   assetId: string;
@@ -36,6 +37,7 @@ export function AssetDetailPage({ assetId }: Props) {
 
   const [showEdit, setShowEdit] = useState(false);
   const [showSnapshot, setShowSnapshot] = useState(false);
+  const [showDispose, setShowDispose] = useState(false);
 
   if (isLoading) return <Loading />;
 
@@ -77,13 +79,12 @@ export function AssetDetailPage({ assetId }: Props) {
     }
   };
 
-  const handleDispose = async () => {
-    if (confirm('Mark this asset as disposed?')) {
-      try {
-        await disposeMutation.mutateAsync(assetId);
-      } catch (err: unknown) {
-        useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
-      }
+  const handleDispose = async (disposalDate: string, disposalPrice: string) => {
+    try {
+      await disposeMutation.mutateAsync({ id: assetId, data: { disposalDate, disposalPrice } });
+      setShowDispose(false);
+    } catch (err: unknown) {
+      useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
     }
   };
 
@@ -105,7 +106,7 @@ export function AssetDetailPage({ assetId }: Props) {
         asset={asset}
         onSnapshot={() => setShowSnapshot(true)}
         onEdit={() => setShowEdit(true)}
-        onDispose={handleDispose}
+        onDispose={() => setShowDispose(true)}
         onDelete={handleDelete}
       />
 
@@ -143,6 +144,13 @@ export function AssetDetailPage({ assetId }: Props) {
         pending={snapshotMutation.isPending}
         onClose={() => setShowSnapshot(false)}
         onSave={handleSnapshot}
+      />
+
+      <DisposeDialog
+        open={showDispose}
+        pending={disposeMutation.isPending}
+        onClose={() => setShowDispose(false)}
+        onSave={handleDispose}
       />
     </div>
   );

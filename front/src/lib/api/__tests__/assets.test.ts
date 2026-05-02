@@ -5,6 +5,7 @@ vi.mock('../client', () => ({
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
   },
 }));
@@ -15,6 +16,7 @@ import { api } from '../client';
 const mockGet = vi.mocked(api.get);
 const mockPost = vi.mocked(api.post);
 const mockPut = vi.mocked(api.put);
+const mockPatch = vi.mocked(api.patch);
 const mockDelete = vi.mocked(api.delete);
 
 describe('assetApi', () => {
@@ -57,11 +59,11 @@ describe('assetApi', () => {
     expect(mockDelete).toHaveBeenCalledWith('/assets/a1');
   });
 
-  it('dispose calls PUT /assets/:id/dispose', async () => {
+  it('dispose calls PATCH /assets/:id/dispose with body', async () => {
     const asset = { id: 'a1', disposed: true };
-    mockPut.mockResolvedValue({ data: asset });
-    const result = await assetApi.dispose('a1');
-    expect(mockPut).toHaveBeenCalledWith('/assets/a1/dispose');
+    mockPatch.mockResolvedValue({ data: asset });
+    const result = await assetApi.dispose('a1', { disposalDate: '2025-06-01', disposalPrice: '5000.00' });
+    expect(mockPatch).toHaveBeenCalledWith('/assets/a1/dispose', { disposalDate: '2025-06-01', disposalPrice: '5000.00' });
     expect(result).toEqual(asset);
   });
 

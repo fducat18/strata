@@ -128,11 +128,12 @@ describe('AssetController', () => {
   });
 
   describe('dispose', () => {
-    it('calls assetService.dispose and returns mapped response', async () => {
+    it('calls assetService.dispose with id and dto fields, returns mapped response', async () => {
       const disposedAsset = sampleAsset.dispose();
       assetService.dispose.mockResolvedValue(disposedAsset);
-      const result = await controller.dispose('a1');
-      expect(assetService.dispose).toHaveBeenCalledWith('a1');
+      const dto = { disposalDate: '2025-06-01', disposalPrice: '5000.00' };
+      const result = await controller.dispose('a1', dto as any);
+      expect(assetService.dispose).toHaveBeenCalledWith('a1', '2025-06-01', '5000.00');
       expect(result.disposed).toBe(true);
     });
   });

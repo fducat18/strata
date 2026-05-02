@@ -76,3 +76,8 @@ export interface CreateCategoryRequest {
 export interface CreateTagRequest {
   name: string;
 }
+
+export interface DisposeAssetRequest {
+  disposalDate: string;
+  disposalPrice: string;
+}

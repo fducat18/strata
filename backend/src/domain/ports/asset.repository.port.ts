@@ -12,6 +12,7 @@ export interface UpdateAssetData {
   name?: string;
   quantity?: string;
   assetTypeId?: string;
+  disposed?: boolean;
 }
 
 export abstract class IAssetRepository {

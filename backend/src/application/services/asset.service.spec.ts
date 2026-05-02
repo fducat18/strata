@@ -9,6 +9,7 @@ import { ITagRepository } from '../../domain/ports/tag.repository.port.js';
 import { ICategoryRepository } from '../../domain/ports/category.repository.port.js';
 import { ITransactionRepository } from '../../domain/ports/transaction.repository.port.js';
 import { AssetSnapshotService } from './asset-snapshot.service.js';
+import { PortfolioSnapshotService } from './portfolio-snapshot.service.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
 import { AssetType } from '../../domain/entities/asset-type.entity.js';
 import { Tag } from '../../domain/entities/tag.entity.js';
@@ -18,6 +19,7 @@ import {
   AssetTypeNotFoundException,
   TagNotFoundException,
   CategoryNotFoundException,
+  AssetAlreadyDisposedException,
 } from '../../domain/exceptions/domain.exceptions.js';
 
 describe('AssetService', () => {
@@ -59,11 +61,16 @@ describe('AssetService', () => {
 
   const mockTransactionRepo = {
     save: jest.fn(),
+    findByAssetAndType: jest.fn(),
   };
 
   const mockAssetSnapshotService = {
     create: jest.fn(),
     findByAsset: jest.fn(),
+  };
+
+  const mockPortfolioSnapshotService = {
+    recalculateFromDate: jest.fn(),
   };
 
   const now = new Date();
@@ -93,6 +100,7 @@ describe('AssetService', () => {
         { provide: ICategoryRepository, useValue: mockCategoryRepo },
         { provide: ITransactionRepository, useValue: mockTransactionRepo },
         { provide: AssetSnapshotService, useValue: mockAssetSnapshotService },
+        { provide: PortfolioSnapshotService, useValue: mockPortfolioSnapshotService },
       ],
     }).compile();
 
@@ -236,17 +244,51 @@ describe('AssetService', () => {
   describe('dispose', () => {
     it('throws AssetNotFoundException when not found', async () => {
       mockAssetRepo.findById.mockResolvedValue(null);
-      await expect(service.dispose('unknown')).rejects.toThrow(
+      await expect(service.dispose('unknown', '2025-06-01', '5000.00')).rejects.toThrow(
         AssetNotFoundException,
       );
     });
 
-    it('calls repository.dispose when found', async () => {
-      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+    it('throws AssetAlreadyDisposedException when asset is already disposed', async () => {
       const disposedAsset = sampleAsset.dispose();
-      mockAssetRepo.dispose.mockResolvedValue(disposedAsset);
-      const result = await service.dispose('a1');
-      expect(mockAssetRepo.dispose).toHaveBeenCalledWith('a1');
+      mockAssetRepo.findById.mockResolvedValue(disposedAsset);
+      await expect(service.dispose('a1', '2025-06-01', '5000.00')).rejects.toThrow(
+        AssetAlreadyDisposedException,
+      );
+    });
+
+    it('throws AssetAlreadyDisposedException when DISPOSE transaction exists', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockTransactionRepo.findByAssetAndType.mockResolvedValue({ id: 'tx1' });
+      await expect(service.dispose('a1', '2025-06-01', '5000.00')).rejects.toThrow(
+        AssetAlreadyDisposedException,
+      );
+    });
+
+    it('marks asset disposed, creates DISPOSE transaction, and triggers snapshot recalc', async () => {
+      const disposedAsset = sampleAsset.dispose();
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(disposedAsset);
+      mockTransactionRepo.findByAssetAndType.mockResolvedValue(null);
+      mockAssetRepo.update.mockResolvedValue(disposedAsset);
+      mockTransactionRepo.save.mockResolvedValue({});
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+
+      const result = await service.dispose('a1', '2025-06-01', '5000.00');
+
+      expect(mockAssetRepo.update).toHaveBeenCalledWith('a1', { disposed: true });
+      expect(mockTransactionRepo.save).toHaveBeenCalledWith({
+        assetId: 'a1',
+        type: 'DISPOSE',
+        unitPrice: '5000.00',
+        quantity: '10',
+        currency: 'EUR',
+        occurredAt: new Date('2025-06-01'),
+      });
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(
+        new Date('2025-06-01'),
+      );
       expect(result.isDisposed()).toBe(true);
     });
   });

@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Put,
   UseFilters,
@@ -19,6 +20,7 @@ import {
   CreateAssetDto,
   CreateAssetSnapshotDto,
   UpdateAssetDto,
+  DisposeAssetDto,
 } from '../dto/index.js';
 import {
   AssetResponseDto,
@@ -101,12 +103,15 @@ export class AssetController {
     await this.assetService.delete(id);
   }
 
-  @Put(':id/dispose')
-  @ApiOperation({ summary: 'Dispose an asset' })
+  @Patch(':id/dispose')
+  @ApiOperation({ summary: 'Mark an asset as disposed' })
   @ApiResponse({ status: 200, type: AssetResponseDto })
-  @ApiStandardErrors([404, 500])
-  async dispose(@Param('id') id: string): Promise<AssetResponseDto> {
-    const asset = await this.assetService.dispose(id);
+  @ApiStandardErrors([400, 404, 409, 500])
+  async dispose(
+    @Param('id') id: string,
+    @Body() dto: DisposeAssetDto,
+  ): Promise<AssetResponseDto> {
+    const asset = await this.assetService.dispose(id, dto.disposalDate, dto.disposalPrice);
     return mapAssetToResponse(asset);
   }
 

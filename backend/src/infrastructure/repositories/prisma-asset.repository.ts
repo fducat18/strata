@@ -120,6 +120,7 @@ export class PrismaAssetRepository extends IAssetRepository {
       updateData.assetTypeId = data.assetTypeId;
     if (data.quantity !== undefined)
       updateData.quantity = new Decimal(data.quantity);
+    if (data.disposed !== undefined) updateData.disposed = data.disposed;
 
     const result = await this.prisma.asset.update({
       where: { id },

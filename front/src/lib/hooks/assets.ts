@@ -6,6 +6,7 @@ import type {
   CreateAssetRequest,
   UpdateAssetRequest,
   CreateSnapshotRequest,
+  DisposeAssetRequest,
 } from '../types';
 
 export function useAssets() {
@@ -59,8 +60,9 @@ export function useDeleteAsset() {
 export function useDisposeAsset() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => assetApi.dispose(id),
-    onSuccess: (_, id) => invalidateAssetQueries(qc, id),
+    mutationFn: ({ id, data }: { id: string; data: DisposeAssetRequest }) =>
+      assetApi.dispose(id, data),
+    onSuccess: (_, { id }) => invalidateAssetQueries(qc, id),
   });
 }
 

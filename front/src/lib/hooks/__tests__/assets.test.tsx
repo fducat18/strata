@@ -131,8 +131,8 @@ describe('useDisposeAsset', () => {
     mockAssetApi.dispose.mockResolvedValue({ ...mockAsset, disposed: true });
     mockAssetApi.getAll.mockResolvedValue([]);
     const { result } = renderHook(() => useDisposeAsset(), { wrapper: createWrapper() });
-    await result.current.mutateAsync('a1');
-    expect(mockAssetApi.dispose).toHaveBeenCalledWith('a1');
+    await result.current.mutateAsync({ id: 'a1', data: { disposalDate: '2025-06-01', disposalPrice: '5000.00' } });
+    expect(mockAssetApi.dispose).toHaveBeenCalledWith('a1', { disposalDate: '2025-06-01', disposalPrice: '5000.00' });
   });
 });
 

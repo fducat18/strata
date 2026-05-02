@@ -5,6 +5,7 @@ import type {
   CreateAssetRequest,
   UpdateAssetRequest,
   CreateSnapshotRequest,
+  DisposeAssetRequest,
 } from '../types';
 
 export const assetApi = {
@@ -17,8 +18,8 @@ export const assetApi = {
   update: (id: string, data: UpdateAssetRequest) =>
     api.put<Asset>(`/assets/${id}`, data).then((r) => r.data),
   delete: (id: string) => api.delete(`/assets/${id}`).then((r) => r.data),
-  dispose: (id: string) =>
-    api.put<Asset>(`/assets/${id}/dispose`).then((r) => r.data),
+  dispose: (id: string, data: DisposeAssetRequest) =>
+    api.patch<Asset>(`/assets/${id}/dispose`, data).then((r) => r.data),
   getSnapshots: (id: string) =>
     api.get<AssetSnapshot[]>(`/assets/${id}/snapshots`).then((r) => r.data),
   createSnapshot: (id: string, data: CreateSnapshotRequest) =>

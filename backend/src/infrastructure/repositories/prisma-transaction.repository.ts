@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
+import { TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   ITransactionRepository,
@@ -24,6 +25,26 @@ export class PrismaTransactionRepository extends ITransactionRepository {
         occurredAt: data.occurredAt,
       },
     });
+    return this.mapToEntity(result);
+  }
+
+  async findByAssetAndType(assetId: string, type: string): Promise<Transaction | null> {
+    const result = await this.prisma.transaction.findFirst({
+      where: { assetId, type: type as TransactionType },
+    });
+    return result ? this.mapToEntity(result) : null;
+  }
+
+  private mapToEntity(result: {
+    id: string;
+    assetId: string;
+    type: TransactionType;
+    unitPrice: { toString(): string };
+    quantity: { toString(): string };
+    currency: string;
+    occurredAt: Date;
+    createdAt: Date;
+  }): Transaction {
     return new Transaction(
       result.id,
       result.assetId,

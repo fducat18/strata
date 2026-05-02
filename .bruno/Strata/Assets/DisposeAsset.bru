@@ -4,12 +4,19 @@ meta {
   seq: 7
 }
 
-put {
+patch {
   url: http://localhost:3000/api/v1/assets/:id/dispose
-  body: none
+  body: json
   auth: none
 }
 
 params:path {
   id: {{asset_id}}
+}
+
+body:json {
+  {
+    "disposalDate": "2025-06-01",
+    "disposalPrice": "5000.00"
+  }
 }

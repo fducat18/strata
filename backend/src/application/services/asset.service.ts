@@ -20,8 +20,10 @@ import {
   AssetTypeNotFoundException,
   TagNotFoundException,
   CategoryNotFoundException,
+  AssetAlreadyDisposedException,
 } from '../../domain/exceptions/index.js';
 import { AssetSnapshotService } from './asset-snapshot.service.js';
+import { PortfolioSnapshotService } from './portfolio-snapshot.service.js';
 
 @Injectable()
 export class AssetService {
@@ -32,6 +34,7 @@ export class AssetService {
     private readonly categoryRepository: ICategoryRepository,
     private readonly transactionRepository: ITransactionRepository,
     private readonly assetSnapshotService: AssetSnapshotService,
+    private readonly portfolioSnapshotService: PortfolioSnapshotService,
   ) {}
 
   async create(data: CreateAssetData): Promise<Asset> {
@@ -93,9 +96,28 @@ export class AssetService {
     return this.assetRepository.delete(id);
   }
 
-  async dispose(id: string): Promise<Asset> {
-    await this.findById(id);
-    return this.assetRepository.dispose(id);
+  async dispose(id: string, disposalDate: string, disposalPrice: string): Promise<Asset> {
+    const asset = await this.assetRepository.findById(id);
+    if (!asset) throw new AssetNotFoundException(`Asset ${id} not found`);
+    if (asset.disposed) throw new AssetAlreadyDisposedException(`Asset ${id} is already disposed`);
+
+    const existing = await this.transactionRepository.findByAssetAndType(id, 'DISPOSE');
+    if (existing) throw new AssetAlreadyDisposedException(`Asset ${id} already has a DISPOSE transaction`);
+
+    await this.assetRepository.update(id, { disposed: true });
+
+    await this.transactionRepository.save({
+      assetId: id,
+      type: 'DISPOSE',
+      unitPrice: disposalPrice,
+      quantity: asset.quantity?.toString() ?? '1',
+      currency: 'EUR',
+      occurredAt: new Date(disposalDate),
+    });
+
+    await this.portfolioSnapshotService.recalculateFromDate(new Date(disposalDate));
+
+    return this.assetRepository.findById(id) as Promise<Asset>;
   }
 
   async addCategory(assetId: string, categoryId: string): Promise<Asset> {

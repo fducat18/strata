@@ -6,4 +6,5 @@ export {
   PortfolioSnapshotNotFoundException,
   DuplicateNameException,
   CategoryHasChildrenException,
+  AssetAlreadyDisposedException,
 } from './domain.exceptions';

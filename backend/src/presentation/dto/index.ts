@@ -1,4 +1,4 @@
-export { CreateAssetDto, UpdateAssetDto } from './asset/index.js';
+export { CreateAssetDto, UpdateAssetDto, DisposeAssetDto } from './asset/index.js';
 export { CreatePortfolioSnapshotDto } from './portfolio-snapshot/index.js';
 export { CreateCategoryDto } from './category/index.js';
 export { CreateTagDto } from './tag/index.js';

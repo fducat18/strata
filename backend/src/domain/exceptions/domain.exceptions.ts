@@ -46,3 +46,10 @@ export class CategoryHasChildrenException extends Error {
     this.name = 'CategoryHasChildrenException';
   }
 }
+
+export class AssetAlreadyDisposedException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AssetAlreadyDisposedException';
+  }
+}
