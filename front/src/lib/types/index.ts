@@ -8,6 +8,7 @@ export interface Asset {
   categories: Category[];
   tags: Tag[];
   transactions: Transaction[];
+  snapshots: AssetSnapshot[];
   createdAt: string;
   updatedAt: string;
   currentValue: string | null;

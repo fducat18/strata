@@ -18,6 +18,7 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
         id: asset.assetType.id,
         code: asset.assetType.code,
         label: asset.assetType.label,
+        group: asset.assetType.group,
       }
     : null;
   dto.categories = (asset.categories ?? []).map((c) => ({
@@ -27,6 +28,11 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
   }));
   dto.tags = (asset.tags ?? []).map((t) => ({ id: t.id, name: t.name }));
   dto.currentValue = asset.currentValue()?.toString() ?? null;
+  dto.snapshots = (asset.snapshots ?? []).map((s) => ({
+    id: s.id,
+    value: s.value.toString(),
+    observedAt: s.observedAt.toISOString(),
+  }));
   return dto;
 }
 

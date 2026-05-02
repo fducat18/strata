@@ -5,6 +5,8 @@ vi.mock('@/lib/hooks', () => ({
   useAssets: vi.fn(),
   useCurrentPortfolioValue: vi.fn(),
   usePortfolioSnapshots: vi.fn(),
+  FILTER_MODES: ['total', 'by-group', 'by-type', 'by-category'],
+  useNetWorthBreakdown: vi.fn(() => ({ data: [], keys: [], keyColors: {} })),
 }));
 
 vi.mock('@/stores/settingsStore', () => ({
@@ -14,16 +16,17 @@ vi.mock('@/stores/settingsStore', () => ({
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  AreaChart: ({ children }: any) => <div>{children}</div>,
-  Area: () => null,
+  BarChart: ({ children }: any) => <div>{children}</div>,
+  Bar: () => null,
   XAxis: () => null,
   YAxis: () => null,
   CartesianGrid: () => null,
   Tooltip: () => null,
+  Legend: () => null,
+  ReferenceLine: () => null,
   PieChart: ({ children }: any) => <div>{children}</div>,
   Pie: () => null,
   Cell: () => null,
-  Legend: () => null,
 }));
 
 import { DashboardPage } from '../DashboardPage';

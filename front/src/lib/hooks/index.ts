@@ -10,3 +10,4 @@ export * from './assets';
 export * from './categories';
 export * from './tags';
 export * from './assetTypes';
+export * from './useNetWorthBreakdown';

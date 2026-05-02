@@ -4,6 +4,7 @@ export class AssetTypeResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() code!: string;
   @ApiProperty() label!: string;
+  @ApiProperty() group!: string;
 }
 
 export class CategoryNestedResponseDto {
@@ -41,4 +42,6 @@ export class AssetResponseDto {
   tags!: TagNestedResponseDto[];
   @ApiPropertyOptional({ type: String, nullable: true })
   currentValue!: string | null;
+  @ApiProperty({ type: [AssetSnapshotNestedResponseDto] })
+  snapshots!: AssetSnapshotNestedResponseDto[];
 }
