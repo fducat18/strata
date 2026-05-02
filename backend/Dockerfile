@@ -5,7 +5,7 @@ WORKDIR /app
 # developer dropped any PEM-encoded *.crt file in backend/certs/.
 # Harmless no-op when the directory only contains the README.
 COPY certs/ /tmp/strata-certs/
-RUN apk add --no-cache ca-certificates \
+RUN apk add --no-cache ca-certificates python3 make g++ \
     && find /tmp/strata-certs -name '*.crt' -exec cp {} /usr/local/share/ca-certificates/ \; \
     && update-ca-certificates \
     && rm -rf /tmp/strata-certs
