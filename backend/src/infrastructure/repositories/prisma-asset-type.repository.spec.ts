@@ -5,8 +5,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 describe('PrismaAssetTypeRepository', () => {
   let repository: PrismaAssetTypeRepository;
 
-  const assetTypeRow = { id: 'at1', code: 'STOCKS', label: 'Stocks' };
-  const assetTypeRow2 = { id: 'at2', code: 'CRYPTO', label: 'Crypto' };
+  const assetTypeRow = { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' };
+  const assetTypeRow2 = { id: 'at2', code: 'CRYPTO', label: 'Crypto', group: 'FINANCIAL' };
 
   const mockPrismaService = {
     assetType: {
@@ -40,6 +40,7 @@ describe('PrismaAssetTypeRepository', () => {
       expect(result?.id).toBe('at1');
       expect(result?.code).toBe('STOCKS');
       expect(result?.label).toBe('Stocks');
+      expect(result?.group).toBe('FINANCIAL');
     });
 
     it('returns null when not found', async () => {

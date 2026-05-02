@@ -11,7 +11,7 @@ export class PrismaAssetTypeRepository extends IAssetTypeRepository {
   }
 
   private mapToEntity(data: AssetTypeModel): AssetType {
-    return new AssetType(data.id, data.code, data.label);
+    return new AssetType(data.id, data.code, data.label, data.group);
   }
 
   async findById(id: string): Promise<AssetType | null> {

@@ -17,7 +17,7 @@ describe('AssetController', () => {
   let assetSnapshotService: jest.Mocked<AssetSnapshotService>;
 
   const now = new Date('2024-01-01T00:00:00.000Z');
-  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks');
+  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks', 'FINANCIAL');
   const sampleAsset = new Asset(
     'a1',
     'My Asset',

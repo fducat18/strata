@@ -13,7 +13,7 @@ function makeAssetRow(overrides: any = {}) {
     assetTypeId: 'at1',
     createdAt: now,
     updatedAt: now,
-    assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks' },
+    assetType: { id: 'at1', code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' },
     snapshots: [],
     transactions: [],
     categories: [],

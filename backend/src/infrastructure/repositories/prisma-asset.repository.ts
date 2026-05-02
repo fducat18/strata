@@ -52,6 +52,7 @@ export class PrismaAssetRepository extends IAssetRepository {
             data.assetType.id,
             data.assetType.code,
             data.assetType.label,
+            data.assetType.group,
           )
         : null,
       data.snapshots?.map(

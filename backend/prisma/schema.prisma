@@ -23,10 +23,20 @@ model Asset {
   @@map("assets")
 }
 
+enum AssetTypeGroup {
+  FINANCIAL
+  REAL_ESTATE
+  PERSONAL_PROPERTY
+  PHYSICAL_COLLECTIONS
+  LIABILITIES
+  OTHER
+}
+
 model AssetType {
-  id     String  @id @default(uuid())
-  code   String  @unique
+  id     String         @id @default(uuid())
+  code   String         @unique
   label  String
+  group  AssetTypeGroup
   assets Asset[]
 
   @@map("asset_types")

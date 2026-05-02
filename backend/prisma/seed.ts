@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { AssetTypeGroup, PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 const adapter = new PrismaBetterSqlite3({
@@ -7,19 +7,19 @@ const adapter = new PrismaBetterSqlite3({
 const prisma = new PrismaClient({ adapter });
 
 const ASSET_TYPES = [
-  { code: 'CHECKING_ACCOUNT', label: 'Checking Account' },
-  { code: 'SAVINGS_ACCOUNT', label: 'Savings Account' },
-  { code: 'CASH', label: 'Cash' },
-  { code: 'REAL_ESTATE', label: 'Real Estate' },
-  { code: 'STOCKS', label: 'Stocks' },
-  { code: 'CRYPTO', label: 'Crypto' },
-  { code: 'BONDS', label: 'Bonds' },
-  { code: 'PERSONAL_PROPERTY', label: 'Personal Property' },
-  { code: 'VEHICLE', label: 'Vehicle' },
-  { code: 'LOAN', label: 'Loan' },
-  { code: 'COLLECTIBLES', label: 'Collectibles' },
-  { code: 'BUSINESS', label: 'Business' },
-  { code: 'OTHER', label: 'Other' },
+  { code: 'CHECKING_ACCOUNT', label: 'Checking Account', group: 'FINANCIAL' },
+  { code: 'SAVINGS_ACCOUNT', label: 'Savings Account', group: 'FINANCIAL' },
+  { code: 'CASH', label: 'Cash', group: 'FINANCIAL' },
+  { code: 'REAL_ESTATE', label: 'Real Estate', group: 'REAL_ESTATE' },
+  { code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' },
+  { code: 'CRYPTO', label: 'Crypto', group: 'FINANCIAL' },
+  { code: 'BONDS', label: 'Bonds', group: 'FINANCIAL' },
+  { code: 'PERSONAL_PROPERTY', label: 'Personal Property', group: 'PERSONAL_PROPERTY' },
+  { code: 'VEHICLE', label: 'Vehicle', group: 'PERSONAL_PROPERTY' },
+  { code: 'LOAN', label: 'Loan', group: 'LIABILITIES' },
+  { code: 'COLLECTIBLES', label: 'Collectibles', group: 'PHYSICAL_COLLECTIONS' },
+  { code: 'BUSINESS', label: 'Business', group: 'OTHER' },
+  { code: 'OTHER', label: 'Other', group: 'OTHER' },
 ];
 
 const DEMO_CATEGORIES = [
@@ -40,8 +40,8 @@ async function seedAssetTypes(): Promise<void> {
   for (const at of ASSET_TYPES) {
     await prisma.assetType.upsert({
       where: { code: at.code },
-      update: {},
-      create: at,
+      update: { group: at.group as AssetTypeGroup },
+      create: at as { code: string; label: string; group: AssetTypeGroup },
     });
   }
   console.log(`  ✅ ${ASSET_TYPES.length} asset types seeded`);

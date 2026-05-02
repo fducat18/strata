@@ -4,4 +4,5 @@ export class AssetTypeFullResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() code!: string;
   @ApiProperty() label!: string;
+  @ApiProperty() group!: string;
 }

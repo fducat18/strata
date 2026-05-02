@@ -14,7 +14,8 @@ CREATE TABLE "assets" (
 CREATE TABLE "asset_types" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "code" TEXT NOT NULL,
-    "label" TEXT NOT NULL
+    "label" TEXT NOT NULL,
+    "group" TEXT NOT NULL
 );
 
 -- CreateTable
@@ -95,3 +96,18 @@ CREATE INDEX "categories_parent_id_idx" ON "categories"("parent_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "tags_name_key" ON "tags"("name");
+
+-- CreateIndex
+CREATE INDEX "asset_snapshots_asset_id_observed_at_idx" ON "asset_snapshots"("asset_id", "observed_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "portfolio_snapshots_observed_at_idx" ON "portfolio_snapshots"("observed_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "transactions_asset_id_occurred_at_idx" ON "transactions"("asset_id", "occurred_at" DESC);
+
+-- CreateIndex
+CREATE INDEX "asset_categories_category_id_idx" ON "asset_categories"("category_id");
+
+-- CreateIndex
+CREATE INDEX "asset_tags_tag_id_idx" ON "asset_tags"("tag_id");

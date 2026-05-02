@@ -8,5 +8,6 @@ export function mapAssetTypeToResponse(
   dto.id = assetType.id;
   dto.code = assetType.code;
   dto.label = assetType.label;
+  dto.group = assetType.group;
   return dto;
 }

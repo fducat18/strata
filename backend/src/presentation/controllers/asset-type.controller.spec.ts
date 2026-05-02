@@ -7,8 +7,8 @@ describe('AssetTypeController', () => {
   let controller: AssetTypeController;
   let assetTypeService: jest.Mocked<AssetTypeService>;
 
-  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks');
-  const sampleAssetType2 = new AssetType('at2', 'CRYPTO', 'Crypto');
+  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks', 'FINANCIAL');
+  const sampleAssetType2 = new AssetType('at2', 'CRYPTO', 'Crypto', 'FINANCIAL');
 
   beforeEach(async () => {
     const mockAssetTypeService = {

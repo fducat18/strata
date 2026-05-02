@@ -56,7 +56,7 @@ describe('AssetService', () => {
   };
 
   const now = new Date();
-  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks');
+  const sampleAssetType = new AssetType('at1', 'STOCKS', 'Stocks', 'FINANCIAL');
   const sampleTag = new Tag('t1', 'MyTag');
   const sampleCategory = new Category('c1', 'MyCategory', null);
   const sampleAsset = new Asset(
