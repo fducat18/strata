@@ -63,4 +63,16 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     });
     return results.map((r) => this.mapToEntity(r));
   }
+
+  async findLatestPerNonDisposedAssetAsOf(beforeDate: Date): Promise<AssetSnapshot[]> {
+    const results = await this.prisma.assetSnapshot.findMany({
+      where: {
+        asset: { disposed: false },
+        observedAt: { lte: beforeDate },
+      },
+      orderBy: { observedAt: 'desc' },
+      distinct: ['assetId'],
+    });
+    return results.map((r) => this.mapToEntity(r));
+  }
 }

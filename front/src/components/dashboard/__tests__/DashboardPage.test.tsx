@@ -4,17 +4,12 @@ import { vi } from 'vitest';
 vi.mock('@/lib/hooks', () => ({
   useAssets: vi.fn(),
   useCurrentPortfolioValue: vi.fn(),
-  useCreatePortfolioSnapshot: vi.fn(),
   usePortfolioSnapshots: vi.fn(),
 }));
 
 vi.mock('@/stores/settingsStore', () => ({
   useLocale: vi.fn(() => 'en-US'),
   useCurrency: vi.fn(() => 'EUR'),
-}));
-
-vi.mock('@/stores/uiStore', () => ({
-  useUIStore: { getState: vi.fn(() => ({ pushToast: vi.fn() })) },
 }));
 
 vi.mock('recharts', () => ({
@@ -32,18 +27,16 @@ vi.mock('recharts', () => ({
 }));
 
 import { DashboardPage } from '../DashboardPage';
-import { useAssets, useCurrentPortfolioValue, useCreatePortfolioSnapshot, usePortfolioSnapshots } from '@/lib/hooks';
+import { useAssets, useCurrentPortfolioValue, usePortfolioSnapshots } from '@/lib/hooks';
 
 const mockUseAssets = vi.mocked(useAssets);
 const mockUseCurrentPortfolioValue = vi.mocked(useCurrentPortfolioValue);
-const mockUseCreatePortfolioSnapshot = vi.mocked(useCreatePortfolioSnapshot);
 const mockUsePortfolioSnapshots = vi.mocked(usePortfolioSnapshots);
 
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUsePortfolioSnapshots.mockReturnValue({ data: [], isLoading: false } as any);
-    mockUseCreatePortfolioSnapshot.mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any);
   });
 
   it('shows loading when fetching', () => {
@@ -91,12 +84,11 @@ describe('DashboardPage', () => {
     expect(assetTypesCard).toBeNull();
   });
 
-  it('renders Take Snapshot button', () => {
+  it('does not render a Take Snapshot button', () => {
     mockUseAssets.mockReturnValue({ isLoading: false, data: [], isError: false, refetch: vi.fn() } as any);
     mockUseCurrentPortfolioValue.mockReturnValue({ isLoading: false, data: { value: '0', currency: 'EUR' }, isError: false, refetch: vi.fn() } as any);
     render(<DashboardPage />);
-    const button = screen.getByRole('button', { name: /Take Snapshot/i });
-    expect(button).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Take Snapshot/i })).not.toBeInTheDocument();
   });
 
   it('filters out disposed assets', () => {

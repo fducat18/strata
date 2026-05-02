@@ -1,16 +1,14 @@
-import { useAssets, useCurrentPortfolioValue, useCreatePortfolioSnapshot, usePortfolioSnapshots } from '@/lib/hooks';
+import { useAssets, useCurrentPortfolioValue } from '@/lib/hooks';
 import { Card, CardHeader, CardTitle, CardContent, Loading, Button } from '@/components/ui';
-import { Package, TrendingUp, Camera, AlertCircle } from 'lucide-react';
+import { Package, TrendingUp, AlertCircle } from 'lucide-react';
 import { NetWorthChart } from './NetWorthChart';
 import { AllocationChart } from './AllocationChart';
 import { formatMoney, toDecimal } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
-import { useUIStore } from '@/stores/uiStore';
 
 export function DashboardPage() {
   const { data: assets, isLoading: loadingAssets, isError: errorAssets, refetch: refetchAssets } = useAssets();
   const { data: currentValue, isLoading: loadingValue, isError: errorValue, refetch: refetchValue } = useCurrentPortfolioValue();
-  const snapshotMutation = useCreatePortfolioSnapshot();
   const locale = useLocale();
   const currency = useCurrency();
 
@@ -44,17 +42,6 @@ export function DashboardPage() {
     .filter(d => d.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  const handleTakeSnapshot = async () => {
-    try {
-      const snapshot = await snapshotMutation.mutateAsync(undefined);
-      const formatted = formatMoney(snapshot.value, { currency: snapshot.currency || currency, locale });
-      useUIStore.getState().pushToast({ variant: 'success', message: `📸 Snapshot recorded — ${formatted}` });
-    } catch (err) {
-      const message = (err as any)?.message ?? 'Failed to take snapshot';
-      useUIStore.getState().pushToast({ variant: 'error', message });
-    }
-  };
-
   const netWorth = currentValue
     ? formatMoney(currentValue.value, { currency: currentValue.currency || currency, locale })
     : '—';
@@ -66,9 +53,6 @@ export function DashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Your financial overview at a glance.</p>
         </div>
-        <Button onClick={handleTakeSnapshot} disabled={snapshotMutation.isPending}>
-          <Camera className="h-4 w-4" /> {snapshotMutation.isPending ? 'Saving…' : 'Take Snapshot'}
-        </Button>
       </div>
 
       {/* Stats cards */}

@@ -7,12 +7,12 @@ import {
 } from '../../domain/ports/index.js';
 import { PortfolioSnapshotNotFoundException } from '../../domain/exceptions/index.js';
 
-const makeSnapshot = (id: string, value: string, currency = 'EUR') => ({
+const makeSnapshot = (id: string, value: string, currency = 'EUR', observedAt?: Date) => ({
   id,
   value: new Decimal(value),
   currency,
   notes: null,
-  observedAt: new Date('2024-01-01T00:00:00.000Z'),
+  observedAt: observedAt ?? new Date('2024-01-01T00:00:00.000Z'),
   createdAt: new Date('2024-01-01T00:00:00.000Z'),
   updatedAt: new Date('2024-01-01T00:00:00.000Z'),
 });
@@ -34,6 +34,9 @@ describe('PortfolioSnapshotService', () => {
     findAll: jest.fn(),
     findById: jest.fn(),
     delete: jest.fn(),
+    upsertForDate: jest.fn(),
+    findAllAfter: jest.fn(),
+    updateValue: jest.fn(),
   };
 
   const mockAssetSnapshotRepo = {
@@ -41,6 +44,7 @@ describe('PortfolioSnapshotService', () => {
     findByAsset: jest.fn(),
     findLatestByAsset: jest.fn(),
     findLatestPerNonDisposedAsset: jest.fn(),
+    findLatestPerNonDisposedAssetAsOf: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -203,6 +207,48 @@ describe('PortfolioSnapshotService', () => {
 
       const result = await service.getCurrentValue();
       expect(result).toEqual({ value: '239200', currency: 'EUR' });
+    });
+  });
+
+  describe('recalculateFromDate', () => {
+    const fromDate = new Date('2024-06-01T00:00:00.000Z');
+
+    it('upserts a portfolio snapshot for fromDate', async () => {
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf.mockResolvedValue([
+        makeAssetSnapshot('s1', 'a1', '100000.00'),
+      ]);
+      mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '100000', 'EUR', fromDate));
+      mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([]);
+
+      await service.recalculateFromDate(fromDate);
+
+      expect(mockPortfolioSnapshotRepo.upsertForDate).toHaveBeenCalledWith(fromDate, '100000');
+    });
+
+    it('updates all future snapshots', async () => {
+      const futureDate = new Date('2024-07-01T00:00:00.000Z');
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf
+        .mockResolvedValueOnce([makeAssetSnapshot('s1', 'a1', '100000.00')])  // for fromDate
+        .mockResolvedValueOnce([makeAssetSnapshot('s2', 'a1', '110000.00')]); // for futureDate
+      mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '100000', 'EUR', fromDate));
+      mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([
+        makeSnapshot('ps2', '95000', 'EUR', futureDate),
+      ]);
+      mockPortfolioSnapshotRepo.updateValue.mockResolvedValue(makeSnapshot('ps2', '110000', 'EUR', futureDate));
+
+      await service.recalculateFromDate(fromDate);
+
+      expect(mockPortfolioSnapshotRepo.updateValue).toHaveBeenCalledWith('ps2', '110000');
+    });
+
+    it('handles no future snapshots', async () => {
+      mockAssetSnapshotRepo.findLatestPerNonDisposedAssetAsOf.mockResolvedValue([]);
+      mockPortfolioSnapshotRepo.upsertForDate.mockResolvedValue(makeSnapshot('ps1', '0', 'EUR', fromDate));
+      mockPortfolioSnapshotRepo.findAllAfter.mockResolvedValue([]);
+
+      await service.recalculateFromDate(fromDate);
+
+      expect(mockPortfolioSnapshotRepo.updateValue).not.toHaveBeenCalled();
     });
   });
 });

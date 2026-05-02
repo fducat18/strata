@@ -81,7 +81,7 @@ model PortfolioSnapshot {
   value      Decimal
   currency   String   @default("EUR")
   notes      String?
-  observedAt DateTime @map("observed_at")
+  observedAt DateTime @unique @map("observed_at")
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([observedAt(sort: Desc)])

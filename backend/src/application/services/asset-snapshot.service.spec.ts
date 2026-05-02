@@ -8,6 +8,7 @@ import {
 import { AssetSnapshot } from '../../domain/entities/asset-snapshot.entity.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
 import { AssetNotFoundException } from '../../domain/exceptions/index.js';
+import { PortfolioSnapshotService } from './portfolio-snapshot.service.js';
 
 describe('AssetSnapshotService', () => {
   let service: AssetSnapshotService;
@@ -28,6 +29,10 @@ describe('AssetSnapshotService', () => {
     removeCategory: jest.fn(),
     addTag: jest.fn(),
     removeTag: jest.fn(),
+  };
+
+  const mockPortfolioSnapshotService = {
+    recalculateFromDate: jest.fn(),
   };
 
   const now = new Date('2024-01-01T00:00:00.000Z');
@@ -56,6 +61,7 @@ describe('AssetSnapshotService', () => {
         AssetSnapshotService,
         { provide: IAssetSnapshotRepository, useValue: mockAssetSnapshotRepo },
         { provide: IAssetRepository, useValue: mockAssetRepo },
+        { provide: PortfolioSnapshotService, useValue: mockPortfolioSnapshotService },
       ],
     }).compile();
 
@@ -77,10 +83,19 @@ describe('AssetSnapshotService', () => {
     it('saves snapshot when asset exists', async () => {
       mockAssetRepo.findById.mockResolvedValue(sampleAsset);
       mockAssetSnapshotRepo.save.mockResolvedValue(sampleSnapshot);
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
       const data = { assetId: 'a1', value: '1000', observedAt: now };
       const result = await service.create(data);
       expect(mockAssetSnapshotRepo.save).toHaveBeenCalledWith(data);
       expect(result).toBe(sampleSnapshot);
+    });
+
+    it('triggers portfolio recalculation after save', async () => {
+      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockAssetSnapshotRepo.save.mockResolvedValue(sampleSnapshot);
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+      await service.create({ assetId: 'a1', value: '1000', observedAt: now });
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(sampleSnapshot.observedAt);
     });
   });
 

@@ -62,4 +62,33 @@ export class PrismaPortfolioSnapshotRepository extends IPortfolioSnapshotReposit
   async delete(id: string): Promise<void> {
     await this.prisma.portfolioSnapshot.delete({ where: { id } });
   }
+
+  async upsertForDate(date: Date, value: string): Promise<PortfolioSnapshot> {
+    const result = await this.prisma.portfolioSnapshot.upsert({
+      where: { observedAt: date },
+      update: { value: new Decimal(value) },
+      create: {
+        value: new Decimal(value),
+        currency: 'EUR',
+        observedAt: date,
+      },
+    });
+    return this.mapToEntity(result);
+  }
+
+  async findAllAfter(date: Date): Promise<PortfolioSnapshot[]> {
+    const results = await this.prisma.portfolioSnapshot.findMany({
+      where: { observedAt: { gt: date } },
+      orderBy: { observedAt: 'asc' },
+    });
+    return results.map((r) => this.mapToEntity(r));
+  }
+
+  async updateValue(id: string, value: string): Promise<PortfolioSnapshot> {
+    const result = await this.prisma.portfolioSnapshot.update({
+      where: { id },
+      data: { value: new Decimal(value) },
+    });
+    return this.mapToEntity(result);
+  }
 }

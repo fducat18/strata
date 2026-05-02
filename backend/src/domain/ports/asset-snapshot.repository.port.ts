@@ -12,4 +12,9 @@ export abstract class IAssetSnapshotRepository {
   abstract findLatestByAsset(assetId: string): Promise<AssetSnapshot | null>;
   /** Returns the single latest snapshot for each non-disposed asset. */
   abstract findLatestPerNonDisposedAsset(): Promise<AssetSnapshot[]>;
+  /**
+   * For each non-disposed asset, returns the latest snapshot with observedAt <= beforeDate.
+   * Used by recalculateFromDate to compute portfolio totals for a specific date.
+   */
+  abstract findLatestPerNonDisposedAssetAsOf(beforeDate: Date): Promise<AssetSnapshot[]>;
 }
