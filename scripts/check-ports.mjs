@@ -2,6 +2,7 @@
 // scripts/check-ports.mjs
 // Detects non-Docker processes occupying Docker-required ports (3000, 4321, 8001).
 // Exits with code 1 and prints termination instructions if stale local servers are found.
+// Skips Docker Desktop (docker/vpnkit/com.docker) and Colima/Lima port-forwarding SSH processes.
 // Called automatically by docker:dev and docker:reset.
 
 import { execSync } from 'node:child_process';
@@ -33,11 +34,19 @@ for (const { port, service } of PORTS) {
       continue;
     }
 
-    // Skip Docker's own port-forwarding processes on macOS
+    // Also fetch full args to detect runtime-level port-forwarding (Colima/Lima)
+    let fullArgs = '';
+    try {
+      fullArgs = execSync(`ps -p ${pid} -o args=`, { encoding: 'utf8' }).trim();
+    } catch {}
+
+    // Skip Docker's own port-forwarding processes on macOS (Docker Desktop, Colima/Lima)
     if (
       cmd.includes('docker') ||
       cmd.includes('vpnkit') ||
-      cmd.includes('com.docker')
+      cmd.includes('com.docker') ||
+      fullArgs.includes('.colima') ||
+      fullArgs.includes('_lima')
     ) {
       continue;
     }
