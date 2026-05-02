@@ -34,7 +34,7 @@ export function DashboardPage() {
   const allocationByType = activeAssets.reduce((acc, asset) => {
     const type = asset.assetType?.code || 'OTHER';
     const label = asset.assetType?.label || 'Other';
-    const assetValue = toDecimal((asset as any).currentValue)?.toNumber() ?? 0;
+    const assetValue = toDecimal(asset.currentValue)?.toNumber() ?? 0;
     if (!acc[type]) acc[type] = { code: type, label, value: 0 };
     acc[type].value += assetValue;
     return acc;

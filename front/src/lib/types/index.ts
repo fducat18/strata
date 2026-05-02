@@ -8,6 +8,7 @@ export interface Asset {
   tags: Tag[];
   createdAt: string;
   updatedAt: string;
+  currentValue: string | null;
 }
 
 export interface AssetType {

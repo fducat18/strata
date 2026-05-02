@@ -39,4 +39,6 @@ export class AssetResponseDto {
   categories!: CategoryNestedResponseDto[];
   @ApiProperty({ type: [TagNestedResponseDto] })
   tags!: TagNestedResponseDto[];
+  @ApiPropertyOptional({ type: String, nullable: true })
+  currentValue!: string | null;
 }

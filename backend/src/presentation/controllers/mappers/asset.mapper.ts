@@ -26,6 +26,7 @@ export function mapAssetToResponse(asset: Asset): AssetResponseDto {
     parentId: c.parentId,
   }));
   dto.tags = (asset.tags ?? []).map((t) => ({ id: t.id, name: t.name }));
+  dto.currentValue = asset.currentValue()?.toString() ?? null;
   return dto;
 }
 
