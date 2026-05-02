@@ -94,6 +94,34 @@ describe('AssetController', () => {
       expect(assetService.findAll).toHaveBeenCalled();
       expect(result).toHaveLength(1);
     });
+
+    it('includes currentValue in response (null when no snapshots)', async () => {
+      assetService.findAll.mockResolvedValue([sampleAsset]);
+      const result = await controller.findAll();
+      expect(result[0]).toHaveProperty('currentValue');
+      expect(result[0].currentValue).toBeNull();
+    });
+
+    it('includes currentValue in response (set when snapshots exist)', async () => {
+      const assetWithSnapshots = new Asset(
+        'a1',
+        'My Asset',
+        new Decimal('10'),
+        false,
+        'at1',
+        now,
+        now,
+        sampleAssetType,
+        [sampleSnapshot], // snapshots (9th param)
+        [], // transactions
+        [], // categories
+        [], // tags
+      );
+      assetService.findAll.mockResolvedValue([assetWithSnapshots]);
+      const result = await controller.findAll();
+      expect(result[0]).toHaveProperty('currentValue');
+      expect(result[0].currentValue).toBe('1000');
+    });
   });
 
   describe('findById', () => {
