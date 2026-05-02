@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AssetTypeController } from './asset-type.controller.js';
 import { AssetTypeService } from '../../application/services/index.js';
 import { AssetType } from '../../domain/entities/asset-type.entity.js';
+import { AssetTypeGroup } from '@prisma/client';
 
 describe('AssetTypeController', () => {
   let controller: AssetTypeController;
@@ -61,7 +62,7 @@ describe('AssetTypeController', () => {
       const result = await controller.create({
         code: 'CRYPTO_ETF',
         label: 'Crypto ETF',
-        group: 'FINANCIAL' as any,
+        group: AssetTypeGroup.FINANCIAL,
       });
       expect(assetTypeService.create).toHaveBeenCalledWith({
         code: 'CRYPTO_ETF',
@@ -80,7 +81,7 @@ describe('AssetTypeController', () => {
       assetTypeService.update.mockResolvedValue(updated);
       const result = await controller.update('at1', {
         label: 'Public Stocks',
-        group: 'FINANCIAL' as any,
+        group: AssetTypeGroup.FINANCIAL,
       });
       expect(assetTypeService.update).toHaveBeenCalledWith('at1', {
         label: 'Public Stocks',

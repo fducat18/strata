@@ -104,6 +104,12 @@ describe('AssetTypeService', () => {
       await expect(service.delete('at1')).rejects.toThrow(AssetTypeInUseException);
     });
 
+    it('throws AssetTypeInUseException when exactly 1 asset references this type', async () => {
+      mockAssetTypeRepo.findById.mockResolvedValue(sampleAssetType);
+      mockAssetTypeRepo.countByTypeId.mockResolvedValue(1);
+      await expect(service.delete('at1')).rejects.toThrow(AssetTypeInUseException);
+    });
+
     it('deletes when no assets reference this type', async () => {
       mockAssetTypeRepo.findById.mockResolvedValue(sampleAssetType);
       mockAssetTypeRepo.countByTypeId.mockResolvedValue(0);

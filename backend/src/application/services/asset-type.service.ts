@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { AssetType } from '../../domain/entities/index.js';
-import { IAssetTypeRepository } from '../../domain/ports/index.js';
-import type { CreateAssetTypeData, UpdateAssetTypeData } from '../../domain/ports/asset-type.repository.port.js';
+import {
+  IAssetTypeRepository,
+  type CreateAssetTypeData,
+  type UpdateAssetTypeData,
+} from '../../domain/ports/index.js';
 import {
   AssetTypeNotFoundException,
   AssetTypeInUseException,
