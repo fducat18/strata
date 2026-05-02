@@ -9,7 +9,7 @@ import {
   Loading, EmptyState,
 } from '@/components/ui';
 import { Plus, Package, Search } from 'lucide-react';
-import { formatQuantity, getAssetTypeIcon } from '@/lib/format';
+import { formatQuantity, getAssetTypeIcon, formatMoney } from '@/lib/format';
 import { useUIStore } from '@/stores/uiStore';
 
 export function AssetListPage() {
@@ -129,7 +129,7 @@ export function AssetListPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
+                  <TableHead>Current Value</TableHead>
                   <TableHead>Categories</TableHead>
                   <TableHead>Tags</TableHead>
                   <TableHead>Status</TableHead>
@@ -139,16 +139,25 @@ export function AssetListPage() {
                 {filtered.map(asset => (
                   <TableRow key={asset.id}>
                     <TableCell>
-                      <a href={`/assets/${asset.id}`} className="font-medium hover:text-primary">
-                        {asset.name}
-                      </a>
+                      <div>
+                        <a href={`/assets/${asset.id}`} className="font-medium hover:text-primary">
+                          {asset.name}
+                        </a>
+                        {asset.quantity != null && (
+                          <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                            {formatQuantity(asset.quantity)}
+                          </p>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1.5 text-sm">
                         {getAssetTypeIcon(asset.assetType?.code || '')} {asset.assetType?.label}
                       </span>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{formatQuantity(asset.quantity)}</TableCell>
+                    <TableCell className="font-mono font-medium">
+                      {formatMoney(asset.currentValue)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
                         {asset.categories?.map(c => <Badge key={c.id} variant="outline">{c.name}</Badge>)}

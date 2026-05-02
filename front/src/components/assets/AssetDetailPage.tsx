@@ -88,11 +88,11 @@ export function AssetDetailPage({ assetId }: Props) {
     }
   };
 
-  const handleSnapshot = async (value: string) => {
+  const handleSnapshot = async (value: string, observedAt: string) => {
     try {
       await snapshotMutation.mutateAsync({
         id: assetId,
-        data: { value, observedAt: new Date().toISOString() },
+        data: { value, observedAt: new Date(observedAt).toISOString() },
       });
       setShowSnapshot(false);
     } catch (err: unknown) {

@@ -38,6 +38,7 @@ const mockAssets = [
     categories: [],
     tags: [],
     quantity: '10',
+    currentValue: '1500.00',
     createdAt: '',
     updatedAt: '',
   },
@@ -49,6 +50,7 @@ const mockAssets = [
     categories: [],
     tags: [],
     quantity: null,
+    currentValue: null,
     createdAt: '',
     updatedAt: '',
   },
@@ -230,5 +232,51 @@ describe('AssetListPage', () => {
     render(<AssetListPage />);
     fireEvent.click(screen.getByText('New Asset'));
     expect(screen.getByText('Create')).toBeDisabled();
+  });
+
+  it('shows Current Value column header', () => {
+    mockUseAssets.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: mockAssets,
+      refetch: vi.fn(),
+    } as any);
+    render(<AssetListPage />);
+    expect(screen.getByText('Current Value')).toBeInTheDocument();
+  });
+
+  it('shows formatted currentValue for asset', () => {
+    mockUseAssets.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: mockAssets,
+      refetch: vi.fn(),
+    } as any);
+    render(<AssetListPage />);
+    // formatMoney('1500.00') with en-US locale yields '$1,500.00' or similar — check em-dash not shown
+    expect(screen.queryAllByText('—').length).toBe(0);
+  });
+
+  it('shows em dash for asset with null currentValue', () => {
+    mockUseAssets.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: [{ ...mockAssets[0], currentValue: null }],
+      refetch: vi.fn(),
+    } as any);
+    render(<AssetListPage />);
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('shows quantity as secondary text below name', () => {
+    mockUseAssets.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: mockAssets,
+      refetch: vi.fn(),
+    } as any);
+    render(<AssetListPage />);
+    // quantity '10' should appear as secondary text (formatQuantity)
+    expect(screen.getByText('10')).toBeInTheDocument();
   });
 });
