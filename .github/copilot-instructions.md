@@ -1,5 +1,7 @@
 # Strata — Copilot / AI Agent Instructions
 
+> **Important:** Read `AGENTS.md` at repo root for project-level conventions that all AI agents must follow.
+
 Strata is a personal asset-tracking app: a **NestJS + Prisma (SQLite)** backend, an **Astro + React + Tailwind v4** frontend, a **Tauri v2 (Rust)** desktop wrapper that spawns both as sidecars, and an **Astro Starlight** documentation site. It tracks portfolios, assets, snapshots, transactions, categories and tags to compute net worth.
 
 ## Layout
