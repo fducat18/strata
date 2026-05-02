@@ -50,10 +50,13 @@ After adding this, open a new terminal and `cd` into the repo — nvm will autom
 cd backend
 nvm use 22            # Mandatory — check before every npm install
 npm install           # Compiles native modules for Node 22
-npx prisma migrate deploy   # Apply DB schema
 npx prisma db seed          # Load demo data
 npm run start:dev           # Starts on http://localhost:3000
 ```
+
+:::note[Migrations run automatically]
+NestJS runs `prisma migrate deploy` automatically on startup, before the server accepts connections. You do **not** need to run migrations manually in local dev.
+:::
 
 - API: `http://localhost:3000/api/v1`
 - Swagger UI: `http://localhost:3000/swagger`

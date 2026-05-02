@@ -34,8 +34,24 @@ Monitor asset values over time with snapshots and transaction history.
 
 See your complete net worth across all asset types — loans and liabilities automatically reduce the total via negative snapshot values.
 
+### Net Worth History Chart
+
+The chart shows your portfolio value over time and supports **4 filter modes**:
+
+| Mode | Description |
+|------|-------------|
+| **Total only** | Single bar per date — total portfolio value |
+| **By group** | Stacked bars by asset group (FINANCIAL, REAL_ESTATE, etc.) |
+| **By asset type** | Stacked bars per asset type code |
+| **By category** | Stacked bars per user-defined category |
+
+**LIABILITIES group** assets always appear **below the zero axis** (red bars) — reflecting that loans reduce your net worth.
+
+Portfolio snapshots are **calculated automatically** every time you add or modify an asset snapshot — no manual action needed.
+
 ## 🔮 Planned (v2)
 
 - Budgeting and expense tracking
 - Goal setting and progress tracking
 - Multi-currency support
+- Bank API / MCP integration via `ADJUST` transactions — new asset snapshot values flow in automatically, triggering the same portfolio snapshot recalculation cascade

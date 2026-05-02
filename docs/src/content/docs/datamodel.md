@@ -57,6 +57,7 @@ erDiagram
         uuid id PK
         string code UK
         string label
+        string group
     }
 
     CATEGORY {
@@ -94,6 +95,23 @@ graph TD
     C --> D[PortfolioSnapshot]
     D --> E[Net Worth Chart]
 ```
+
+## Asset Types
+
+Each asset belongs to an `AssetType`, which has a `code`, a human-readable `label`, and a `group`.
+
+The `group` field organises the 13 type codes into 6 groups:
+
+| Group | Type Codes |
+|-------|-----------|
+| `FINANCIAL` | CHECKING_ACCOUNT, SAVINGS_ACCOUNT, CASH, STOCKS, CRYPTO, BONDS |
+| `REAL_ESTATE` | REAL_ESTATE |
+| `PERSONAL_PROPERTY` | PERSONAL_PROPERTY, VEHICLE |
+| `PHYSICAL_COLLECTIONS` | COLLECTIBLES |
+| `LIABILITIES` | LOAN |
+| `OTHER` | BUSINESS, OTHER |
+
+The `group` field drives chart color-coding (LIABILITIES group = red bars below the zero axis) and the "By group" filter mode in the net worth history chart.
 
 ## Transaction Types
 
