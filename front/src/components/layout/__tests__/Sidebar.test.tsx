@@ -9,6 +9,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Assets')).toBeInTheDocument();
     expect(screen.getByText('Categories')).toBeInTheDocument();
     expect(screen.getByText('Tags')).toBeInTheDocument();
+    expect(screen.getByText('Asset Types')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 

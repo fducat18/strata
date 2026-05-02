@@ -4,6 +4,7 @@ import {
   Package,
   FolderTree,
   Tags,
+  Layers,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -16,6 +17,7 @@ const navItems = [
   { label: 'Assets', href: '/assets', icon: Package },
   { label: 'Categories', href: '/categories', icon: FolderTree },
   { label: 'Tags', href: '/tags', icon: Tags },
+  { label: 'Asset Types', href: '/asset-types', icon: Layers },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 

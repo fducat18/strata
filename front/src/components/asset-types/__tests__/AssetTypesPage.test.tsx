@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 
 vi.mock('@/lib/hooks', () => ({
@@ -122,11 +122,11 @@ describe('AssetTypesPage', () => {
     });
   });
 
-  it('opens edit dialog when edit button is clicked', () => {
+  it('opens edit dialog when edit button is clicked', async () => {
     mockUseAssetTypes.mockReturnValue({ isLoading: false, isError: false, data: sampleTypes, refetch: vi.fn() } as any);
     render(<AssetTypesPage />);
     const editBtn = screen.getByLabelText('Edit asset type CHECKING_ACCOUNT');
-    fireEvent.click(editBtn);
+    await act(async () => { fireEvent.click(editBtn); });
     expect(screen.getByRole('heading', { name: 'Edit Asset Type' })).toBeInTheDocument();
   });
 

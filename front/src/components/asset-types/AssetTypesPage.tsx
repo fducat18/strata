@@ -30,7 +30,7 @@ const GROUP_COLORS: Record<string, string> = {
   PERSONAL_PROPERTY: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   PHYSICAL_COLLECTIONS: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
   LIABILITIES: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  OTHER: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
+  OTHER: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
 };
 
 const GROUPS = Object.keys(GROUP_COLORS) as Array<keyof typeof GROUP_COLORS>;
