@@ -17,6 +17,7 @@ export interface AssetType {
   id: string;
   code: string;
   label: string;
+  group: string;
 }
 
 export interface Category {
@@ -91,6 +92,17 @@ export interface CreateCategoryRequest {
 
 export interface CreateTagRequest {
   name: string;
+}
+
+export interface CreateAssetTypeRequest {
+  code: string;
+  label: string;
+  group: string;
+}
+
+export interface UpdateAssetTypeRequest {
+  label: string;
+  group: string;
 }
 
 export interface DisposeAssetRequest {
