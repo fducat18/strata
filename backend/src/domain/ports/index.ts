@@ -5,6 +5,7 @@ export type { CreateCategoryData } from './category.repository.port';
 export { ITagRepository } from './tag.repository.port';
 export type { CreateTagData } from './tag.repository.port';
 export { IAssetTypeRepository } from './asset-type.repository.port';
+export type { CreateAssetTypeData, UpdateAssetTypeData } from './asset-type.repository.port';
 export { IAssetSnapshotRepository } from './asset-snapshot.repository.port';
 export type { CreateAssetSnapshotData } from './asset-snapshot.repository.port';
 export { IPortfolioSnapshotRepository } from './portfolio-snapshot.repository.port';
