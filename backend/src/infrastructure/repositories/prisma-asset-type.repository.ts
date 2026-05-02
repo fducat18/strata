@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AssetType as AssetTypeModel } from '@prisma/client';
+import { AssetType as AssetTypeModel, $Enums } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IAssetTypeRepository } from '../../domain/ports/asset-type.repository.port.js';
 import type { CreateAssetTypeData, UpdateAssetTypeData } from '../../domain/ports/asset-type.repository.port.js';
@@ -27,7 +27,7 @@ export class PrismaAssetTypeRepository extends IAssetTypeRepository {
 
   async create(data: CreateAssetTypeData): Promise<AssetType> {
     const result = await this.prisma.assetType.create({
-      data: { code: data.code, label: data.label, group: data.group },
+      data: { code: data.code, label: data.label, group: data.group as $Enums.AssetTypeGroup },
     });
     return this.mapToEntity(result);
   }
@@ -35,7 +35,7 @@ export class PrismaAssetTypeRepository extends IAssetTypeRepository {
   async update(id: string, data: UpdateAssetTypeData): Promise<AssetType> {
     const result = await this.prisma.assetType.update({
       where: { id },
-      data: { label: data.label, group: data.group },
+      data: { label: data.label, group: data.group as $Enums.AssetTypeGroup },
     });
     return this.mapToEntity(result);
   }
