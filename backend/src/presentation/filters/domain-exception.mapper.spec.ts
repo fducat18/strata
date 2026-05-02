@@ -8,6 +8,7 @@ import {
   AssetTypeNotFoundException,
   DuplicateNameException,
   CategoryHasChildrenException,
+  AssetTypeInUseException,
 } from '../../domain/exceptions/index.js';
 
 describe('DomainExceptionMapper', () => {
@@ -66,6 +67,14 @@ describe('DomainExceptionMapper', () => {
       );
       expect(result.status).toBe(HttpStatus.CONFLICT);
       expect(result.code).toBe('CATEGORY_HAS_CHILDREN');
+    });
+
+    it('maps AssetTypeInUseException to 409 ASSET_TYPE_IN_USE', () => {
+      const result = DomainExceptionMapper.map(
+        new AssetTypeInUseException('in use'),
+      );
+      expect(result.status).toBe(HttpStatus.CONFLICT);
+      expect(result.code).toBe('ASSET_TYPE_IN_USE');
     });
 
     it('maps unknown error to 500 INTERNAL_ERROR', () => {
