@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import {
   AssetNotFoundException,
   AssetTypeNotFoundException,
+  AssetTypeInUseException,
   CategoryHasChildrenException,
   CategoryNotFoundException,
   DuplicateNameException,
@@ -19,6 +20,7 @@ import { DomainExceptionMapper } from './domain-exception.mapper.js';
   AssetTypeNotFoundException,
   DuplicateNameException,
   CategoryHasChildrenException,
+  AssetTypeInUseException,
 )
 export class DomainExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(DomainExceptionFilter.name);

@@ -8,6 +8,7 @@ import {
   AssetTypeNotFoundException,
   DuplicateNameException,
   CategoryHasChildrenException,
+  AssetTypeInUseException,
 } from '../../domain/exceptions/index.js';
 
 function buildMockHost(
@@ -84,6 +85,15 @@ describe('DomainExceptionFilter', () => {
       expect(responseMock.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
       const body = responseMock.json.mock.calls[0][0];
       expect(body.code).toBe('CATEGORY_HAS_CHILDREN');
+    });
+
+    it('returns 409 for AssetTypeInUseException', () => {
+      const host = buildMockHost(responseMock);
+      filter.catch(new AssetTypeInUseException('type in use'), host);
+      expect(responseMock.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
+      const body = responseMock.json.mock.calls[0][0];
+      expect(body.code).toBe('ASSET_TYPE_IN_USE');
+      expect(body.error).toBe('Conflict');
     });
 
     it('includes timestamp in response body', () => {

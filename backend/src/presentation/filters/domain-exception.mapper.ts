@@ -7,6 +7,7 @@ import {
   DuplicateNameException,
   CategoryHasChildrenException,
   AssetAlreadyDisposedException,
+  AssetTypeInUseException,
 } from '../../domain/exceptions/index.js';
 import { HttpStatus } from '@nestjs/common';
 
@@ -36,6 +37,8 @@ export class DomainExceptionMapper {
       return this.categoryHasChildren();
     if (exception instanceof AssetAlreadyDisposedException)
       return this.assetAlreadyDisposed();
+    if (exception instanceof AssetTypeInUseException)
+      return this.assetTypeInUse();
     return this.unknown();
   }
 
@@ -65,6 +68,9 @@ export class DomainExceptionMapper {
   }
   private static assetAlreadyDisposed(): MappedDomainException {
     return { status: HttpStatus.CONFLICT, code: 'ASSET_ALREADY_DISPOSED' };
+  }
+  private static assetTypeInUse(): MappedDomainException {
+    return { status: HttpStatus.CONFLICT, code: 'ASSET_TYPE_IN_USE' };
   }
   private static unknown(): MappedDomainException {
     return {

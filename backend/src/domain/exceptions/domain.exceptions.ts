@@ -53,3 +53,10 @@ export class AssetAlreadyDisposedException extends Error {
     this.name = 'AssetAlreadyDisposedException';
   }
 }
+
+export class AssetTypeInUseException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AssetTypeInUseException';
+  }
+}

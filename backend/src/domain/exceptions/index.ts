@@ -7,4 +7,5 @@ export {
   DuplicateNameException,
   CategoryHasChildrenException,
   AssetAlreadyDisposedException,
+  AssetTypeInUseException,
 } from './domain.exceptions';
