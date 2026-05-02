@@ -115,7 +115,7 @@ export default defineConfig({
         {
           label: 'Plans',
           items: [
-            { label: 'All Plans', slug: 'plans/index' },
+            { label: 'All Plans', slug: 'plans' },
             { label: '2025-01 Beta Feedback', slug: 'plans/2025-01-beta-feedback-plan' },
           ],
         },
