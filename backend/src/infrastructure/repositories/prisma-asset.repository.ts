@@ -169,6 +169,30 @@ export class PrismaAssetRepository extends IAssetRepository {
     });
   }
 
+  async replaceCategories(assetId: string, categoryIds: string[]): Promise<Asset> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.categoriesOnAssets.deleteMany({ where: { assetId } });
+      if (categoryIds.length > 0) {
+        await tx.categoriesOnAssets.createMany({
+          data: categoryIds.map((categoryId) => ({ assetId, categoryId })),
+        });
+      }
+      return this.reloadAsset(tx, assetId);
+    });
+  }
+
+  async replaceTags(assetId: string, tagIds: string[]): Promise<Asset> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.tagsOnAssets.deleteMany({ where: { assetId } });
+      if (tagIds.length > 0) {
+        await tx.tagsOnAssets.createMany({
+          data: tagIds.map((tagId) => ({ assetId, tagId })),
+        });
+      }
+      return this.reloadAsset(tx, assetId);
+    });
+  }
+
   private async attachCategory(
     tx: Prisma.TransactionClient,
     assetId: string,

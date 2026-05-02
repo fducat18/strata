@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  useAsset, useAssetSnapshots, useTags, useCategories,
+  useAsset, useAssetSnapshots, useTags, useCategories, useAssetTypes,
   useUpdateAsset, useDeleteAsset, useDisposeAsset,
   useCreateAssetSnapshot, useAddTagToAsset, useRemoveTagFromAsset,
   useAddCategoryToAsset, useRemoveCategoryFromAsset,
@@ -26,6 +26,7 @@ export function AssetDetailPage({ assetId }: Props) {
   const { data: snapshots = [] } = useAssetSnapshots(assetId);
   const { data: allTags = [] } = useTags();
   const { data: allCategories = [] } = useCategories();
+  const { data: assetTypes = [] } = useAssetTypes();
   const updateMutation = useUpdateAsset();
   const deleteMutation = useDeleteAsset();
   const disposeMutation = useDisposeAsset();
@@ -59,7 +60,14 @@ export function AssetDetailPage({ assetId }: Props) {
   const availableTags = allTags.filter(t => !assetTagIds.has(t.id));
   const availableCategories = allCategories.filter(c => !assetCatIds.has(c.id));
 
-  const handleSaveEdit = async (values: { name: string; quantity?: string }) => {
+  const handleSaveEdit = async (values: {
+    name: string;
+    assetTypeId: string;
+    quantity?: string;
+    categoryIds: string[];
+    tagIds: string[];
+    acquisitionDate: string;
+  }) => {
     try {
       await updateMutation.mutateAsync({ id: assetId, data: values });
       setShowEdit(false);
@@ -135,6 +143,9 @@ export function AssetDetailPage({ assetId }: Props) {
       <AssetEditDialog
         open={showEdit}
         asset={asset}
+        assetTypes={assetTypes}
+        allCategories={allCategories}
+        allTags={allTags}
         onClose={() => setShowEdit(false)}
         onSave={handleSaveEdit}
       />

@@ -13,6 +13,8 @@ export interface UpdateAssetData {
   quantity?: string;
   assetTypeId?: string;
   disposed?: boolean;
+  categoryIds?: string[];
+  tagIds?: string[];
 }
 
 export abstract class IAssetRepository {
@@ -26,4 +28,6 @@ export abstract class IAssetRepository {
   abstract removeCategory(assetId: string, categoryId: string): Promise<void>;
   abstract addTag(assetId: string, tagId: string): Promise<Asset>;
   abstract removeTag(assetId: string, tagId: string): Promise<void>;
+  abstract replaceCategories(assetId: string, categoryIds: string[]): Promise<Asset>;
+  abstract replaceTags(assetId: string, tagIds: string[]): Promise<Asset>;
 }

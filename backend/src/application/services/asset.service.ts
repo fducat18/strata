@@ -12,6 +12,7 @@ import {
   ITagRepository,
   ICategoryRepository,
   ITransactionRepository,
+  IAssetSnapshotRepository,
   type CreateAssetData,
   type UpdateAssetData,
 } from '../../domain/ports/index.js';
@@ -33,6 +34,7 @@ export class AssetService {
     private readonly tagRepository: ITagRepository,
     private readonly categoryRepository: ICategoryRepository,
     private readonly transactionRepository: ITransactionRepository,
+    private readonly assetSnapshotRepository: IAssetSnapshotRepository,
     private readonly assetSnapshotService: AssetSnapshotService,
     private readonly portfolioSnapshotService: PortfolioSnapshotService,
   ) {}
@@ -75,7 +77,7 @@ export class AssetService {
     return this.assetRepository.findAll();
   }
 
-  async update(id: string, data: UpdateAssetData): Promise<Asset> {
+  async update(id: string, data: UpdateAssetData & { acquisitionDate?: string }): Promise<Asset> {
     await this.findById(id);
 
     if (data.assetTypeId) {
@@ -88,7 +90,43 @@ export class AssetService {
         );
     }
 
-    return this.assetRepository.update(id, data);
+    const assetData: UpdateAssetData = {};
+    if (data.name !== undefined) assetData.name = data.name;
+    if (data.quantity !== undefined) assetData.quantity = data.quantity;
+    if (data.assetTypeId !== undefined) assetData.assetTypeId = data.assetTypeId;
+    if (data.disposed !== undefined) assetData.disposed = data.disposed;
+
+    if (Object.keys(assetData).length > 0) {
+      await this.assetRepository.update(id, assetData);
+    }
+
+    if (data.categoryIds !== undefined) {
+      await this.assetRepository.replaceCategories(id, data.categoryIds);
+    }
+
+    if (data.tagIds !== undefined) {
+      await this.assetRepository.replaceTags(id, data.tagIds);
+    }
+
+    if (data.acquisitionDate !== undefined) {
+      const acquireTransaction = await this.transactionRepository.findByAssetAndType(id, 'ACQUIRE');
+      if (acquireTransaction) {
+        const newDate = new Date(data.acquisitionDate);
+        const oldDate = acquireTransaction.occurredAt;
+        const minDate = newDate < oldDate ? newDate : oldDate;
+
+        await this.transactionRepository.updateOccurredAt(acquireTransaction.id, newDate);
+
+        const earliestSnapshot = await this.assetSnapshotRepository.findEarliestByAsset(id);
+        if (earliestSnapshot) {
+          await this.assetSnapshotRepository.updateObservedAt(earliestSnapshot.id, newDate);
+        }
+
+        await this.portfolioSnapshotService.recalculateFromDate(minDate);
+      }
+    }
+
+    return this.assetRepository.findById(id) as Promise<Asset>;
   }
 
   async delete(id: string): Promise<void> {

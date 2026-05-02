@@ -8,6 +8,7 @@ import { IAssetTypeRepository } from '../../domain/ports/asset-type.repository.p
 import { ITagRepository } from '../../domain/ports/tag.repository.port.js';
 import { ICategoryRepository } from '../../domain/ports/category.repository.port.js';
 import { ITransactionRepository } from '../../domain/ports/transaction.repository.port.js';
+import { IAssetSnapshotRepository } from '../../domain/ports/asset-snapshot.repository.port.js';
 import { AssetSnapshotService } from './asset-snapshot.service.js';
 import { PortfolioSnapshotService } from './portfolio-snapshot.service.js';
 import { Asset } from '../../domain/entities/asset.entity.js';
@@ -36,6 +37,8 @@ describe('AssetService', () => {
     removeCategory: jest.fn(),
     addTag: jest.fn(),
     removeTag: jest.fn(),
+    replaceCategories: jest.fn(),
+    replaceTags: jest.fn(),
   };
 
   const mockAssetTypeRepo = {
@@ -62,6 +65,17 @@ describe('AssetService', () => {
   const mockTransactionRepo = {
     save: jest.fn(),
     findByAssetAndType: jest.fn(),
+    updateOccurredAt: jest.fn(),
+  };
+
+  const mockAssetSnapshotRepo = {
+    save: jest.fn(),
+    findByAsset: jest.fn(),
+    findLatestByAsset: jest.fn(),
+    findLatestPerNonDisposedAsset: jest.fn(),
+    findLatestPerNonDisposedAssetAsOf: jest.fn(),
+    findEarliestByAsset: jest.fn(),
+    updateObservedAt: jest.fn(),
   };
 
   const mockAssetSnapshotService = {
@@ -99,6 +113,7 @@ describe('AssetService', () => {
         { provide: ITagRepository, useValue: mockTagRepo },
         { provide: ICategoryRepository, useValue: mockCategoryRepo },
         { provide: ITransactionRepository, useValue: mockTransactionRepo },
+        { provide: IAssetSnapshotRepository, useValue: mockAssetSnapshotRepo },
         { provide: AssetSnapshotService, useValue: mockAssetSnapshotService },
         { provide: PortfolioSnapshotService, useValue: mockPortfolioSnapshotService },
       ],
@@ -216,12 +231,70 @@ describe('AssetService', () => {
     });
 
     it('calls repository.update when valid', async () => {
-      mockAssetRepo.findById.mockResolvedValue(sampleAsset);
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(sampleAsset);
       mockAssetRepo.update.mockResolvedValue(sampleAsset);
       await service.update('a1', { name: 'Updated' });
       expect(mockAssetRepo.update).toHaveBeenCalledWith('a1', {
         name: 'Updated',
       });
+    });
+
+    it('calls replaceCategories when categoryIds provided', async () => {
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(sampleAsset);
+      mockAssetRepo.replaceCategories.mockResolvedValue(sampleAsset);
+      await service.update('a1', { categoryIds: ['c1', 'c2'] });
+      expect(mockAssetRepo.replaceCategories).toHaveBeenCalledWith('a1', ['c1', 'c2']);
+      expect(mockAssetRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('calls replaceTags when tagIds provided', async () => {
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(sampleAsset);
+      mockAssetRepo.replaceTags.mockResolvedValue(sampleAsset);
+      await service.update('a1', { tagIds: ['t1'] });
+      expect(mockAssetRepo.replaceTags).toHaveBeenCalledWith('a1', ['t1']);
+      expect(mockAssetRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('updates ACQUIRE transaction and snapshot when acquisitionDate provided', async () => {
+      const acquireTx = { id: 'tx1', occurredAt: new Date('2025-01-10') };
+      const snapshot = { id: 'snap1', observedAt: new Date('2025-01-10') };
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(sampleAsset);
+      mockTransactionRepo.findByAssetAndType.mockResolvedValue(acquireTx);
+      mockTransactionRepo.updateOccurredAt.mockResolvedValue({});
+      mockAssetSnapshotRepo.findEarliestByAsset.mockResolvedValue(snapshot);
+      mockAssetSnapshotRepo.updateObservedAt.mockResolvedValue({});
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+
+      await service.update('a1', { acquisitionDate: '2025-01-15' });
+
+      expect(mockTransactionRepo.updateOccurredAt).toHaveBeenCalledWith('tx1', new Date('2025-01-15'));
+      expect(mockAssetSnapshotRepo.updateObservedAt).toHaveBeenCalledWith('snap1', new Date('2025-01-15'));
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(new Date('2025-01-10'));
+    });
+
+    it('uses min(old, new) date for recalculation when new date is earlier', async () => {
+      const acquireTx = { id: 'tx1', occurredAt: new Date('2025-01-15') };
+      const snapshot = { id: 'snap1' };
+      mockAssetRepo.findById
+        .mockResolvedValueOnce(sampleAsset)
+        .mockResolvedValueOnce(sampleAsset);
+      mockTransactionRepo.findByAssetAndType.mockResolvedValue(acquireTx);
+      mockTransactionRepo.updateOccurredAt.mockResolvedValue({});
+      mockAssetSnapshotRepo.findEarliestByAsset.mockResolvedValue(snapshot);
+      mockAssetSnapshotRepo.updateObservedAt.mockResolvedValue({});
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+
+      await service.update('a1', { acquisitionDate: '2025-01-01' });
+
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(new Date('2025-01-01'));
     });
   });
 

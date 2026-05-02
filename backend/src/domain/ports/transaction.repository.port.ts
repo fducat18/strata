@@ -12,4 +12,5 @@ export interface CreateTransactionData {
 export abstract class ITransactionRepository {
   abstract save(data: CreateTransactionData): Promise<Transaction>;
   abstract findByAssetAndType(assetId: string, type: string): Promise<Transaction | null>;
+  abstract updateOccurredAt(id: string, occurredAt: Date): Promise<Transaction>;
 }

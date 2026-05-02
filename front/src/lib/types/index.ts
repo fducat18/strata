@@ -3,9 +3,11 @@ export interface Asset {
   name: string;
   quantity: string | null;
   disposed: boolean;
+  assetTypeId: string;
   assetType: AssetType;
   categories: Category[];
   tags: Tag[];
+  transactions: Transaction[];
   createdAt: string;
   updatedAt: string;
   currentValue: string | null;
@@ -27,6 +29,17 @@ export interface Category {
 export interface Tag {
   id: string;
   name: string;
+}
+
+export interface Transaction {
+  id: string;
+  assetId: string;
+  type: 'ACQUIRE' | 'DISPOSE' | 'ADJUST';
+  unitPrice: string;
+  quantity: string;
+  currency: string;
+  occurredAt: string;
+  createdAt: string;
 }
 
 export interface AssetSnapshot {
@@ -61,6 +74,9 @@ export interface UpdateAssetRequest {
   name?: string;
   quantity?: string;
   assetTypeId?: string;
+  categoryIds?: string[];
+  tagIds?: string[];
+  acquisitionDate?: string;
 }
 
 export interface CreateSnapshotRequest {

@@ -75,4 +75,20 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     });
     return results.map((r) => this.mapToEntity(r));
   }
+
+  async findEarliestByAsset(assetId: string): Promise<AssetSnapshot | null> {
+    const result = await this.prisma.assetSnapshot.findFirst({
+      where: { assetId },
+      orderBy: { observedAt: 'asc' },
+    });
+    return result ? this.mapToEntity(result) : null;
+  }
+
+  async updateObservedAt(id: string, observedAt: Date): Promise<AssetSnapshot> {
+    const result = await this.prisma.assetSnapshot.update({
+      where: { id },
+      data: { observedAt },
+    });
+    return this.mapToEntity(result);
+  }
 }

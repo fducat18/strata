@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsUUID, IsArray, IsDateString } from 'class-validator';
 import { IsDecimalString } from '../validators/is-decimal-string.validator.js';
 
 /** Payload to update mutable fields of an Asset. */
@@ -21,4 +21,21 @@ export class UpdateAssetDto {
   @IsOptional()
   @IsUUID()
   assetTypeId?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  categoryIds?: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tagIds?: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsDateString()
+  acquisitionDate?: string;
 }

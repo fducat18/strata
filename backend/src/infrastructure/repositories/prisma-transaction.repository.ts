@@ -35,6 +35,14 @@ export class PrismaTransactionRepository extends ITransactionRepository {
     return result ? this.mapToEntity(result) : null;
   }
 
+  async updateOccurredAt(id: string, occurredAt: Date): Promise<Transaction> {
+    const result = await this.prisma.transaction.update({
+      where: { id },
+      data: { occurredAt },
+    });
+    return this.mapToEntity(result);
+  }
+
   private mapToEntity(result: {
     id: string;
     assetId: string;

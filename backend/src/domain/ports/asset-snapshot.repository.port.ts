@@ -17,4 +17,6 @@ export abstract class IAssetSnapshotRepository {
    * Used by recalculateFromDate to compute portfolio totals for a specific date.
    */
   abstract findLatestPerNonDisposedAssetAsOf(beforeDate: Date): Promise<AssetSnapshot[]>;
+  abstract findEarliestByAsset(assetId: string): Promise<AssetSnapshot | null>;
+  abstract updateObservedAt(id: string, observedAt: Date): Promise<AssetSnapshot>;
 }
