@@ -18,18 +18,36 @@ This checks your Node version, Docker status, and port availability before you d
 
 ## Option 1: Docker (Recommended)
 
-Strata ships **one** `docker-compose.yml` with two flavours toggled by env
-vars. Two npm shortcuts at the repo root make this painless:
+Strata ships **one** `docker-compose.yml` with two flavours toggled by env vars.
 
+### Docker script reference
+
+| Script | Purpose |
+|--------|---------|
+| `npm run docker:dev` | Start stack, keep DB, use existing images (no rebuild) |
+| `npm run docker:reset` | Rebuild images + fresh DB, BuildKit cache preserved |
+| `npm run docker:nuke` | Rebuild images + fresh DB, BuildKit cache cleared |
+| `npm run docker:prod` | Rebuild images for production + start all services, keep DB |
+| `npm run docker:down` | Stop all containers |
+
+**First time or after a Dockerfile change** — build images and start with demo data:
 ```bash
-git clone https://github.com/francoiducat/strata.git
-cd strata
+npm run docker:reset
+```
 
-# Dev mode (Swagger on, no restart policy, default)
+**Daily development** — start the already-built stack in seconds:
+```bash
 npm run docker:dev
+```
 
-# Production-like mode (Swagger off, restart=always, NODE_ENV=production)
+**Production-like mode** (Swagger off, `restart=always`, `NODE_ENV=production`):
+```bash
 npm run docker:prod
+```
+
+**Nuclear option** — when you suspect a corrupted npm or Prisma cache:
+```bash
+npm run docker:nuke
 ```
 
 :::note[Corporate / ZScaler proxy?]
@@ -39,7 +57,7 @@ If your machine intercepts HTTPS traffic (ZScaler, Netskope, Cisco Umbrella, …
 security find-certificate -a -c ZScaler -p /Library/Keychains/System.keychain \
   > backend/certs/zscaler-ca.crt
 # Then rebuild:
-npm run docker:dev
+npm run docker:reset
 ```
 
 See `backend/certs/README.md` for other platforms and CA names.
@@ -57,19 +75,44 @@ See `backend/certs/README.md` for other platforms and CA names.
 For the "real" Strata experience — a native macOS window, menu bar, and an
 isolated SQLite under `~/Library/Application Support/Strata/`.
 
-```bash
-# Dev: opens an unsigned dev build with hot reload, uses Strata-Dev/ data dir
-./scripts/tauri-dev.sh
+### Tauri script reference
 
-# Prod: builds Strata.app from a tagged commit (or current HEAD)
-./scripts/tauri-build.sh
-open src-tauri/target/release/bundle/macos/Strata.app
+| Script | Purpose |
+|--------|---------|
+| `npm run tauri:dev` | Rebuild app + launch dev mode (devtools on), keep DB |
+| `npm run tauri:reset` | Rebuild app + fresh DB, Astro cache preserved |
+| `npm run tauri:nuke` | Rebuild app + fresh DB, Astro cache cleared |
+| `npm run tauri:build` | Build distributable .app bundle, does not launch |
+| `npm run tauri:prod` | Build .app bundle + launch in production mode, keep DB |
+
+**Development** — rebuild and launch with devtools:
+```bash
+npm run tauri:dev
+```
+
+**Beta testing** — build the production .app and launch it locally:
+```bash
+npm run tauri:prod
+```
+The .app auto-spawns the NestJS backend (port `3456`) and Astro frontend (port `4321`) as sidecars. SQLite lives at `~/Library/Application Support/Strata/strata.db`.
+
+**Reset dev data** — fresh DB with seeded demo data, keep Astro build cache:
+```bash
+npm run tauri:reset
 ```
 
 The window title shows the version (e.g. `Strata 1.4.2`). Untagged or dirty
-builds show `(DEV)` and use a **separate** data folder so dev experiments
+builds show `(DEV)` and use a **separate** data folder (`Strata-Dev/`) so dev experiments
 cannot corrupt your real data. See [Versioning](/docs/versioning/) and
 [Recovery](/docs/recovery/) for the full story.
+
+## Releasing a New Version
+
+```bash
+npm run release -- X.Y.Z
+```
+
+This validates the semver format, checks your working tree is clean, creates git tag `vX.Y.Z`, and pushes it to origin. After tagging, run `docker:prod` or `tauri:prod` to build and start the new version.
 
 ## Common Issues
 
@@ -92,13 +135,13 @@ The most common cause is a **stale local NestJS process** from a previous `npm r
 
 ### Demo data not visible after `docker:dev`
 
-`docker:dev` **keeps** the existing dev database — it will show whatever data was there before (including leftover test data). To get clean, freshly seeded demo data:
+`docker:dev` starts the existing images without rebuilding or resetting the database. To get clean, freshly seeded demo data:
 
 ```bash
 npm run docker:reset
 ```
 
-This wipes `strata-dev.db`, rebuilds images from scratch, runs migrations, and re-seeds the 6 demo assets.
+This wipes `strata-dev.db`, rebuilds images, runs migrations, and re-seeds the demo assets.
 
 ### Database is stale after backup import
 
@@ -142,4 +185,3 @@ strata/
 ├── .bruno/            ← Bruno API collection (all endpoints)
 └── docker-compose.yml
 ```
-

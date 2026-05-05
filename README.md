@@ -20,17 +20,28 @@ Strata is a self-hosted personal asset manager that tracks your full net worth �
 | [`docs/`](docs/) | Astro Starlight documentation site (deployed to <https://strata.ducatillon.net/docs/>) |
 | [`.bruno/Strata/`](.bruno/Strata/) | Bruno API collection — every endpoint, ready to run |
 | [`docker-compose.yml`](docker-compose.yml) | Backend + frontend + docs, ready to `up` |
-| `src-tauri/` | _(coming)_ Tauri desktop wrapper |
+| `src-tauri/` | Tauri v2 desktop wrapper (macOS) — spawns backend + frontend as sidecars |
 
 ## 5-minute quickstart (Docker)
 
-Requires Docker Desktop (or Docker + Compose v2).
+Requires Docker Desktop (or Docker + Compose).
 
+**First run (builds all images):**
 ```bash
 git clone https://github.com/francoiducat/strata.git
 cd strata
 docker-compose up --build
 ```
+
+**With npm scripts (recommended for development):**
+```bash
+npm install          # installs dev tools (Tauri CLI, etc.)
+npm run docker:dev   # start with existing images (~10s after first build)
+npm run docker:reset # fresh DB + layer-cached build (after schema changes)
+npm run docker:nuke  # full nuclear reset (wipes images + DB)
+```
+
+For the full script reference (docker/tauri/release), see the [Quickstart docs](https://strata.ducatillon.net/docs/quickstart).
 
 | Service | URL |
 |---|---|
@@ -39,7 +50,7 @@ docker-compose up --build
 | Frontend | <http://localhost:4321> |
 | Docs | <http://localhost:8001> |
 
-The SQLite database persists in `backend/.data/strata.db`. To start fresh, delete that file (or the whole directory) and bring the stack back up.
+The SQLite database persists in `backend/.data/strata-dev.db`. To start fresh: `npm run docker:reset`.
 
 ## Local development
 

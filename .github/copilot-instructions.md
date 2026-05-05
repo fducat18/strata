@@ -11,7 +11,7 @@ backend/       NestJS (hexagonal: domain/ application/ infrastructure/ presentat
 front/         Astro 6 + React 19 + Tailwind v4 (Zustand + react-query)
 src-tauri/     Tauri v2 desktop shell (Rust); spawns backend (port 3456) + front (port 4321)
 docs/          Astro Starlight docs site (Markdown-first)
-scripts/       Repo-wide Node scripts (version.mjs, sync-readme.mjs, tauri-*.sh)
+scripts/       Repo-wide Node scripts (version.mjs, gen-version.mjs, release.mjs, tauri-*.sh)
 issues/        Lightweight in-tree tracker for deferred work
 .bruno/Strata/ Bruno API request collection
 ```

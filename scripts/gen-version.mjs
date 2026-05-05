@@ -16,21 +16,22 @@ import { versionInfo } from './version.mjs';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const target = process.argv[2];
 
-if (target !== 'backend' && target !== 'front' && target !== 'docs') {
-  console.error('Usage: node scripts/gen-version.mjs <backend|front|docs>');
+if (!['backend', 'front', 'docs', 'all'].includes(target)) {
+  console.error('Usage: node scripts/gen-version.mjs <backend|front|docs|all>');
   process.exit(1);
 }
 
 const info = versionInfo();
 
-if (target === 'backend') {
+function writeBackend() {
   const out = resolve(repoRoot, 'backend', 'src', '_generated', 'version.json');
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(info, null, 2) + '\n');
   console.log(`[gen-version] wrote ${out} → ${info.version} (${info.env})`);
-} else {
-  // 'front' or 'docs' — both generate a TypeScript version file
-  const outPath = target === 'front'
+}
+
+function writeFrontOrDocs(t) {
+  const outPath = t === 'front'
     ? resolve(repoRoot, 'front', 'src', 'lib', 'version.ts')
     : resolve(repoRoot, 'docs', 'src', 'lib', 'version.ts');
   mkdirSync(dirname(outPath), { recursive: true });
@@ -47,4 +48,14 @@ export const VERSION: VersionInfo = ${JSON.stringify(info, null, 2)} as const;
 `;
   writeFileSync(outPath, banner + body);
   console.log(`[gen-version] wrote ${outPath} → ${info.version} (${info.env})`);
+}
+
+if (target === 'all') {
+  writeBackend();
+  writeFrontOrDocs('front');
+  writeFrontOrDocs('docs');
+} else if (target === 'backend') {
+  writeBackend();
+} else {
+  writeFrontOrDocs(target);
 }

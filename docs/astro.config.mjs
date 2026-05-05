@@ -114,11 +114,7 @@ export default defineConfig({
         },
         {
           label: 'Plans',
-          items: [
-            { label: 'All Plans', slug: 'plans' },
-            { label: '2026-05-02 Post-Implementation Improvements', slug: 'plans/2026-05-02-beta-feedback-post-implementation-improvements' },
-            { label: '2026-05-01 Beta Feedback', slug: 'plans/2026-05-01-beta-feedback-plan' },
-          ],
+          autogenerate: { directory: 'plans' },
         },
 
       ],

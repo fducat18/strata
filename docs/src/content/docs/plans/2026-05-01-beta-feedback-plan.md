@@ -5,8 +5,6 @@ sidebar:
   order: 2
 ---
 
-# 2025-01 — Beta Feedback Plan
-
 **Status**: ✅ Complete
 **Source**: First full beta test session — user identified ~12 bugs/improvements
 **Branch**: `feat/beta-feedback-plan`

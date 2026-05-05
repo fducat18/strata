@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # ---- Build stage: produce a static Astro Starlight site ----
 FROM node:22-alpine AS build
 
@@ -5,7 +6,7 @@ WORKDIR /site
 
 # Install deps with cache-friendly layer
 COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund 2>/dev/null || npm install --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 
 # Build the docs site
 COPY astro.config.mjs ./

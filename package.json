@@ -5,12 +5,17 @@
   "description": "Strata — universal asset-tracking & net-worth dashboard",
   "scripts": {
     "setup": "node scripts/check-prereqs.mjs",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "docker:dev": "node scripts/check-ports.mjs && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose up --build",
-    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose up --build -d'",
-    "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs backend && node scripts/gen-version.mjs front && node scripts/gen-version.mjs docs && docker-compose build --no-cache && docker-compose up",
-    "docker:down": "docker-compose down"
+    "tauri:dev": "sh scripts/tauri-dev.sh",
+    "tauri:reset": "sh scripts/tauri-reset.sh",
+    "tauri:nuke": "sh scripts/tauri-nuke.sh",
+    "tauri:build": "sh scripts/tauri-build.sh",
+    "tauri:prod": "sh scripts/tauri-build.sh && open src-tauri/target/release/bundle/macos/Strata.app",
+    "docker:dev": "node scripts/check-ports.mjs && docker-compose up",
+    "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs all && docker-compose build --parallel && docker-compose up",
+    "docker:nuke": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && docker image prune -a -f && node scripts/gen-version.mjs all && docker-compose build --no-cache --parallel && docker-compose up",
+    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs all && docker-compose up --build -d'",
+    "docker:down": "docker-compose down",
+    "release": "node scripts/release.mjs"
   },
   "repository": {
     "type": "git",
