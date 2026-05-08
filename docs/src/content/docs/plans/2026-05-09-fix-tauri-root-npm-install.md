@@ -55,4 +55,33 @@ The repo root `package.json` has a minimal install — only `@tauri-apps/cli` in
 
 ## Execution Summary
 
-_To be appended after implementation._
+**Commit:** `cee4832`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `scripts/tauri-dev.sh` | Added root `npm ci 2>/dev/null \|\| npm install` before the frontend step |
+| `scripts/tauri-build.sh` | Same, before the backend step |
+| `docs/src/content/docs/plans/2026-05-09-fix-tauri-root-npm-install.md` | This plan doc (new file) |
+
+### Deviations from plan
+
+None.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 265 tests passed |
+| Backend e2e  | ⏭ skipped (unaffected) |
+| Frontend unit | ⏭ skipped (unaffected) |
+| Frontend e2e  | ⏭ skipped (unaffected) |
+| Tauri symlink | ✅ `node_modules/.bin/tauri` → `../@tauri-apps/cli/tauri.js`, `tauri-cli 2.10.1` |
+
+### Key discoveries
+
+- The root `node_modules` only had `@tauri-apps` — a sparse install suggesting the root was installed once but never refreshed with the scripts.
+- The broken symlink had an **empty** target (`lrw-------- tauri ->`), not a dangling one. This is a known Google Drive artefact when syncing across machines.
+- After `npm install` at root, the symlink was recreated correctly in under 2 seconds.
+
