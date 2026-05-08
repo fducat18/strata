@@ -16,6 +16,23 @@ const currentPath = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} — Strata</title>
+    <!--
+      Synchronous theme pre-load: reads localStorage and sets `dark` on <html>
+      BEFORE any paint. Must use is:inline so Astro does not convert it to a
+      deferred <script type="module">, which would cause a flash of unstyled
+      content (FOUC) on every navigation in dark mode.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('strata.theme') || 'system';
+          var dark =
+            t === 'dark' ||
+            (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
