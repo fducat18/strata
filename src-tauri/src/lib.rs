@@ -53,22 +53,26 @@ impl Drop for SidecarProcesses {
     }
 }
 
-/// Where the SQLite database lives on macOS.
-/// Dev builds → `Strata-Dev/`, production tagged builds → `Strata/`.
+/// Where the SQLite database lives.
+/// Dev builds → `<repo>/backend/.data/` (shared with docker:dev and start:dev).
+/// Production builds → `~/Library/Application Support/Strata/`.
 fn data_dir() -> std::path::PathBuf {
-    let mut dir = dirs::data_dir().expect("could not determine app data directory");
     if is_dev_build() {
-        dir.push("Strata-Dev");
+        let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let repo_root = manifest.parent().expect("CARGO_MANIFEST_DIR has no parent");
+        repo_root.join("backend").join(".data")
     } else {
+        let mut dir = dirs::data_dir().expect("could not determine app data directory");
         dir.push("Strata");
+        dir
     }
-    dir
 }
 
 fn ensure_data_dir() -> String {
     let dir = data_dir();
     std::fs::create_dir_all(&dir).expect("could not create data directory");
-    format!("file:{}", dir.join("strata.db").display())
+    let db_file = if is_dev_build() { "strata-dev.db" } else { "strata.db" };
+    format!("file:{}", dir.join(db_file).display())
 }
 
 fn find_node() -> String {
