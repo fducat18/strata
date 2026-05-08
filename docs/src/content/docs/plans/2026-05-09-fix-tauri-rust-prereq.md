@@ -71,4 +71,35 @@ Added a **Tauri Desktop App** section explaining Rust as a prerequisite and how 
 
 ## Execution Summary
 
-_To be appended after implementation._
+**Commit:** `6696d98`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `scripts/tauri-dev.sh` | Source `~/.cargo/env` + cargo pre-flight check before `npx tauri dev` |
+| `scripts/tauri-build.sh` | Same before `npx tauri build --bundles app` |
+| `scripts/check-prereqs.mjs` | Added `cargo --version` check with rustup install instructions |
+| `docs/src/content/docs/dev-setup.md` | Added Step 5 — Tauri Desktop App with Rust prerequisites |
+| `docs/src/content/docs/plans/2026-05-09-fix-tauri-rust-prereq.md` | This plan doc (new file) |
+
+### Deviations from plan
+
+None.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ⏭ skipped (scripts/docs only — no backend logic changed) |
+| Backend e2e  | ⏭ skipped |
+| Frontend unit | ⏭ skipped |
+| Frontend e2e  | ⏭ skipped |
+| Manual verification | ✅ Script exits cleanly with actionable error when cargo is missing |
+
+### Key discoveries
+
+- `~/.cargo/env` sourcing is essential: rustup adds cargo to PATH via this file, but non-interactive bash scripts don't source `~/.bashrc`/`~/.zshrc`. Without it, a freshly-installed Rust via rustup would still fail.
+- The check comes **after** `~/.cargo/env` sourcing so both "not installed" and "installed but not on shell PATH" cases are handled.
+- **Rust still needs to be installed manually** by the user — this fix only makes the error message clear and actionable. Once Rust is installed (`curl ... | sh && source ~/.cargo/env`), `npm run tauri:dev` will proceed to actually compile and launch the app.
+
