@@ -86,4 +86,34 @@ The backend `Dockerfile` calls `RUN npx nest build` **directly** — it never ca
 
 ## Execution Summary
 
-_To be appended after implementation._
+**Commit:** `acf15f9`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `scripts/tauri-dev.sh` | Added `echo "▸ Generating Prisma client …"` + `npx prisma generate` after backend `npm install` |
+| `scripts/tauri-build.sh` | Same addition after `npm install --omit=dev` |
+| `backend/package.json` | Changed `prebuild` to `"prisma generate && node ../scripts/gen-version.mjs backend"` |
+| `docs/src/content/docs/plans/2026-05-08-fix-prisma-generate-tauri.md` | This plan doc (new file) |
+| `docs/src/content/docs/dev-setup.md` | Added note about automatic `prisma generate` in the backend Step 2 section |
+
+### Deviations from plan
+
+None. The plan was followed exactly.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 265 tests passed (28 suites) |
+| Backend e2e  | ✅ 69 tests passed (8 suites) |
+| Frontend unit | ⏭ skipped (not affected) |
+| Frontend e2e  | ⏭ skipped (not affected) |
+
+### Key discoveries
+
+- `prisma generate` in `prebuild` works for local dev because `backend/.env` supplies `DATABASE_URL` via `import 'dotenv/config'` in `prisma.config.ts`.
+- Docker calls `npx nest build` directly — never `npm run build` — so `prebuild` is not triggered in Docker. No conflict.
+- The `tauri-dev.sh` change calls `npx prisma generate` from the `backend/` directory, which correctly picks up `prisma.config.ts` and `backend/.env`.
+
