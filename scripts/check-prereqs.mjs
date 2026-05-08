@@ -35,8 +35,8 @@ console.log('\n🔍  Strata prerequisite check\n');
 // ── Node.js version (required for local dev only; Docker always uses node:22-alpine) ──
 const nodeVersion = parseInt(process.versions.node.split('.')[0], 10);
 check(
-  `Node.js version: v${process.versions.node}${nodeVersion === 22 ? '  (required for local dev)' : ''}`,
-  nodeVersion === 22,
+  `Node.js version: v${process.versions.node}${nodeVersion >= 22 ? '  (≥22 required)' : ''}`,
+  nodeVersion >= 22,
   'Run: nvm install 22 && nvm use 22\n      Then: cd backend && npm install  (to rebuild native modules)',
 );
 

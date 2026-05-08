@@ -2,15 +2,14 @@
 #
 # Two flavours, controlled by env vars (set via the npm shortcuts below):
 #
-#   npm run docker:dev   → development (Swagger on, NODE_ENV=development)
-#   npm run docker:prod  → production  (Swagger off, NODE_ENV=production,
-#                                       restart=always)
+#   npm run docker:dev   → development (NODE_ENV=development)
+#   npm run docker:prod  → production  (NODE_ENV=production, restart=always)
 #
 # Equivalent raw commands:
 #   docker-compose up --build
-#   NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always \
-#     docker-compose up --build
+#   NODE_ENV=production RESTART_POLICY=always docker-compose up --build
 #
+# Swagger UI is always available at /swagger (both dev and prod).
 # All overrides go through env interpolation so we keep ONE compose file.
 # Resource caps (mem_limit / cpus) are intentionally not set here; add them
 # locally if you run this on a constrained host.
@@ -25,7 +24,6 @@ services:
     environment:
       - DATABASE_URL=file:/app/.data/${DB_FILE:-strata-dev.db}
       - NODE_ENV=${NODE_ENV:-development}
-      - ENABLE_SWAGGER=${ENABLE_SWAGGER:-true}
     volumes:
       # Bind-mount for local dev. If the non-root container user can't write,
       # run: chmod 777 backend/.data (or chown to UID 1000).

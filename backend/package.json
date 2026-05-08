@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": "22.x"
+    "node": ">=22"
   },
   "scripts": {
     "prebuild": "node ../scripts/gen-version.mjs backend",

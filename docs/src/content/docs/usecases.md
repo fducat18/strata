@@ -5,8 +5,6 @@ title: "Use Cases"
 
 This page illustrates the Asset data model with concrete, real-life examples.
 
-## Examples
-
 ### 1.Checking Account
 
 #### Scenario

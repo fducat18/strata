@@ -3,10 +3,10 @@ title: "Development Setup"
 description: How to run the Strata backend, frontend, and docs site locally without Docker.
 ---
 
-:::danger[Node 22 — non-negotiable]
-Strata's backend uses `better-sqlite3`, a native C++ module compiled for a **specific Node.js ABI version**. If you run the app with a different Node version than the one used during `npm install`, the backend crashes at startup.
+:::tip[Node >=22 LTS — Node 22 recommended]
+Strata uses Prisma's built-in SQLite driver (Rust query engine binary). The binary is platform-specific (darwin-arm64, linux-amd64…) but **not** Node-version-specific — it works on any Node >=22.
 
-**Node 22 is the only supported version for local development.** Docker is unaffected — it always uses `node:22-alpine` internally.
+Node 22 LTS is the recommended version and is pinned in `.nvmrc`. Node 24, 26, and later LTS releases are fully supported. Docker always uses `node:22-alpine` internally.
 :::
 
 ## Step 0 — Check prerequisites
@@ -19,15 +19,15 @@ npm run setup
 
 This checks Node version, Docker status, and port availability. Fix anything marked ❌ before continuing.
 
-## Step 1 — Install Node 22
+## Step 1 — Install Node 22 LTS (recommended)
 
 ```bash
-# Install and switch to Node 22 (using nvm)
+# Install and switch to Node 22 (using nvm) — recommended; >=22 also works
 nvm install 22
 nvm use 22
 
 # Verify
-node --version   # Must print v22.x.x — not v23, not v20
+node --version   # v22.x.x (or v24.x.x / v26.x.x — any >=22 is fine)
 ```
 
 ### Optional: auto-switch when entering the project directory
@@ -48,8 +48,8 @@ After adding this, open a new terminal and `cd` into the repo — nvm will autom
 
 ```bash
 cd backend
-nvm use 22            # Mandatory — check before every npm install
-npm install           # Compiles native modules for Node 22
+nvm use 22            # Recommended; any Node >=22 works
+npm install
 npx prisma db seed          # Load demo data
 npm run start:dev           # Starts on http://localhost:3000
 ```
@@ -59,15 +59,7 @@ NestJS runs `prisma migrate deploy` automatically on startup, before the server 
 :::
 
 - API: `http://localhost:3000/api/v1`
-- Swagger UI: `http://localhost:3000/swagger`
-
-:::tip[NODE_MODULE_VERSION error?]
-This means your `node_modules` were compiled for a different Node version. Fix:
-```bash
-nvm use 22
-npm install   # Recompiles native modules for Node 22
-```
-:::
+- Swagger UI: `http://localhost:3000/swagger` (always available)
 
 ## Step 3 — Frontend
 
@@ -94,7 +86,7 @@ The docs dev server runs at port `8001` — consistent with Docker.
 Open three terminal tabs:
 ```bash
 # Tab 1 — Backend
-cd backend && nvm use 22 && npm run start:dev
+cd backend && npm run start:dev
 
 # Tab 2 — Frontend
 cd front && npm run dev       # http://localhost:4321

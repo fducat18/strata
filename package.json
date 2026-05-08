@@ -13,7 +13,7 @@
     "docker:dev": "node scripts/check-ports.mjs && docker-compose up",
     "docker:reset": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && node scripts/gen-version.mjs all && docker-compose build --parallel && docker-compose up",
     "docker:nuke": "node scripts/check-ports.mjs && docker-compose down && rm -f backend/.data/strata-dev.db && docker image prune -a -f && node scripts/gen-version.mjs all && docker-compose build --no-cache --parallel && docker-compose up",
-    "docker:prod": "DB_FILE=strata.db NODE_ENV=production ENABLE_SWAGGER=false RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs all && docker-compose up --build -d'",
+    "docker:prod": "DB_FILE=strata.db NODE_ENV=production RESTART_POLICY=always sh -c 'node scripts/gen-version.mjs all && docker-compose up --build -d'",
     "docker:down": "docker-compose down",
     "release": "node scripts/release.mjs"
   },

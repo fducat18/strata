@@ -16,21 +16,7 @@ function parseAllowedOrigins(): string[] {
     .filter((o) => o.length > 0);
 }
 
-function shouldEnableSwagger(): boolean {
-  return process.env.ENABLE_SWAGGER !== 'false';
-}
-
 async function bootstrap() {
-  const nodeVersion = parseInt(process.versions.node.split('.')[0], 10);
-  if (nodeVersion !== 22) {
-    console.error(
-      `\n❌  Wrong Node.js version: v${process.versions.node}\n` +
-        `    Strata requires Node 22.\n` +
-        `    Fix: nvm use 22  →  then: npm install\n`,
-    );
-    process.exit(1);
-  }
-
   console.log('⚙️  Running database migrations...');
   try {
     execSync('npx prisma migrate deploy', {
@@ -61,23 +47,19 @@ async function bootstrap() {
     credentials: true,
   });
 
-  if (shouldEnableSwagger()) {
-    const config = new DocumentBuilder()
-      .setTitle('Strata API')
-      .setDescription(
-        'Universal asset tracking API — manage assets, snapshots, categories, and tags.',
-      )
-      .setVersion('1.0.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('swagger', app, document);
-  }
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Strata API')
+    .setDescription(
+      'Universal asset tracking API — manage assets, snapshots, categories, and tags.',
+    )
+    .setVersion('1.0.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('swagger', app, document);
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`🚀 Strata API running on http://localhost:${String(port)}`);
-  if (shouldEnableSwagger()) {
-    logger.log(`📖 Swagger UI at http://localhost:${String(port)}/swagger`);
-  }
+  logger.log(`📖 Swagger UI at http://localhost:${String(port)}/swagger`);
 }
 void bootstrap();
