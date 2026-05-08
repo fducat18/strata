@@ -85,6 +85,35 @@ npm run dev                 # Starts on http://localhost:8001
 
 The docs dev server runs at port `8001` — consistent with Docker.
 
+## Step 5 — Tauri Desktop App (optional)
+
+The desktop app wraps both the backend and frontend in a native macOS window using Tauri v2 (Rust).
+
+**Prerequisites:**
+
+- **Rust** — install via [rustup](https://rustup.rs):
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  source ~/.cargo/env   # or restart your terminal
+  ```
+- **Node ≥ 22** — already required for backend/frontend
+
+**Run in dev mode:**
+
+```bash
+npm run tauri:dev
+```
+
+This script automatically:
+1. Installs root/front/backend dependencies
+2. Builds the frontend with the Tauri API URL (`http://localhost:3456/api/v1`)
+3. Generates the Prisma client and builds the backend
+4. Launches `tauri dev`
+
+:::caution[Rust required]
+If you see `cargo metadata: No such file or directory`, Rust is not installed. Run `npm run setup` — it will show a ❌ for Rust with install instructions.
+:::
+
 ## Running All Three Together
 
 Open three terminal tabs:

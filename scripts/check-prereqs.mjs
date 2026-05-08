@@ -49,6 +49,15 @@ check(
   'Start Docker Desktop (or your Docker daemon)',
 );
 
+// ── Rust / Cargo (required for Tauri desktop app) ───────────────────────────────────
+let cargoOk = false;
+try { execSync('cargo --version', { stdio: 'ignore' }); cargoOk = true; } catch {}
+check(
+  'Rust/Cargo (required for Tauri desktop app)',
+  cargoOk,
+  "Install: curl --proto='=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\n      Then: source ~/.cargo/env",
+);
+
 // ── Ports ────────────────────────────────────────────────────────────────────────────
 const ports = [
   { port: 3000, label: 'Backend API   port 3000' },

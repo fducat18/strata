@@ -43,4 +43,23 @@ npm run build
 
 echo "▸ Launching Tauri dev …"
 cd "$REPO_ROOT"
+
+# Source rustup environment — cargo may not be on PATH in non-interactive shells
+if [[ -f "$HOME/.cargo/env" ]]; then
+  source "$HOME/.cargo/env"
+fi
+
+# Verify cargo is available (Tauri requires Rust to build the desktop shell)
+if ! command -v cargo &>/dev/null; then
+  echo ""
+  echo "❌  Rust/Cargo not found. Tauri requires Rust to build the desktop app."
+  echo ""
+  echo "   Install Rust with:"
+  echo "   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+  echo "   source ~/.cargo/env"
+  echo ""
+  echo "   Then re-run this script."
+  exit 1
+fi
+
 npx tauri dev
