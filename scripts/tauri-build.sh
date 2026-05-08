@@ -16,6 +16,9 @@ echo "▸ Installing backend dependencies …"
 cd "$REPO_ROOT/backend"
 npm ci --omit=dev 2>/dev/null || npm install --omit=dev
 
+echo "▸ Generating Prisma client …"
+npx prisma generate
+
 echo "▸ Building backend …"
 npm run build
 

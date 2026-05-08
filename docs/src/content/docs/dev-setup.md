@@ -58,6 +58,10 @@ npm run start:dev           # Starts on http://localhost:3000
 NestJS runs `prisma migrate deploy` automatically on startup, before the server accepts connections. You do **not** need to run migrations manually in local dev.
 :::
 
+:::note[Prisma client is generated automatically]
+`npm run build` (and `npm run start:dev`) automatically runs `prisma generate` via the `prebuild` lifecycle hook. You do **not** need to run it manually. If you ever see TypeScript errors like `Module '"@prisma/client"' has no exported member 'PrismaClient'`, run `npx prisma generate` manually to regenerate the client.
+:::
+
 - API: `http://localhost:3000/api/v1`
 - Swagger UI: `http://localhost:3000/swagger` (always available)
 

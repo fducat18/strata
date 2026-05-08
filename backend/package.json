@@ -9,7 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "prebuild": "node ../scripts/gen-version.mjs backend",
+    "prebuild": "prisma generate && node ../scripts/gen-version.mjs backend",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "prestart:dev": "node -e \"const v=parseInt(process.versions.node);if(v!==22){console.error('\\x1b[31m\\n\\u274c Wrong Node.js version: v'+process.versions.node+'\\n   Strata requires Node 22. Run: nvm use 22\\n   Then re-run: npm install  (to rebuild native modules)\\n\\x1b[0m');process.exit(1);}\" && node ../scripts/gen-version.mjs backend",
