@@ -53,3 +53,39 @@ Therefore `@prisma/adapter-better-sqlite3` is kept. The key insight is that the 
 
 - **`better-sqlite3` adapter kept**: Prisma 7 removed the "classic built-in" SQLite path — a driver adapter is mandatory. `better-sqlite3` remains the right choice for local SQLite; it works on any Node >=22 as long as `npm install` is allowed to run (which `engine-strict=false` now ensures).
 - **Swagger in prod**: No security concern for a local/personal app. If needed in the future, an `ENABLE_SWAGGER` env var can be reintroduced.
+
+## Execution Summary
+
+**Commit**: `36fe8f3`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `backend/package.json` | Engine `"22.x"` → `">=22"` (adapter kept) |
+| `backend/.npmrc` | `engine-strict=true` → `engine-strict=false` |
+| `backend/src/main.ts` | Removed Node 22 runtime gate; Swagger always registered |
+| `backend/src/infrastructure/prisma/prisma.service.ts` | Restored correct `PrismaBetterSqlite3` adapter constructor |
+| `package.json` (root) | Removed `ENABLE_SWAGGER=false` from `docker:prod` |
+| `docker-compose.yml` | Removed `ENABLE_SWAGGER` env var; updated comments |
+| `scripts/check-prereqs.mjs` | `nodeVersion >= 22` (was `=== 22`) |
+| `docs/src/content/docs/dev-setup.md` | Node >=22 supported, 22 LTS recommended; Swagger always-on note |
+
+### Deviations from plan
+
+The plan proposed removing `@prisma/adapter-better-sqlite3` and switching to "classic Prisma SQLite". This was **not possible**: Prisma 7 mandates a driver adapter — `PrismaClientOptions` only accepts `adapter` or `accelerateUrl`, and there is no adapter-free local SQLite path in Prisma 7. The adapter was kept. The actual fix was purely the engine constraint relaxation.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 265 tests passed (28 suites) |
+| Backend e2e | ✅ 69 tests passed (8 suites) |
+| Frontend unit | ⏭ skipped — not affected by this change |
+| Frontend e2e | ⏭ skipped — not affected by this change |
+
+### Key discoveries
+
+- **Prisma 7 requires a driver adapter**: `PrismaClientOptions` is a discriminated union — one branch requires `adapter: SqlDriverAdapterFactory`, the other `accelerateUrl`. The "no adapter" path does not exist. Removing `better-sqlite3` would require downgrading Prisma.
+- **Root cause was the engine-strict lock, not the adapter**: `better-sqlite3@12.9.0` successfully downloads a prebuild (or compiles from source) for Node 26 once `npm install` is allowed to run. The binary had been permanently frozen on the Node 22 ABI because `engine-strict=true` had blocked every subsequent `npm install` attempt.
+- **Google Drive corruption pattern**: After the mid-implementation undo/redo, `npm ci` was required (not `npm install`) to get a clean `node_modules` — the same pattern seen with other packages in this environment.

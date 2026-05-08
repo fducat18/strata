@@ -97,12 +97,29 @@ This rule prevents frontend work from silently depending on unimplemented or bro
 
 ---
 
+## 12. Plan Execution Summary
+
+**After implementation completes, append an `## Execution Summary` section to the plan doc.**
+
+- **File**: the same plan doc created in Convention 8 (`docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md`)
+- **When**: after all applicable test gates pass (Convention 2), before closing the task
+- **Required content**:
+  - **Actual changes**: what was changed vs. what was planned — highlight any deviations
+  - **Deviations**: if the implementation differed from the plan, explain why
+  - **Test results**: which gates were run and whether they passed (unit, e2e, frontend, infra)
+  - **Commit SHA(s)**: one or more commit hashes for traceability
+  - **Key discoveries**: anything found during implementation that was not in the plan and affected the outcome
+
+This turns every plan doc into a full ADR-style record: **intent + outcome**. The decision log is only useful if it reflects what actually happened.
+
+---
+
 ## Summary
 
-These 9 conventions ensure:
+These 12 conventions ensure:
 - **Consistency** across all AI-assisted work
 - **Quality gates** prevent incomplete releases
-- **Traceability** through plans and decision history
+- **Traceability** through plans and decision history (intent AND outcome)
 - **Test coverage** and regression prevention
 - **Documentation parity** with implementation
 - **Data integrity** through invariant enforcement

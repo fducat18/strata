@@ -24,6 +24,7 @@ Before presenting any plan and before making any code change, go through this ch
 | 9 | **Infra test gate**: Dockerfile / docker-compose / build-script changes MUST be verified by running the affected command before declaring done. Run `docker-compose build <service>` for Dockerfile changes. Never declare "done" for infra changes without a successful run. | Touching infra files? Run them. |
 | 10 | **Environment compatibility**: Before using platform-specific Docker or shell features, check availability first (`docker buildx version`, `docker compose version`). Do not assume modern tooling (e.g., BuildKit is NOT available in standalone docker-compose v5.x). | Check tool versions first. |
 | 11 | **Do-no-harm baseline**: For optimization tasks, document the working baseline before changing anything. Run the command BEFORE and AFTER changes. "Faster is useless if broken." | Optimizing? Verify it works first. |
+| 12 | **Plan Execution Summary**: after all test gates pass, append `## Execution Summary` to the plan doc with: actual changes (vs. plan), deviations + reasons, test results, commit SHA(s), key discoveries. | Append before closing task. |
 
 ## Naming convention for plan docs
 `docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md`  
@@ -39,4 +40,31 @@ cd backend && npm run test:e2e     # e2e tests
 # Frontend
 cd front && npm test               # unit tests (≥90% coverage)
 cd front && npm run test:e2e       # e2e (Playwright)
+```
+
+## Post-implementation checklist (run after all test gates pass)
+
+Before closing any task that had an approved plan, append `## Execution Summary` to the plan doc:
+
+```markdown
+## Execution Summary
+
+**Commit**: <SHA>
+
+### Actual changes
+<!-- What was changed. Note any differences from the planned file list. -->
+
+### Deviations from plan
+<!-- If implementation differed from the plan, explain why. Write "None" if the plan was followed exactly. -->
+
+### Test results
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ N tests passed |
+| Backend e2e  | ✅ N tests passed |
+| Frontend unit | ✅ / ⏭ skipped (not affected) |
+| Frontend e2e  | ✅ / ⏭ skipped (not affected) |
+
+### Key discoveries
+<!-- Anything found during implementation that was not in the plan and affected the outcome. Write "None" if nothing unexpected. -->
 ```
