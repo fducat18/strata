@@ -20,6 +20,10 @@ if [[ "$REPO_ROOT" == *"Google Drive"* ]]; then
   echo ""
 fi
 
+echo "▸ Installing root dependencies (Tauri CLI) …"
+cd "$REPO_ROOT"
+npm ci 2>/dev/null || npm install
+
 echo "▸ Installing frontend dependencies …"
 cd "$REPO_ROOT/front"
 npm ci 2>/dev/null || npm install

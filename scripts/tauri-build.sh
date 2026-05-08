@@ -12,6 +12,10 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_PORT=3456
 API_URL="http://localhost:${BACKEND_PORT}/api/v1"
 
+echo "▸ Installing root dependencies (Tauri CLI) …"
+cd "$REPO_ROOT"
+npm ci 2>/dev/null || npm install
+
 echo "▸ Installing backend dependencies …"
 cd "$REPO_ROOT/backend"
 npm ci --omit=dev 2>/dev/null || npm install --omit=dev
