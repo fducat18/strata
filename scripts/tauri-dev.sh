@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # scripts/tauri-dev.sh — Start Strata in Tauri dev mode
 #
-# Rebuilds both frontend (with correct API URL) and backend,
+# Installs dependencies, rebuilds both frontend (with correct API URL) and backend,
 # then launches `npx tauri dev` which opens the Tauri webview.
 # The Tauri app itself spawns the backend + frontend sidecars.
+#
+# Note: if the repo is synced via Google Drive, node_modules symlinks are
+# broken after switching machines. The npm install steps below self-heal this.
 
 set -euo pipefail
 
@@ -11,12 +14,24 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_PORT=3456
 API_URL="http://localhost:${BACKEND_PORT}/api/v1"
 
-echo "▸ Building frontend with PUBLIC_API_URL=${API_URL} …"
+if [[ "$REPO_ROOT" == *"Google Drive"* ]]; then
+  echo "⚠️  Repo is inside Google Drive. node_modules symlinks may be broken after"
+  echo "   switching machines. Running npm install automatically to self-heal…"
+  echo ""
+fi
+
+echo "▸ Installing frontend dependencies …"
 cd "$REPO_ROOT/front"
+npm ci 2>/dev/null || npm install
+
+echo "▸ Building frontend with PUBLIC_API_URL=${API_URL} …"
 PUBLIC_API_URL="$API_URL" npm run build
 
-echo "▸ Building backend …"
+echo "▸ Installing backend dependencies …"
 cd "$REPO_ROOT/backend"
+npm ci 2>/dev/null || npm install
+
+echo "▸ Building backend …"
 npm run build
 
 echo "▸ Launching Tauri dev …"

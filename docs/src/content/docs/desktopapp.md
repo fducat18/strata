@@ -159,6 +159,21 @@ lsof -i :3456 -t | xargs kill -9
 lsof -i :4321 -t | xargs kill -9
 ```
 
+## Multi-machine development (Google Drive sync)
+
+The source can be synced between Macs (e.g. M3 Pro ↔ M1 Max) via **Google Drive offline mode**.
+
+**Known limitation**: Google Drive does not correctly replicate symlinks. After switching machines, `node_modules/.bin/` entries arrive as empty/broken zero-byte symlinks. This is what causes errors like `sh: astro: command not found` or `sh: nest: command not found` right after a machine switch.
+
+**This is expected and self-healing**: `tauri-dev.sh` now runs `npm install` automatically before building both packages. Simply run `npm run tauri:dev` on the new machine — the install step restores all symlinks.
+
+If you need to fix it manually (e.g. without launching Tauri):
+
+```bash
+cd front && npm install && cd ..
+cd backend && npm install
+```
+
 ## Future Improvements
 
 - [ ] Bundle Node.js inside the .app (no system Node dependency)

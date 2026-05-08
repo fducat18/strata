@@ -76,6 +76,14 @@ Use `--dry-run` to preview all steps without executing git commands:
 npm run release -- 1.2.3 --dry-run
 ```
 
+Use `--no-push` to bump, commit and tag locally without pushing to the remote:
+```bash
+npm run release -- 1.2.3 --no-push
+# Then push manually when ready:
+#   git push origin HEAD
+#   git push origin v1.2.3
+```
+
 ## How to release
 
 ```bash
