@@ -85,6 +85,7 @@ Strata is preparing `v1.0.0` with:
 - Added release notes page: `docs/src/content/docs/releases/v1-0-0.md` and linked it in docs sidebar.
 - Updated canonical repository references to `fducat18/strata` in root metadata and documentation surfaces.
 - Adapted `proxy-worker/` configuration and docs for Strata (`strata-docs-proxy`, `DOCS_ORIGIN`, `/docs*` route guidance).
+- Applied routing hotfix in `proxy-worker/index.ts`: strip `/docs` prefix before fetching `DOCS_ORIGIN` so custom-domain `/docs/*` maps to origin root paths.
 - Retired GitHub Pages docs deploy workflow by removing `.github/workflows/main-docs-ci.yml`.
 - Updated docs-site documentation to reflect Cloudflare Pages + Worker proxy production model.
 
@@ -105,4 +106,4 @@ Strata is preparing `v1.0.0` with:
 ### Key discoveries
 
 - `proxy-worker/` already existed in this repository with legacy naming/defaults and required only adaptation, not greenfield creation.
-- Strata docs require preserving `/docs` path when proxying (`base: '/docs'`), so stripping `/docs` in worker path mapping would break deep links.
+- With `base: '/docs'`, generated HTML links use `/docs/*`, but Cloudflare Pages origin files are emitted at root paths (`/_astro/*`, `/quickstart/*`), so worker must strip `/docs` before origin fetch.

@@ -6,6 +6,8 @@ Cloudflare Worker used in production to serve docs at:
 
 The worker routes `/docs*` to the docs Cloudflare Pages origin and lets non-doc routes pass through unchanged.
 
+`*.pages.dev` is not the canonical public docs URL for Strata.
+
 ## When is this worker needed?
 
 **Production only.** No worker needed for local dev or Docker local stack.
@@ -23,7 +25,7 @@ Browser request: GET /docs/quickstart
     ↓
 Worker route: strata.ducatillon.net/docs*
     ↓
-Fetches: https://strata-eep.pages.dev/docs/quickstart
+Fetches: https://strata-eep.pages.dev/quickstart
     ↓
 Returns docs page under strata.ducatillon.net
 ```

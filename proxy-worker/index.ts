@@ -21,9 +21,9 @@ export default {
     const url = new URL(request.url);
     const docsOrigin = env.DOCS_ORIGIN ?? 'https://strata-eep.pages.dev';
 
-    if (url.pathname.startsWith('/docs')) {
-      // Keep /docs prefix because docs Astro config uses base='/docs'.
-      const proxied = new URL(url.pathname, docsOrigin);
+    if (url.pathname === '/docs' || url.pathname.startsWith('/docs/')) {
+      const docsPath = url.pathname.replace(/^\/docs(?=\/|$)/, '') || '/';
+      const proxied = new URL(docsPath, docsOrigin);
       proxied.search = url.search;
 
       const proxyReq = new Request(proxied.toString(), {
