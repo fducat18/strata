@@ -21,14 +21,17 @@ that start/stop automatically with the app.
 │  └──────────────┬────────────────┘  │
 │                 │                   │
 │  ┌──────────────▼────────────────┐  │
-│  │  SQLite (~/Library/App Sup…)  │  │
+│  │  SQLite (dev: backend/.data/ │  │
+│  │  prod: ~/Library/App Sup…)  │  │
 │  └───────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```
 
 On launch, the Tauri app:
 
-1. Creates `~/Library/Application Support/Strata/` if needed
+1. Creates the data directory if needed:
+   - **Dev build** (untagged/dirty): `<repo>/backend/.data/` — shared with `npm run docker:dev` and `npm run start:dev`
+   - **Production build** (clean tagged): `~/Library/Application Support/Strata/`
 2. Runs `prisma migrate deploy` and `prisma db seed`
 3. Starts the NestJS backend on port 3456
 4. Starts the Astro frontend on port 4321
@@ -88,8 +91,8 @@ xattr -cr /path/to/Strata.app
 | Item | Path |
 |------|------|
 | SQLite database (prod/tagged build) | `~/Library/Application Support/Strata/strata.db` |
-| SQLite database (dev/untagged build) | `~/Library/Application Support/Strata-Dev/strata.db` |
-| Tauri logs | `~/Library/Logs/Strata/` |
+| SQLite database (dev/untagged build) | `<repo>/backend/.data/strata-dev.db` *(shared with `docker:dev` and `start:dev`)* |
+| Tauri logs | `~/Library/Logs/net.ducatillon.strata/Strata.log` |
 
 ## Dev vs prod behavior
 
@@ -101,15 +104,15 @@ The desktop app derives environment from build metadata:
 | Concern | Dev build | Production build |
 |---|---|---|
 | Window title | `Strata <version> (DEV)` | `Strata <version>` |
-| Data folder | `Strata-Dev/` | `Strata/` |
-| Goal | Safe experiments | Real data |
+| Data folder | `backend/.data/` (repo-relative, shared with docker:dev) | `~/Library/Application Support/Strata/` |
+| Goal | Safe experiments, same data as Docker dev | Real data |
 
-This separation prevents accidental corruption of your real data during local testing.
+This separation prevents accidental corruption of production data during local testing. Because dev mode uses `backend/.data/`, all local dev modes (Tauri dev, Docker dev, `npm run start:dev`) share the same database file.
 
 ## Smoke checklist (after build)
 
 1. Launch app and verify window title includes version (and `(DEV)` when expected).
-2. Open **File → Reveal Data Folder** and verify it opens `Strata-Dev/` in dev builds or `Strata/` in production builds.
+2. Open **File → Reveal Data Folder** and verify it opens `backend/.data/` (repo-relative) in dev builds or `~/Library/Application Support/Strata/` in production builds.
 3. Confirm backend health by opening `http://localhost:3456/api/v1/health` while app is running.
 4. Create an asset and add a snapshot; restart app; verify data persists.
 5. Trigger **Settings → Backup → Export**, then import into a fresh dev DB.
@@ -119,7 +122,7 @@ This separation prevents accidental corruption of your real data during local te
 
 | Menu | Item | Action |
 |------|------|--------|
-| File | Reveal Data Folder | Opens `~/Library/Application Support/Strata/` in Finder |
+| File | Reveal Data Folder | Opens `backend/.data/` (dev) or `~/Library/Application Support/Strata/` (prod) in Finder |
 | File | Close Window | Closes the window |
 | Strata | About Strata | Shows the about dialog |
 | Strata | Quit Strata | Quits the app and stops all sidecars |
@@ -136,7 +139,7 @@ This separation prevents accidental corruption of your real data during local te
 ### Backend fails to start
 
 - Check that `backend/dist/main.js` exists (`cd backend && npm run build`)
-- Check logs in `~/Library/Logs/Strata/`
+- Check logs in `~/Library/Logs/net.ducatillon.strata/Strata.log`
 - Ensure port 3456 is free: `lsof -i :3456`
 
 ### Frontend fails to start

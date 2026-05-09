@@ -1,6 +1,6 @@
 # AGENTS.md — Project-Level Conventions for AI Agents
 
-This document defines **9 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
+This document defines **13 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
 
 ## 1. Documentation Philosophy
 
@@ -114,9 +114,29 @@ This turns every plan doc into a full ADR-style record: **intent + outcome**. Th
 
 ---
 
+## 13. Doc Grep Rule
+
+**Before committing any change that renames a path, moves a directory, renames a command, or changes how data is stored/accessed, run:**
+
+```bash
+grep -r '<old-value>' docs/
+```
+
+**Update every match inline.** Never commit a code change that leaves stale references in `docs/src/content/docs/`.
+
+Examples of changes that trigger this rule:
+- Renaming a DB file (`strata.db` → `strata-dev.db`) → grep docs for the old filename
+- Changing a config key or env var → grep docs for the old key
+- Moving a data directory (`Strata-Dev/` → `backend/.data/`) → grep docs for the old path
+- Renaming an npm script → grep docs for the old script name
+
+A doc that documents the wrong path is worse than no doc at all.
+
+---
+
 ## Summary
 
-These 12 conventions ensure:
+These 13 conventions ensure:
 - **Consistency** across all AI-assisted work
 - **Quality gates** prevent incomplete releases
 - **Traceability** through plans and decision history (intent AND outcome)

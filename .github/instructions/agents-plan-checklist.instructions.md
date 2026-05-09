@@ -25,6 +25,7 @@ Before presenting any plan and before making any code change, go through this ch
 | 10 | **Environment compatibility**: Before using platform-specific Docker or shell features, check availability first (`docker buildx version`, `docker compose version`). Do not assume modern tooling (e.g., BuildKit is NOT available in standalone docker-compose v5.x). | Check tool versions first. |
 | 11 | **Do-no-harm baseline**: For optimization tasks, document the working baseline before changing anything. Run the command BEFORE and AFTER changes. "Faster is useless if broken." | Optimizing? Verify it works first. |
 | 12 | **Plan Execution Summary**: after all test gates pass, append `## Execution Summary` to the plan doc with: actual changes (vs. plan), deviations + reasons, test results, commit SHA(s), key discoveries. | Append before closing task. |
+| 13 | **Doc Grep Rule**: before committing any change that renames a path, command, env var, or data location, run `grep -r '<old-value>' docs/` and update every match inline. Never commit code that leaves stale references in the docs. | Renaming paths/files/commands? grep docs first. |
 
 ## Naming convention for plan docs
 `docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md`  
