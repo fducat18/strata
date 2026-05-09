@@ -38,8 +38,9 @@ src-tauri/.version
 coverage/
 .nyc_output/
 
-# Tauri
-src-tauri/
+# Tauri build artifacts (source files are tracked; artifacts excluded by src-tauri/.gitignore)
+src-tauri/target/
+src-tauri/gen/
 
 # Playwright / e2e artifacts
 front/playwright-report/
