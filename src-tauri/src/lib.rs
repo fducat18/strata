@@ -20,11 +20,20 @@ const FRONTEND_PORT: u16 = 4321;
 
 /// Build-time version metadata (injected by build.rs from scripts/version.mjs).
 const APP_VERSION: &str = env!("STRATA_VERSION");
-const APP_ENV: &str = env!("STRATA_ENV"); // "production" or "development"
+const APP_ENV: &str = env!("STRATA_ENV"); // git-state label from version.mjs
 const APP_GIT_SHA: &str = env!("STRATA_GIT_SHA");
 
 fn is_dev_build() -> bool {
-    APP_ENV != "production"
+    // Runtime mode must depend on Tauri build profile, not git tag cleanliness.
+    cfg!(debug_assertions)
+}
+
+fn runtime_env_label() -> &'static str {
+    if is_dev_build() {
+        "development"
+    } else {
+        "production"
+    }
 }
 
 /// Holds both sidecar child processes so we can clean them up on every exit
@@ -242,7 +251,7 @@ fn get_backend_url() -> String {
 fn get_app_version() -> serde_json::Value {
     serde_json::json!({
         "version": APP_VERSION,
-        "env": APP_ENV,
+        "env": runtime_env_label(),
         "gitSha": APP_GIT_SHA,
     })
 }
@@ -287,8 +296,9 @@ pub fn run() {
             )?;
 
             log::info!(
-                "Strata desktop starting — version={} env={} sha={}",
+                "Strata desktop starting — version={} runtime_env={} build_env={} sha={}",
                 APP_VERSION,
+                runtime_env_label(),
                 APP_ENV,
                 APP_GIT_SHA
             );
@@ -330,6 +340,11 @@ pub fn run() {
                 .build()?;
             app.set_menu(menu)?;
 
+            // Check BEFORE ensure_data_dir so we can detect a fresh install.
+            // ensure_data_dir only creates the directory; prisma migrate creates the file.
+            let db_filename = if is_dev_build() { "strata-dev.db" } else { "strata.db" };
+            let is_fresh_db = !data_dir().join(db_filename).exists();
+
             let database_url = ensure_data_dir();
             log::info!("Database URL: {}", database_url);
 
@@ -349,7 +364,12 @@ pub fn run() {
                     .blocking_show();
                 std::process::exit(1);
             }
-            run_prisma_seed(&backend_path, &database_url);
+            if is_fresh_db {
+                log::info!("Fresh database detected — running seed.");
+                run_prisma_seed(&backend_path, &database_url);
+            } else {
+                log::info!("Existing database detected — skipping seed.");
+            }
 
             let backend = match spawn_backend(&backend_path, &database_url) {
                 Ok(c) => c,
@@ -418,7 +438,7 @@ pub fn run() {
                 let body = format!(
                     "Strata {}\n\nEnvironment: {}\nGit: {}\n\nData folder:\n{}",
                     APP_VERSION,
-                    APP_ENV,
+                    runtime_env_label(),
                     APP_GIT_SHA,
                     data_dir().display()
                 );

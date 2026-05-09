@@ -17,7 +17,7 @@ Strata runs on the same machine in two distinct modes. This page documents the d
 | Version badge | Shows `DEV` badge | Shows clean version number |
 | Docker restart policy | none | `always` |
 | Reset DB | `npm run docker:reset` | ⚠️ Manual only — backup first! |
-| Desktop app data dir | `~/Library/Application Support/Strata-Dev/` | `~/Library/Application Support/Strata/` |
+| Desktop app data dir | `backend/.data/` (for `tauri:dev`) | `~/Library/Application Support/Strata/` (for `.app` builds) |
 
 ## How to Access Strata
 
@@ -26,9 +26,10 @@ In **development mode** (`npm run docker:dev`), you can access the app in two wa
 | Access method | Where | When to use |
 |---|---|---|
 | Web browser | `http://localhost:4321` | Day-to-day dev — fast reload, browser devtools, React hot update |
-| Tauri Desktop App | `./scripts/tauri-dev.sh` | Test native macOS window, menu bar, and isolated data directory |
+| Tauri Desktop App | `./scripts/tauri-dev.sh` | Test native macOS window/menu bar while sharing dev DB |
 
-Both connect to the same backend API (`http://localhost:3000/api/v1`) in dev mode.
+Web browser mode uses backend on `http://localhost:3000/api/v1` (Docker).
+`tauri:dev` runs sidecar backend on `http://localhost:3456/api/v1`, but both modes use the same `backend/.data/strata-dev.db` file.
 
 In **production mode** (`npm run docker:prod`):
 - Use `./scripts/tauri-build.sh` to build the Tauri `.app` bundle — the full native experience with your real data in `~/Library/Application Support/Strata/`

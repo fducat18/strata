@@ -14,11 +14,18 @@ function mockApis(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
   });
 }
 
+async function expectHeading(page: Parameters<Parameters<typeof test>[1]>[0]['page'], text: string) {
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1', { hasText: text }).first()).toBeVisible({
+    timeout: 10_000,
+  });
+}
+
 test.describe('Strata Smoke Tests', () => {
   test('homepage loads dashboard', async ({ page }) => {
     await mockApis(page);
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible();
+    await expectHeading(page, 'Dashboard');
   });
 
   test('navigation links exist', async ({ page }) => {
@@ -32,23 +39,23 @@ test.describe('Strata Smoke Tests', () => {
   test('can navigate to assets page', async ({ page }) => {
     await mockApis(page);
     await page.goto('/assets');
-    await expect(page.getByRole('heading', { name: 'Assets', level: 1 })).toBeVisible();
+    await expectHeading(page, 'Assets');
   });
 
   test('can navigate to categories page', async ({ page }) => {
     await mockApis(page);
     await page.goto('/categories');
-    await expect(page.getByRole('heading', { name: 'Categories', level: 1 })).toBeVisible();
+    await expectHeading(page, 'Categories');
   });
 
   test('can navigate to tags page', async ({ page }) => {
     await mockApis(page);
     await page.goto('/tags');
-    await expect(page.getByRole('heading', { name: 'Tags', level: 1 })).toBeVisible();
+    await expectHeading(page, 'Tags');
   });
 
   test('can navigate to settings page', async ({ page }) => {
     await page.goto('/settings');
-    await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
+    await expectHeading(page, 'Settings');
   });
 });

@@ -9,7 +9,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-STRATA_DEV_DB="$HOME/Library/Application Support/Strata-Dev/strata.db"
+STRATA_DEV_DB="$REPO_ROOT/backend/.data/strata-dev.db"
 
 echo "▸ Deleting dev database …"
 rm -f "$STRATA_DEV_DB"

@@ -26,3 +26,5 @@ title: "Page title"
 ## Build & deploy
 
 The site is built into `dist/` as a static site. The repo `docs/Dockerfile` produces an nginx image serving the built site on port 8000 (matches the rest of the stack).
+
+Production publish target is Cloudflare Pages (root directory `docs`, output `dist`), served through `https://strata.ducatillon.net/docs` with a `/docs*` Worker proxy route.

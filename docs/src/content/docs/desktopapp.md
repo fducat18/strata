@@ -30,9 +30,9 @@ that start/stop automatically with the app.
 On launch, the Tauri app:
 
 1. Creates the data directory if needed:
-   - **Dev build** (untagged/dirty): `<repo>/backend/.data/` — shared with `npm run docker:dev` and `npm run start:dev`
-   - **Production build** (clean tagged): `~/Library/Application Support/Strata/`
-2. Runs `prisma migrate deploy` and `prisma db seed`
+   - **`npm run tauri:dev`**: `<repo>/backend/.data/` — shared with `npm run docker:dev` and `npm run start:dev`
+   - **Production `.app` build**: `~/Library/Application Support/Strata/`
+2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database
 3. Starts the NestJS backend on port 3456
 4. Starts the Astro frontend on port 4321
 5. Shows a loading screen, then redirects to the frontend once healthy
@@ -91,15 +91,14 @@ xattr -cr /path/to/Strata.app
 | Item | Path |
 |------|------|
 | SQLite database (prod/tagged build) | `~/Library/Application Support/Strata/strata.db` |
-| SQLite database (dev/untagged build) | `<repo>/backend/.data/strata-dev.db` *(shared with `docker:dev` and `start:dev`)* |
+| SQLite database (`tauri:dev`) | `<repo>/backend/.data/strata-dev.db` *(shared with `docker:dev` and `start:dev`)* |
 | Tauri logs | `~/Library/Logs/net.ducatillon.strata/Strata.log` |
 
 ## Dev vs prod behavior
 
-The desktop app derives environment from build metadata:
-
-- **Tagged, clean build**: production behavior
-- **Untagged or dirty build**: development behavior
+The desktop app behavior is runtime-mode based:
+- **`tauri:dev` (debug build)**: development behavior
+- **`tauri:build` / bundled `.app` (release build)**: production behavior
 
 | Concern | Dev build | Production build |
 |---|---|---|
@@ -107,7 +106,7 @@ The desktop app derives environment from build metadata:
 | Data folder | `backend/.data/` (repo-relative, shared with docker:dev) | `~/Library/Application Support/Strata/` |
 | Goal | Safe experiments, same data as Docker dev | Real data |
 
-This separation prevents accidental corruption of production data during local testing. Because dev mode uses `backend/.data/`, all local dev modes (Tauri dev, Docker dev, `npm run start:dev`) share the same database file.
+This separation prevents accidental corruption of production data during local testing. Because `tauri:dev` uses `backend/.data/`, all local dev modes (Tauri dev, Docker dev, `npm run start:dev`) share the same database file.
 
 ## Smoke checklist (after build)
 
@@ -162,20 +161,10 @@ lsof -i :3456 -t | xargs kill -9
 lsof -i :4321 -t | xargs kill -9
 ```
 
-## Multi-machine development (Google Drive sync)
+## Source checkout recommendation
 
-The source can be synced between Macs (e.g. M3 Pro ↔ M1 Max) via **Google Drive offline mode**.
-
-**Known limitation**: Google Drive does not correctly replicate symlinks. After switching machines, `node_modules/.bin/` entries arrive as empty/broken zero-byte symlinks. This is what causes errors like `sh: astro: command not found` or `sh: nest: command not found` right after a machine switch.
-
-**This is expected and self-healing**: `tauri-dev.sh` now runs `npm install` automatically before building both packages. Simply run `npm run tauri:dev` on the new machine — the install step restores all symlinks.
-
-If you need to fix it manually (e.g. without launching Tauri):
-
-```bash
-cd front && npm install && cd ..
-cd backend && npm install
-```
+Use a local filesystem checkout (regular git clone path) for development work.
+Cloud-synced project folders can cause unstable file-watcher and I/O behavior.
 
 ## Future Improvements
 

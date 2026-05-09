@@ -1,0 +1,8 @@
+name = "strata-docs-proxy"
+main = "index.ts"
+compatibility_date = "2024-01-01"
+
+# Default environment variable — override in Cloudflare dashboard for production.
+# See proxy-worker/README.md for instructions.
+[vars]
+DOCS_ORIGIN = "https://strata-eep.pages.dev"

@@ -89,6 +89,22 @@ flowchart TD
 
 The custom `remark-mermaid.mjs` plugin converts these blocks to `<pre class="mermaid">` elements, and the Mermaid.js CDN script renders them client-side.
 
+## Production hosting (Cloudflare Pages + `/docs` proxy)
+
+Production docs are hosted on Cloudflare Pages but served at:
+
+`https://strata.ducatillon.net/docs`
+
+Because docs live under a path (`/docs`) on the same domain, Strata uses a Cloudflare Worker proxy route (`/docs*`) to forward docs requests to the docs Pages origin. The worker source lives in:
+
+`proxy-worker/`
+
+High-level flow:
+
+1. Browser requests `/docs/...` on `strata.ducatillon.net`
+2. Cloudflare Worker forwards to docs origin (`DOCS_ORIGIN`)
+3. Response returns under the main domain path
+
 ## Running Locally
 
 ```bash

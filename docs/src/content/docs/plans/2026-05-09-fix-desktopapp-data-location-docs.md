@@ -41,7 +41,7 @@ That commit changed `src-tauri/src/lib.rs` so dev builds use `<repo>/backend/.da
 
 ## Execution Summary
 
-**Commit**: TBD
+**Commit**: `839572e`
 
 ### Actual changes
 All 9 stale references in `desktopapp.md` updated as planned. Also added Convention #13 to `AGENTS.md` and the planning checklist to prevent this class of omission in the future.

@@ -236,7 +236,7 @@ backup in hand.
 
 ```bash
 # 1. Install Docker Desktop, then:
-git clone https://github.com/francoiducat/strata.git
+git clone https://github.com/fducat18/strata.git
 cd strata
 
 # 2. Boot the stack — this applies migrations and seeds reference data.

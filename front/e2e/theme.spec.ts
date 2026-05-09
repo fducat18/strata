@@ -28,4 +28,24 @@ test.describe('Theme', () => {
     await page.waitForLoadState('networkidle');
     await lightBtn.click();
   });
+
+  test('dark mode persists across route navigation', async ({ page }) => {
+    await page.goto('/settings');
+    const darkBtn = page.getByRole('button', { name: /Use Dark theme/i });
+    await expect(darkBtn).toBeVisible();
+    await darkBtn.click();
+    await expect(darkBtn).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('link', { name: 'Assets' }).click();
+    await expect(page).toHaveURL(/\/assets$/);
+
+    await expect.poll(async () => {
+      return await page.evaluate(() => document.documentElement.classList.contains('dark'));
+    }).toBe(true);
+    await expect.poll(async () => {
+      return await page.evaluate(
+        () => window.getComputedStyle(document.documentElement).backgroundColor
+      );
+    }).toBe('rgb(15, 23, 42)');
+  });
 });

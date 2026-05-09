@@ -17,7 +17,7 @@ export default defineConfig({
       logo: { src: './src/assets/logo.avif', replacesTitle: false },
       favicon: '/favicon-32x32.png',
       social: [
-        { icon: 'github', label: 'GitHub', href: 'https://github.com/francoiducat/strata' },
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/fducat18/strata' },
       ],
       head: [
         {
@@ -101,6 +101,7 @@ export default defineConfig({
             { label: 'Recovery', slug: 'recovery' },
             { label: 'Migrations', slug: 'migrations' },
             { label: 'Versioning', slug: 'versioning' },
+            { label: 'Release Notes (v1.0.0)', slug: 'releases/v1-0-0' },
             { label: 'Request Tracing', slug: 'request-tracing' },
           ],
         },

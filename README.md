@@ -1,7 +1,7 @@
 ![Strata logo](assets/logo.avif)
 
-[![CI](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml/badge.svg)](https://github.com/francoiducat/strata/actions/workflows/main-backend-ci.yml)
-[![codecov](https://codecov.io/gh/francoiducat/strata/graph/badge.svg)](https://codecov.io/gh/francoiducat/strata)
+[![CI](https://github.com/fducat18/strata/actions/workflows/ci.yml/badge.svg)](https://github.com/fducat18/strata/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/fducat18/strata/graph/badge.svg)](https://codecov.io/gh/fducat18/strata)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/website?url=https%3A%2F%2Fstrata.ducatillon.net%2Fdocs%2F&label=docs)](https://strata.ducatillon.net/docs/)
 
@@ -28,7 +28,7 @@ Requires Docker Desktop (or Docker + Compose).
 
 **First run (builds all images):**
 ```bash
-git clone https://github.com/francoiducat/strata.git
+git clone https://github.com/fducat18/strata.git
 cd strata
 docker-compose up --build
 ```

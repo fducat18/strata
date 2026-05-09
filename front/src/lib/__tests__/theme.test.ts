@@ -5,6 +5,9 @@ describe('theme', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.classList.remove('dark');
+    document.documentElement.style.backgroundColor = '';
+    document.documentElement.style.color = '';
+    document.documentElement.style.colorScheme = '';
   });
 
   describe('getStoredTheme', () => {
@@ -35,6 +38,13 @@ describe('theme', () => {
       document.documentElement.classList.add('dark');
       applyTheme('light');
       expect(document.documentElement.classList.contains('dark')).toBe(false);
+    });
+
+    it('applies prepaint-safe styles for dark theme', () => {
+      applyTheme('dark');
+      expect(document.documentElement.style.backgroundColor).toBe('#0f172a');
+      expect(document.documentElement.style.color).toBe('#f8fafc');
+      expect(document.documentElement.style.colorScheme).toBe('dark');
     });
   });
 });

@@ -40,12 +40,16 @@ function writeStoredTheme(theme: Theme): void {
 
 function applyThemeToDom(theme: Theme): void {
   if (typeof window === 'undefined') return;
+  const root = document.documentElement;
   const isDark =
     theme === 'dark' ||
     (theme === 'system' &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.toggle('dark', isDark);
-  document.documentElement.dataset.theme = theme;
+  root.classList.toggle('dark', isDark);
+  root.dataset.theme = theme;
+  root.style.colorScheme = isDark ? 'dark' : 'light';
+  root.style.backgroundColor = isDark ? '#0f172a' : '#ffffff';
+  root.style.color = isDark ? '#f8fafc' : '#0f172a';
 }
 
 const initialTheme = readStoredTheme();

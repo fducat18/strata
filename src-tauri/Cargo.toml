@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Strata — desktop app for asset tracking & net-worth"
 authors = ["francoiducat"]
 license = "ISC"
-repository = "https://github.com/francoiducat/strata"
+repository = "https://github.com/fducat18/strata"
 edition = "2021"
 rust-version = "1.77.2"
 

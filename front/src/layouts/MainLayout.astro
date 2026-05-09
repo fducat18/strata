@@ -25,11 +25,17 @@ const currentPath = Astro.url.pathname;
     <script is:inline>
       (function () {
         try {
+          var root = document.documentElement;
           var t = localStorage.getItem('strata.theme') || 'system';
           var dark =
             t === 'dark' ||
             (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (dark) document.documentElement.classList.add('dark');
+          root.classList.toggle('dark', dark);
+          root.dataset.theme = t;
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          // Avoid white flash before CSS loads on route navigation.
+          root.style.backgroundColor = dark ? '#0f172a' : '#ffffff';
+          root.style.color = dark ? '#f8fafc' : '#0f172a';
         } catch (e) {}
       })();
     </script>

@@ -15,7 +15,7 @@ back"** scenario. Three personas:
 ## 0. Get the source code back
 
 ```bash
-git clone https://github.com/francoiducat/strata.git
+git clone https://github.com/fducat18/strata.git
 cd strata
 ```
 
@@ -61,7 +61,7 @@ The desktop `.app` keeps its DB at:
 | Build flavour | Path |
 |---|---|
 | Production (tagged release) | `~/Library/Application Support/Strata/strata.db` |
-| Dev build (`-dirty` / `0.0.0-dev`) | `~/Library/Application Support/Strata-Dev/strata.db` |
+| `tauri:dev` local run | `<repo>/backend/.data/strata-dev.db` |
 
 Restore is just:
 
