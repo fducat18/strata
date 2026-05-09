@@ -101,9 +101,12 @@ export default defineConfig({
             { label: 'Recovery', slug: 'recovery' },
             { label: 'Migrations', slug: 'migrations' },
             { label: 'Versioning', slug: 'versioning' },
-            { label: 'Release Notes (v1.0.0)', slug: 'releases/v1-0-0' },
             { label: 'Request Tracing', slug: 'request-tracing' },
           ],
+        },
+        {
+          label: 'Releases',
+          autogenerate: { directory: 'releases' },
         },
         {
           label: 'Architecture Decisions',
