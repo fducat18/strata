@@ -50,12 +50,16 @@ After adding this, open a new terminal and `cd` into the repo — nvm will autom
 cd backend
 nvm use 22            # Recommended; any Node >=22 works
 npm install
-npx prisma db seed          # Load demo data
+npx prisma db seed          # Load demo data (first run only)
 npm run start:dev           # Starts on http://localhost:3000
 ```
 
 :::note[Migrations run automatically]
 NestJS runs `prisma migrate deploy` automatically on startup, before the server accepts connections. You do **not** need to run migrations manually in local dev.
+:::
+
+:::note[Docker seeds only on first start]
+When starting with Docker, the seed step is skipped automatically if the database already exists. This preserves user data and deliberate demo-asset deletions across restarts.
 :::
 
 :::note[Prisma client is generated automatically]

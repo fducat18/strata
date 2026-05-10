@@ -54,9 +54,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/package*.json ./
-RUN mkdir -p .data && chown -R node:node /app
+COPY docker-start.sh ./docker-start.sh
+RUN mkdir -p .data && chmod +x docker-start.sh && chown -R node:node /app
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/api/v1/health > /dev/null || exit 1
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"]
+CMD ["./docker-start.sh"]

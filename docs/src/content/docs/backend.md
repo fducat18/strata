@@ -89,9 +89,13 @@ flowchart TD
 cd backend
 npm install
 npx prisma migrate deploy
-npx prisma db seed
+npx prisma db seed   # Only needed on first run — loads demo data
 npm run start:dev    # http://localhost:3000
 ```
+
+:::note[Docker seeds only on first start]
+When running via Docker, `docker-start.sh` checks whether the database file exists before starting. If fresh (first run), it seeds automatically. If the database already exists, the seed step is skipped so user data and deliberate demo-asset deletions are preserved.
+:::
 
 - API: `http://localhost:3000/api/v1`
 - Swagger UI: `http://localhost:3000/swagger`
