@@ -70,15 +70,6 @@ export function AssetSnapshotsList({ assetId, snapshots, acquisitionDate, acquis
               </TableRow>
             </TableHeader>
             <TableBody>
-              {acquisitionDate && (
-                <TableRow className="italic text-muted-foreground" aria-label="Acquisition date row">
-                  <TableCell>{formatDate(acquisitionDate, { locale })} <span className="text-xs ml-1 not-italic">(acquired)</span></TableCell>
-                  <TableCell className="font-mono">
-                    {acquisitionPrice ? formatMoney(acquisitionPrice, { currency, locale }) : '—'}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              )}
               {sorted.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>{formatDateTime(s.observedAt, locale)}</TableCell>
@@ -95,6 +86,15 @@ export function AssetSnapshotsList({ assetId, snapshots, acquisitionDate, acquis
                   </TableCell>
                 </TableRow>
               ))}
+              {acquisitionDate && (
+                <TableRow className="italic text-muted-foreground" aria-label="Acquisition date row">
+                  <TableCell>{formatDate(acquisitionDate, { locale })} <span className="text-xs ml-1 not-italic">(acquired)</span></TableCell>
+                  <TableCell className="font-mono">
+                    {acquisitionPrice ? formatMoney(acquisitionPrice, { currency, locale }) : '—'}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         ) : (

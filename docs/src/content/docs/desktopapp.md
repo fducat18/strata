@@ -21,8 +21,8 @@ that start/stop automatically with the app.
 │  └──────────────┬────────────────┘  │
 │                 │                   │
 │  ┌──────────────▼────────────────┐  │
-│  │  SQLite (dev: backend/.data/ │  │
-│  │  prod: ~/Library/App Sup…)  │  │
+│  │  SQLite (dev: backend/.data/  │  │
+│  │  prod: ~/Library/App Sup…)    │  │
 │  └───────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```

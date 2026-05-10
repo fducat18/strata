@@ -1,10 +1,12 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AssetSnapshotsList } from '../AssetSnapshotsList';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { AssetSnapshot } from '@/lib/types';
 
+const mockMutateAsync = vi.fn().mockResolvedValue({});
+
 vi.mock('@/lib/hooks', () => ({
-  useUpdateAssetSnapshot: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  useUpdateAssetSnapshot: vi.fn(() => ({ mutateAsync: mockMutateAsync, isPending: false })),
 }));
 
 vi.mock('@/stores/uiStore', () => ({
@@ -99,5 +101,27 @@ describe('AssetSnapshotsList', () => {
     );
     // Price should appear formatted in the acquisition row
     expect(screen.getByLabelText('Acquisition date row').textContent).toContain('9');
+  });
+
+  it('opens edit dialog when pencil icon clicked (handleEditOpen)', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.click(screen.getAllByLabelText('Edit snapshot')[0]);
+    expect(screen.getByText('Edit Snapshot')).toBeInTheDocument();
+    // Edit dialog should pre-fill value from the snapshot
+    expect((screen.getByLabelText('Value (EUR)') as HTMLInputElement).value).toBe('10000');
+  });
+
+  it('calls mutateAsync when edit dialog Save clicked (handleEditSave)', async () => {
+    mockMutateAsync.mockResolvedValue({});
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.click(screen.getAllByLabelText('Edit snapshot')[0]);
+    fireEvent.change(screen.getByLabelText('Value (EUR)'), { target: { value: '12000' } });
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+        assetId: 'a1',
+        data: expect.objectContaining({ value: '12000' }),
+      }));
+    });
   });
 });
