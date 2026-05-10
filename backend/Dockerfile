@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # ----- builder -----
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 # Trust corporate TLS-intercept proxies (ZScaler, Netskope, …) if the
 # developer dropped any PEM-encoded *.crt file in backend/certs/.
@@ -44,7 +44,7 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=1
 RUN npx nest build
 
 # ----- runtime -----
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 # Copy the full node_modules from builder (includes tsx needed for db seed).

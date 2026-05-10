@@ -17,6 +17,27 @@ const currentPath = Astro.url.pathname;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} — Strata</title>
     <!--
+      CSS-only dark-mode background: applied immediately on HTML parse, before
+      any stylesheet or JavaScript runs. Prevents a white flash between page
+      navigations for users in dark mode.
+
+      • The media query covers users whose system preference is dark.
+      • The html.dark rule covers users who explicitly chose dark in settings
+        (the is:inline script below adds/removes that class synchronously).
+    -->
+    <style is:inline>
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']) {
+          background-color: #0f172a;
+          color: #f8fafc;
+        }
+      }
+      html.dark {
+        background-color: #0f172a;
+        color: #f8fafc;
+      }
+    </style>
+    <!--
       Synchronous theme pre-load: reads localStorage and sets `dark` on <html>
       BEFORE any paint. Must use is:inline so Astro does not convert it to a
       deferred <script type="module">, which would cause a flash of unstyled
@@ -39,7 +60,6 @@ const currentPath = Astro.url.pathname;
         } catch (e) {}
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

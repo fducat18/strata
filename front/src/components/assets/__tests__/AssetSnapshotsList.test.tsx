@@ -67,4 +67,37 @@ describe('AssetSnapshotsList', () => {
     expect(rows[1].textContent).toContain('Jan');
     expect(rows[2].textContent).toContain('Jan');
   });
+
+  it('renders acquisition date row when acquisitionDate provided', () => {
+    render(
+      <AssetSnapshotsList
+        assetId="a1"
+        snapshots={snapshots}
+        acquisitionDate="2024-01-01T00:00:00Z"
+        acquisitionPrice="9500"
+        onAddSnapshot={vi.fn()}
+      />
+    );
+    expect(screen.getByLabelText('Acquisition date row')).toBeInTheDocument();
+    expect(screen.getByText(/acquired/i)).toBeInTheDocument();
+  });
+
+  it('does not render acquisition row when acquisitionDate is absent', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    expect(screen.queryByLabelText('Acquisition date row')).not.toBeInTheDocument();
+  });
+
+  it('shows acquisition price in acquisition row', () => {
+    render(
+      <AssetSnapshotsList
+        assetId="a1"
+        snapshots={[]}
+        acquisitionDate="2024-01-01T00:00:00Z"
+        acquisitionPrice="9500"
+        onAddSnapshot={vi.fn()}
+      />
+    );
+    // Price should appear formatted in the acquisition row
+    expect(screen.getByLabelText('Acquisition date row').textContent).toContain('9');
+  });
 });

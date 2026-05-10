@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 
 # PUBLIC_API_URL is baked into the client bundle at build time.
@@ -23,7 +23,7 @@ RUN if [ ! -f src/lib/version.ts ]; then \
     fi
 RUN npx astro build
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S strata && adduser -S strata -G strata
 COPY --from=build --chown=strata:strata /app/dist ./dist

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # ---- Build stage: produce a static Astro Starlight site ----
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 
 WORKDIR /site
 

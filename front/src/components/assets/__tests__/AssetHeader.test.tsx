@@ -157,4 +157,30 @@ describe('AssetHeader', () => {
     );
     expect(screen.getByLabelText('Back to assets')).toBeInTheDocument();
   });
+
+  it('shows acquisition date when provided', () => {
+    render(
+      <AssetHeader
+        asset={{ ...mockAsset, acquisitionDate: '2024-06-15T00:00:00Z' }}
+        onSnapshot={vi.fn()}
+        onEdit={vi.fn()}
+        onDispose={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Acquired/)).toBeInTheDocument();
+  });
+
+  it('does not show acquisition date when absent', () => {
+    render(
+      <AssetHeader
+        asset={{ ...mockAsset, acquisitionDate: null }}
+        onSnapshot={vi.fn()}
+        onEdit={vi.fn()}
+        onDispose={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    expect(screen.queryByText(/Acquired/)).not.toBeInTheDocument();
+  });
 });

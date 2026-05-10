@@ -3,3 +3,11 @@
   --sl-color-accent: #14b8a6;
   --sl-color-accent-high: #99f6e4;
 }
+
+/* Center the main content block symmetrically between the two sidebars.
+   Starlight calculates the left offset based on sidebar widths, which can
+   leave more space on the left than on the right. This override resets the
+   inline margin so the content is visually centred. */
+.sl-container {
+  margin-inline: auto;
+}

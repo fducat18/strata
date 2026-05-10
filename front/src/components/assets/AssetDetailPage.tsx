@@ -16,6 +16,7 @@ import { AssetCategoriesCard } from './AssetCategoriesCard';
 import { AssetEditDialog } from './AssetEditDialog';
 import { SnapshotDialog } from './SnapshotDialog';
 import { DisposeDialog } from './DisposeDialog';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 
 interface Props {
   assetId: string;
@@ -39,6 +40,7 @@ export function AssetDetailPage({ assetId }: Props) {
   const [showEdit, setShowEdit] = useState(false);
   const [showSnapshot, setShowSnapshot] = useState(false);
   const [showDispose, setShowDispose] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (isLoading) return <Loading />;
 
@@ -77,13 +79,16 @@ export function AssetDetailPage({ assetId }: Props) {
   };
 
   const handleDelete = async () => {
-    if (confirm('Delete this asset permanently?')) {
-      try {
-        await deleteMutation.mutateAsync(assetId);
-        window.location.assign('/assets');
-      } catch (err: unknown) {
-        useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
-      }
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteMutation.mutateAsync(assetId);
+      setShowDeleteConfirm(false);
+      window.location.assign('/assets');
+    } catch (err: unknown) {
+      useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
     }
   };
 
@@ -142,6 +147,8 @@ export function AssetDetailPage({ assetId }: Props) {
       <AssetSnapshotsList
         assetId={assetId}
         snapshots={snapshots}
+        acquisitionDate={asset.acquisitionDate}
+        acquisitionPrice={asset.transactions?.find(t => t.type === 'ACQUIRE')?.unitPrice}
         onAddSnapshot={() => setShowSnapshot(true)}
       />
 
@@ -167,6 +174,13 @@ export function AssetDetailPage({ assetId }: Props) {
         pending={disposeMutation.isPending}
         onClose={() => setShowDispose(false)}
         onSave={handleDispose}
+      />
+
+      <DeleteConfirmDialog
+        open={showDeleteConfirm}
+        pending={deleteMutation.isPending}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

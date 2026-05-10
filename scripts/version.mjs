@@ -34,9 +34,19 @@ function safeGit(args) {
 }
 
 export function versionInfo() {
-  const described = safeGit('describe --tags --dirty --always');
+  const override = process.env.VERSION_OVERRIDE;
   const sha = safeGit('rev-parse --short HEAD') || 'unknown';
   const buildTime = new Date().toISOString();
+
+  // Allow callers (e.g. docker:prod) to pin the version to the latest tag.
+  if (override) {
+    const version = override.replace(/^v/, '');
+    const isClean = /^\d+\.\d+\.\d+$/.test(version);
+    const env = isClean ? 'production' : 'development';
+    return { version, env, gitSha: sha, buildTime };
+  }
+
+  const described = safeGit('describe --tags --dirty --always');
 
   let version;
   if (!described) {

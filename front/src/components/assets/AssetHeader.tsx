@@ -26,7 +26,9 @@ export function AssetHeader({ asset, onSnapshot, onEdit, onDispose, onDelete }: 
           {asset.disposed && <Badge variant="destructive">Disposed</Badge>}
         </div>
         <p className="text-muted-foreground">
-          {asset.assetType?.label} · Qty: {formatQuantity(asset.quantity)} · Created {formatDate(asset.createdAt, { locale })}
+          {asset.assetType?.label} · Qty: {formatQuantity(asset.quantity)}
+          {asset.acquisitionDate && <> · Acquired {formatDate(asset.acquisitionDate, { locale })}</>}
+          {' · '}Created {formatDate(asset.createdAt, { locale })}
         </p>
       </div>
       <div className="flex gap-2">

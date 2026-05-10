@@ -18,12 +18,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "24"
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
       - run: npm ci
       - run: npx prisma generate
+        env:
+          DATABASE_URL: file:/tmp/ci.db
       - run: npm run build
       - run: npm run test:cov
       - run: npm run test:e2e
@@ -48,7 +50,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "24"
           cache: npm
           cache-dependency-path: front/package-lock.json
 
@@ -76,7 +78,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
           cache-dependency-path: docs/package-lock.json
 

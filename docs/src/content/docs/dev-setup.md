@@ -3,10 +3,10 @@ title: "Development Setup"
 description: How to run the Strata backend, frontend, and docs site locally without Docker.
 ---
 
-:::tip[Node >=22 LTS — Node 22 recommended]
+:::tip[Node >=22 LTS — Node 24 recommended]
 Strata uses Prisma's built-in SQLite driver (Rust query engine binary). The binary is platform-specific (darwin-arm64, linux-amd64…) but **not** Node-version-specific — it works on any Node >=22.
 
-Node 22 LTS is the recommended version and is pinned in `.nvmrc`. Node 24, 26, and later LTS releases are fully supported. Docker always uses `node:22-alpine` internally.
+Node 24 LTS is the recommended version and is pinned in `.nvmrc`. Node 22, 26, and later LTS releases are fully supported. Docker uses `node:24-alpine` internally.
 :::
 
 ## Step 0 — Check prerequisites
@@ -19,15 +19,15 @@ npm run setup
 
 This checks Node version, Docker status, and port availability. Fix anything marked ❌ before continuing.
 
-## Step 1 — Install Node 22 LTS (recommended)
+## Step 1 — Install Node 24 LTS (recommended)
 
 ```bash
-# Install and switch to Node 22 (using nvm) — recommended; >=22 also works
-nvm install 22
-nvm use 22
+# Install and switch to Node 24 (using nvm) — recommended; >=22 also works
+nvm install 24
+nvm use 24
 
 # Verify
-node --version   # v22.x.x (or v24.x.x / v26.x.x — any >=22 is fine)
+node --version   # v24.x.x (or v22.x.x / v26.x.x — any >=22 is fine)
 ```
 
 ### Optional: auto-switch when entering the project directory

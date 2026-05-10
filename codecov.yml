@@ -1,2 +1,7 @@
 fixes:
   - "/home/runner/work/strata/strata/backend/src/::backend/src/"
+  - "/home/runner/work/strata/strata/front/src/::front/src/"
+
+flag_management:
+  default_rules:
+    carryforward: true

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Card, CardHeader, CardTitle, CardContent, Table, TableHeader, TableBody, TableRow, TableHead, TableCell, Dialog, DialogHeader, DialogTitle, DialogFooter, Input } from '@/components/ui';
 import { Plus, Pencil } from 'lucide-react';
-import { formatMoney, formatDateTime } from '@/lib/format';
+import { formatMoney, formatDate, formatDateTime } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
 import { useUpdateAssetSnapshot } from '@/lib/hooks';
 import { useUIStore } from '@/stores/uiStore';
@@ -10,10 +10,12 @@ import type { AssetSnapshot } from '@/lib/types';
 interface Props {
   assetId: string;
   snapshots: AssetSnapshot[];
+  acquisitionDate?: string | null;
+  acquisitionPrice?: string | null;
   onAddSnapshot: () => void;
 }
 
-export function AssetSnapshotsList({ assetId, snapshots, onAddSnapshot }: Props) {
+export function AssetSnapshotsList({ assetId, snapshots, acquisitionDate, acquisitionPrice, onAddSnapshot }: Props) {
   const locale = useLocale();
   const currency = useCurrency();
   const [editingSnapshot, setEditingSnapshot] = useState<AssetSnapshot | null>(null);
@@ -58,7 +60,7 @@ export function AssetSnapshotsList({ assetId, snapshots, onAddSnapshot }: Props)
         </Button>
       </CardHeader>
       <CardContent>
-        {sorted.length > 0 ? (
+        {sorted.length > 0 || acquisitionDate ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -68,6 +70,15 @@ export function AssetSnapshotsList({ assetId, snapshots, onAddSnapshot }: Props)
               </TableRow>
             </TableHeader>
             <TableBody>
+              {acquisitionDate && (
+                <TableRow className="italic text-muted-foreground" aria-label="Acquisition date row">
+                  <TableCell>{formatDate(acquisitionDate, { locale })} <span className="text-xs ml-1 not-italic">(acquired)</span></TableCell>
+                  <TableCell className="font-mono">
+                    {acquisitionPrice ? formatMoney(acquisitionPrice, { currency, locale }) : '—'}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              )}
               {sorted.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>{formatDateTime(s.observedAt, locale)}</TableCell>
