@@ -44,6 +44,20 @@ Falls back gracefully when no tags exist or git is unavailable.
 
 Anything that is **not** a clean tag is flagged as `development`.
 
+#### `STRATA_ENV` override
+
+Set `STRATA_ENV=development` or `STRATA_ENV=production` to force the `env` field regardless of what git describe returns. Used by `docker:reset` and `docker:nuke` to ensure the docs Docker image is always labelled **DEV** even when building from a clean release tag:
+
+```bash
+STRATA_ENV=development node scripts/gen-version.mjs all
+```
+
+`docker:prod` does **not** use this — it uses `VERSION_OVERRIDE=$(git describe --tags --abbrev=0)` which yields a clean semver, so `env=production` is derived naturally.
+
+#### `package.json` version fallback
+
+When `git describe` returns `0.0.0-dev` (shallow clone with no reachable tags — e.g. Cloudflare Pages CI), `version.mjs` reads the version from the root `package.json` instead. Since `release.mjs` always bumps `package.json` in sync with git tags, this always yields the correct release version (e.g. `1.0.0`). A clean semver → `isClean=true` → `env=production` is derived automatically — **no extra environment variable needed** for the deployed docs site.
+
 ### `scripts/gen-version.mjs`
 
 Writes generated files that embed the current version into each package at build time:
@@ -101,14 +115,15 @@ npm run tauri:prod         # Desktop app (macOS)
 
 ## Where the version is shown
 
-| Surface | Location | Example |
-|---|---|---|
-| Backend HTTP | `GET /api/v1/version` | `{"version":"1.4.2","env":"production","gitSha":"abcd123","buildTime":"…"}` |
-| Backend health | `GET /api/v1/health` | included in payload |
-| Frontend sidebar | bottom-left footer | `v1.4.2` (or `v1.4.2-3-gabcd-dirty DEV`) |
-| Frontend Settings | About panel | full version + git SHA + build time |
-| Desktop window title | always visible | `Strata 1.4.2` or `Strata 0.0.0-dev+abcd-dirty (DEV)` |
-| Desktop About menu | menu bar → Strata → About | full version + env + data folder |
+| Surface | Location | DEV example | PROD example |
+|---|---|---|---|
+| Backend HTTP | `GET /api/v1/version` | `{"version":"1.4.2-3-gabcd","env":"development",…}` | `{"version":"1.4.2","env":"production",…}` |
+| Backend health | `GET /api/v1/health` | included in payload | included in payload |
+| Docs sidebar | site title badge | `v1.4.2-3-gabcd — DEV` (orange) | `v1.4.2` (no badge) |
+| Frontend sidebar | bottom-left footer | `v1.4.2-3-gabcd-dirty DEV` | `v1.4.2` |
+| Frontend Settings | About panel | full version + git SHA + build time | full version + git SHA + build time |
+| Desktop window title | always visible | `Strata 0.0.0-dev+abcd-dirty (DEV)` | `Strata 1.4.2` |
+| Desktop About menu | menu bar → Strata → About | full version + env + data folder | full version + env + data folder |
 
 ## AI agent versioning skill
 

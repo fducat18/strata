@@ -16,12 +16,35 @@
 //   - Clean tag, no `-dirty`, no `-g`:  env = 'production'
 //   - Anything else:                    env = 'development'
 //
+// Overrides:
+//   STRATA_ENV=development|production   Forces the env field (used by docker:reset/nuke to
+//                                       ensure the docs image is always labelled DEV in local
+//                                       dev stacks, even when building from a clean tag).
+//
+// Fallback — package.json version:
+//   When git returns 0.0.0-dev (shallow clone, no tags — e.g. Cloudflare Pages), the version
+//   is replaced by the value from the root package.json.  Since release.mjs always bumps
+//   package.json in sync with the git tag, this produces a clean semver (e.g. "1.0.0") which
+//   classifies as env=production automatically — no extra env var needed.
+//
 // USAGE:
 //   node scripts/version.mjs                 → prints version string
 //   node scripts/version.mjs --json          → prints {version, env, gitSha, buildTime}
 //   import { versionInfo } from '.../version.mjs'
 
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+function readPkgVersion() {
+  try {
+    const pkgPath = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
+    return JSON.parse(readFileSync(pkgPath, 'utf8')).version ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function safeGit(args) {
   try {
@@ -59,8 +82,23 @@ export function versionInfo() {
     version = `0.0.0-dev+${described}`;
   }
 
+  // When git has no tag history (shallow clone, Cloudflare Pages, fresh repo),
+  // use the root package.json version as fallback. release.mjs keeps it in sync
+  // with git tags, so it always holds the correct release version.
+  if (version.startsWith('0.0.0-dev')) {
+    const pkgVersion = readPkgVersion();
+    if (pkgVersion) version = pkgVersion;
+  }
+
   const isClean = /^\d+\.\d+\.\d+$/.test(version);
-  const env = isClean ? 'production' : 'development';
+
+  // STRATA_ENV lets callers (e.g. docker:reset/nuke) force the env label regardless
+  // of what git describe says — needed to mark local dev Docker images as DEV even
+  // when building from a clean release tag.
+  const strataEnv = process.env.STRATA_ENV;
+  const env = (strataEnv === 'development' || strataEnv === 'production')
+    ? strataEnv
+    : isClean ? 'production' : 'development';
 
   return { version, env, gitSha: sha, buildTime };
 }
