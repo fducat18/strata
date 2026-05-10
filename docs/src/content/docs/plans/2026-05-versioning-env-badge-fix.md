@@ -79,7 +79,40 @@ Prepend `STRATA_ENV=development` to `gen-version.mjs all` call in both scripts. 
 
 Document `STRATA_ENV` and `package.json` fallback behavior.
 
-## Acceptance Criteria
+## Execution Summary
+
+**Commit**: `b7ea452`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `scripts/version.mjs` | Added `readPkgVersion()` helper + `STRATA_ENV` override + `package.json` fallback |
+| `package.json` | `docker:reset` + `docker:nuke` prefixed with `STRATA_ENV=development` |
+| `docs/src/components/DocsSiteTitle.astro` | DEV: full version + `— DEV` badge; PROD: clean tag only, no badge; removed `.env-badge.prod` CSS |
+| `docs/src/content/docs/versioning.md` | Added `STRATA_ENV` override + `package.json` fallback docs; updated surface table |
+| `docs/src/content/docs/plans/2026-05-versioning-env-badge-fix.md` | Plan doc (this file) |
+
+### Deviations from plan
+
+None. Implementation matched the plan exactly.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 315 passed (30 suites) |
+| Backend e2e | ✅ 70 passed (8 suites) |
+| Frontend unit | ✅ 394 passed (63 files) |
+| Frontend e2e | ⏭ skipped (no UI code changed) |
+| Docs build | ✅ 56 pages built successfully |
+
+### Key discoveries
+
+- The `package.json` fallback alone fixes Cloudflare Pages — a clean semver from `package.json` → `isClean=true` → `env=production` is derived automatically. No `STRATA_ENV` dashboard variable needed.
+- `docker:dev` (no rebuild) will show version frozen from last `docker:reset`/`docker:nuke` — this is acceptable behaviour, documented in plan.
+- The old PROD badge in `DocsSiteTitle.astro` was redundant by design — removed per user request.
+
 
 - `npm run docker:reset` → http://localhost:8001/docs/ → `v1.0.0 — DEV` (or full sha if past tag)
 - `npm run docker:prod` → `v1.0.0` (no badge)
