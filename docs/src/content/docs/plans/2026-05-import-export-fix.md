@@ -89,6 +89,38 @@ Rename `version` → `schemaVersion` throughout the frontend layer:
 
 ---
 
+## Execution Summary
+
+**Commit**: `e1d3ca0`
+
+### Actual changes
+
+All 18 planned items implemented. Files modified/created match the plan exactly.
+
+Additionally fixed: `backend/prisma/schema.prisma` — garbage path string `/Users/fducat/WORKSPACE/strata/issues/todo/feedback-and-fixes.md` was prepended to line 1 (Part 0 in plan).
+
+### Deviations from plan
+
+- **e2e binary assertion**: `res.body.slice(0, 6)` doesn't work with supertest on binary responses — supertest returns `{}` unless you provide a custom binary parser. Fixed by adding `.buffer(true).parse(...)` with a raw chunk accumulator, then casting `res.body` as `Buffer` and using `.subarray(0, 6)` instead of `.slice`.
+- **ExportFormat type**: Exported from `useBackupExport.ts` (not a separate types file) for local use by `BackupSection.tsx`.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 268 tests passed |
+| Backend e2e | ✅ 70 tests passed (4 suites, including new sqlite endpoint test) |
+| Frontend unit | ✅ 394 tests passed |
+| Frontend e2e | ⏭ Not run (only mocked API smoke tests; no live backend needed for backup import fix) |
+
+### Key discoveries
+
+- `jest.spyOn` cannot redefine properties on native Node modules (`node:fs/promises`). Must use top-level `jest.mock('node:fs/promises', () => ({ readFile: jest.fn() }))` pattern instead.
+- `res.body` in supertest is `{}` for `application/x-sqlite3` responses unless `.buffer(true)` + a custom binary parser is provided.
+- The `generator client { provider = "prisma-client-js" }` block in `schema.prisma` is mandatory even with Prisma 7 + `prisma.config.ts` (config handles datasource URL only, not generator).
+
+---
+
 ## Acceptance Criteria
 
 - [ ] Export JSON → import JSON round-trip completes without error
