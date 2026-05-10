@@ -1,8 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
+import * as path from 'node:path';
 import { BackupService, BACKUP_SCHEMA_VERSION } from './backup.service.js';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
+
+jest.mock('node:fs/promises', () => ({
+  readFile: jest.fn(),
+}));
+import * as fsModule from 'node:fs/promises';
 
 describe('BackupService', () => {
   let service: BackupService;
@@ -462,6 +468,31 @@ describe('BackupService', () => {
       });
 
       expect(result.counts.tagsOnAssets).toBe(1);
+    });
+  });
+
+  describe('SQLite file export', () => {
+    it('getDbFilePath strips file: prefix and resolves relative path', () => {
+      const original = process.env.DATABASE_URL;
+      process.env.DATABASE_URL = 'file:./dev.db';
+      const result = service.getDbFilePath();
+      expect(result).toBe(path.resolve(process.cwd(), './dev.db'));
+      process.env.DATABASE_URL = original;
+    });
+
+    it('getDbFilePath returns absolute path unchanged', () => {
+      const original = process.env.DATABASE_URL;
+      process.env.DATABASE_URL = 'file:/absolute/path/strata.db';
+      const result = service.getDbFilePath();
+      expect(result).toBe('/absolute/path/strata.db');
+      process.env.DATABASE_URL = original;
+    });
+
+    it('exportSqliteFile reads the database file and returns a Buffer', async () => {
+      const fakeBuffer = Buffer.from('SQLite format 3');
+      (fsModule.readFile as jest.Mock).mockResolvedValueOnce(fakeBuffer);
+      const result = await service.exportSqliteFile();
+      expect(result).toBe(fakeBuffer);
     });
   });
 });

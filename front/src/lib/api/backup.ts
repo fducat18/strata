@@ -8,13 +8,29 @@
 import { api } from './client';
 
 export interface BackupPayload {
-  version: string;
+  schemaVersion: string;
   exportedAt?: string;
   data: Record<string, unknown>;
+}
+
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export const backupApi = {
   export: () => api.get<BackupPayload>('/admin/backup').then((r) => r.data),
   restore: (payload: BackupPayload) =>
     api.post('/admin/restore', payload).then((r) => r.data),
+  exportDb: async (): Promise<void> => {
+    const response = await api.get('/admin/backup/sqlite', {
+      responseType: 'blob',
+    });
+    const date = new Date().toISOString().split('T')[0];
+    triggerDownload(response.data as Blob, `strata-backup-${date}.db`);
+  },
 };

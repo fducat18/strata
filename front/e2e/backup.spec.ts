@@ -34,10 +34,9 @@ test('import opens confirm dialog with parsed counts', async ({ page }) => {
   const fileChooserPromise = page.waitForEvent('filechooser');
   await importBtn.click();
   const chooser = await fileChooserPromise;
-  // Backup format: { version, data: { assets, categories, tags, assetTypes } }
-  // (portfolios were removed in ADR-002)
+  // Backup format: { schemaVersion, data: { assets, categories, tags, assetTypes } }
   const payload = JSON.stringify({
-    version: '1.0',
+    schemaVersion: '1',
     data: { assets: [{}, {}], categories: [{}], tags: [{}, {}, {}], assetTypes: [] },
   });
   await chooser.setFiles({

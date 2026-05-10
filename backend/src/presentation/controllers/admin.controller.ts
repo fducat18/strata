@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, StreamableFile, UseFilters } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
+import type { Response } from 'express';
 import {
   BackupService,
   BackupPayload,
@@ -62,5 +63,35 @@ export class AdminController {
       data: dto.data,
       mode: dto.mode,
     });
+  }
+
+  @Get('backup/sqlite')
+  @ApiOperation({
+    summary: 'Download the raw SQLite database file.',
+    description:
+      'Streams the live `.db` file as a binary download. ' +
+      'Useful for opening in SQLite viewers (e.g. VSCode SQLite extension). ' +
+      'Note: WAL journal data not yet checkpointed may not be included.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Binary SQLite database file.',
+    headers: {
+      'Content-Disposition': {
+        description: 'attachment; filename="strata-backup-YYYY-MM-DD.db"',
+        schema: { type: 'string' },
+      },
+    },
+  })
+  async exportSqliteFile(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const buffer = await this.backupService.exportSqliteFile();
+    const date = new Date().toISOString().split('T')[0];
+    res.set({
+      'Content-Type': 'application/x-sqlite3',
+      'Content-Disposition': `attachment; filename="strata-backup-${date}.db"`,
+    });
+    return new StreamableFile(buffer);
   }
 }

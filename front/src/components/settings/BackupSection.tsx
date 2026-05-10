@@ -2,7 +2,7 @@ import {
   Button, Card, CardHeader, CardTitle, CardDescription, CardContent,
   Dialog, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui';
-import { Download, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Download, Upload, CheckCircle, AlertCircle, Database } from 'lucide-react';
 import { useBackupExport } from './useBackupExport';
 import { useBackupImport } from './useBackupImport';
 
@@ -20,17 +20,26 @@ export function BackupSection() {
       <Card>
         <CardHeader>
           <CardTitle>Data Backup</CardTitle>
-          <CardDescription>Export or import your financial data as JSON.</CardDescription>
+          <CardDescription>Export or import your financial data.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Button
-              onClick={exporter.exportNow}
-              disabled={exporter.status === 'loading'}
+              onClick={() => exporter.exportNow('json')}
+              disabled={exporter.jsonStatus === 'loading'}
               variant="outline"
               aria-label="Export backup as JSON"
             >
-              <ExportButtonContent status={exporter.status} />
+              <ExportButtonContent status={exporter.jsonStatus} format="json" />
+            </Button>
+
+            <Button
+              onClick={() => exporter.exportNow('db')}
+              disabled={exporter.dbStatus === 'loading'}
+              variant="outline"
+              aria-label="Export backup as SQLite DB"
+            >
+              <ExportButtonContent status={exporter.dbStatus} format="db" />
             </Button>
 
             <input
@@ -52,8 +61,8 @@ export function BackupSection() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Exports all assets, categories, and tags to a JSON file
-            usable for backups or computer migration.
+            Export JSON for portable backups or migration.
+            Export .db to inspect data in a SQLite viewer (e.g. VSCode SQLite extension).
           </p>
           {step === 'error' && errors.length > 0 && (
             <div role="alert" className="text-sm text-destructive">
@@ -96,11 +105,18 @@ export function BackupSection() {
   );
 }
 
-function ExportButtonContent({ status }: { status: ReturnType<typeof useBackupExport>['status'] }) {
-  if (status === 'loading') return <>Exporting…</>;
+function ExportButtonContent({
+  status,
+  format,
+}: {
+  status: ReturnType<typeof useBackupExport>['jsonStatus'];
+  format: 'json' | 'db';
+}) {
+  if (status === 'loading') return <>{format === 'db' ? 'Exporting…' : 'Exporting…'}</>;
   if (status === 'success') return <><CheckCircle className="h-4 w-4 text-green-500" /> Exported!</>;
   if (status === 'error') return <><AlertCircle className="h-4 w-4 text-destructive" /> Failed</>;
-  return <><Download className="h-4 w-4" /> Export Backup</>;
+  if (format === 'db') return <><Database className="h-4 w-4" /> Export .db</>;
+  return <><Download className="h-4 w-4" /> Export JSON</>;
 }
 
 function ImportButtonLabel({ busy, step }: { busy: boolean; step: string }) {

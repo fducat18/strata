@@ -12,7 +12,7 @@ import { useBackupStore, type ParsedBackup } from '@/stores/backupStore';
 function isParsedBackup(value: unknown): value is ParsedBackup {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
-  return typeof v.version === 'string' && !!v.data && typeof v.data === 'object';
+  return typeof v.schemaVersion === 'string' && !!v.data && typeof v.data === 'object';
 }
 
 export function useBackupImport() {

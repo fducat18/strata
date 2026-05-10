@@ -10,7 +10,7 @@ describe('backupStore', () => {
 
   it('setParsed transitions to review with counts', () => {
     useBackupStore.getState().setParsed({
-      version: '1.0',
+      schemaVersion: '1',
       data: {
         assets: [{}],
         categories: [],
@@ -45,7 +45,7 @@ describe('backupStore', () => {
   });
 
   it('startConfirming transitions to confirming', () => {
-    useBackupStore.getState().setParsed({ version: '1.0', data: {} });
+    useBackupStore.getState().setParsed({ schemaVersion: '1', data: {} });
     useBackupStore.getState().startConfirming();
     expect(useBackupStore.getState().step).toBe('confirming');
   });
@@ -56,7 +56,7 @@ describe('backupStore', () => {
   });
 
   it('countsOf handles missing arrays in payload', () => {
-    useBackupStore.getState().setParsed({ version: '1.0', data: {} });
+    useBackupStore.getState().setParsed({ schemaVersion: '1', data: {} });
     const s = useBackupStore.getState();
     expect(s.counts).toEqual({ assets: 0, categories: 0, tags: 0 });
   });

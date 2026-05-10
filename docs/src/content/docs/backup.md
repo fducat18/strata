@@ -187,20 +187,30 @@ check against your expectations.
 The Settings page (`front/` → **Settings → Backup**) wraps the same two
 endpoints with a friendlier flow:
 
-- **Export** — click *Export*; the browser (or Tauri file dialog) prompts you
+- **Export JSON** — click *Export JSON*; the browser (or Tauri file dialog) prompts you
   to save `strata-backup-YYYY-MM-DD.json` wherever you want.
+- **Export .db** — click *Export .db*; downloads `strata-backup-YYYY-MM-DD.db`,
+  the raw SQLite file. Open it directly in any SQLite viewer
+  (e.g. the [SQLite Viewer VSCode extension](https://marketplace.visualstudio.com/items?itemName=qwtel.sqlite-viewer))
+  without needing to run the app. Uses `GET /api/v1/admin/backup/sqlite`.
 - **Import** — click *Import*, pick a `.json` file with the file picker, review
   the parsed summary, then confirm. The confirm step is deliberate: import
   defaults to `replace` mode and overwrites your current data.
 
-Under the hood it's the exact same `GET /api/v1/admin/backup` and
-`POST /api/v1/admin/restore` calls — the UI adds nothing the API doesn't.
+> **Note on `.db` exports:** The download is a point-in-time snapshot of the
+> SQLite main database file. WAL journal entries not yet checkpointed may not
+> be reflected. For a guaranteed-consistent copy, stop the backend before
+> copying the file manually.
+
+Under the hood the JSON export/import uses `GET /api/v1/admin/backup` and
+`POST /api/v1/admin/restore`; the `.db` button uses `GET /api/v1/admin/backup/sqlite`.
 
 ---
 
 ## Raw SQLite alternative
 
-For a **full-fidelity, byte-for-byte copy**, just copy the database file:
+For a **full-fidelity, byte-for-byte copy**, you can also copy the database file
+directly from the filesystem (requires stopping the server first for consistency):
 
 ```bash
 # Stop the backend (or `docker-compose stop backend`) so SQLite isn't mid-write

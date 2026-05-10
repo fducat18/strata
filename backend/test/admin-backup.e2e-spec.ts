@@ -110,6 +110,26 @@ describe('Admin backup/restore (e2e)', () => {
       .expect(400);
   });
 
+  it('GET /admin/backup/sqlite returns 200 with sqlite content-type', async () => {
+    const http = ctx.app.getHttpServer() as unknown as App;
+    const res = await request(http)
+      .get('/api/v1/admin/backup/sqlite')
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      })
+      .expect(200);
+    expect(res.headers['content-type']).toMatch(/application\/x-sqlite3/);
+    expect(res.headers['content-disposition']).toMatch(
+      /attachment; filename="strata-backup-\d{4}-\d{2}-\d{2}\.db"/,
+    );
+    // SQLite files start with the magic header "SQLite format 3"
+    const body = res.body as Buffer;
+    expect(body.subarray(0, 6).toString()).toBe('SQLite');
+  });
+
   describe('merge mode', () => {
     it('adds new records without wiping existing ones', async () => {
       const http = ctx.app.getHttpServer() as unknown as App;

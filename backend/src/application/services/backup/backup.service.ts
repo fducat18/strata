@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js';
 import { Decimal } from 'decimal.js';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 
 /**
  * JSON backup format (schemaVersion = "1"):
@@ -293,5 +295,28 @@ export class BackupService {
       }
     }
     return out;
+  }
+
+  // ─── SQLite file export ───────────────────────────────────────────────
+
+  /**
+   * Resolves the SQLite database file path from DATABASE_URL.
+   * Strips the `file:` prefix and resolves relative paths against cwd.
+   */
+  getDbFilePath(): string {
+    const url = process.env.DATABASE_URL ?? 'file:./dev.db';
+    const filePath = url.startsWith('file:') ? url.slice(5) : url;
+    return path.isAbsolute(filePath)
+      ? filePath
+      : path.resolve(process.cwd(), filePath);
+  }
+
+  /**
+   * Reads the raw SQLite database file and returns it as a Buffer.
+   * Suitable for streaming as an HTTP download.
+   */
+  async exportSqliteFile(): Promise<Buffer> {
+    const dbPath = this.getDbFilePath();
+    return fs.readFile(dbPath);
   }
 }

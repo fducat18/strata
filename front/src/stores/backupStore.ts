@@ -13,7 +13,7 @@ export interface BackupCounts {
 }
 
 export interface ParsedBackup {
-  version: string;
+  schemaVersion: string;
   exportedAt?: string;
   data: {
     assets?: unknown[];
