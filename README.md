@@ -1,8 +1,8 @@
 ![Strata logo](assets/logo.avif)
 
 [![CI](https://github.com/fducat18/strata/actions/workflows/ci.yml/badge.svg)](https://github.com/fducat18/strata/actions/workflows/ci.yml)
-[![codecov backend](https://codecov.io/gh/fducat18/strata/graph/badge.svg?flag=backend)](https://codecov.io/gh/fducat18/strata)
-[![codecov frontend](https://codecov.io/gh/fducat18/strata/graph/badge.svg?flag=frontend)](https://codecov.io/gh/fducat18/strata)
+[![Coverage: backend](https://codecov.io/gh/fducat18/strata/graph/badge.svg?flag=backend)](https://codecov.io/gh/fducat18/strata)
+[![Coverage: frontend](https://codecov.io/gh/fducat18/strata/graph/badge.svg?flag=frontend)](https://codecov.io/gh/fducat18/strata)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/website?url=https%3A%2F%2Fstrata.ducatillon.net%2Fdocs%2F&label=docs)](https://strata.ducatillon.net/docs/)
 

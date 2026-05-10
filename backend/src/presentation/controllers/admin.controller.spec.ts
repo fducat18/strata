@@ -46,6 +46,7 @@ describe('AdminController', () => {
     const mockBackupService = {
       exportBackup: jest.fn(),
       importBackup: jest.fn(),
+      exportSqliteFile: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -98,6 +99,24 @@ describe('AdminController', () => {
         data: sampleBackupPayload.data,
         mode: undefined,
       });
+    });
+  });
+
+  describe('exportSqliteFile', () => {
+    it('returns a StreamableFile with correct headers', async () => {
+      const fakeBuffer = Buffer.from('SQLite format 3\0fake');
+      backupService.exportSqliteFile.mockResolvedValue(fakeBuffer);
+
+      const mockRes = { set: jest.fn() } as any;
+      const result = await controller.exportSqliteFile(mockRes);
+
+      expect(backupService.exportSqliteFile).toHaveBeenCalled();
+      expect(mockRes.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'Content-Type': 'application/x-sqlite3',
+        }),
+      );
+      expect(result).toBeDefined();
     });
   });
 });

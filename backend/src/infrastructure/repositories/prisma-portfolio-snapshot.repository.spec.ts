@@ -20,6 +20,10 @@ describe('PrismaPortfolioSnapshotRepository', () => {
     portfolioSnapshot: {
       create: jest.fn(),
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -76,6 +80,68 @@ describe('PrismaPortfolioSnapshotRepository', () => {
       mockPrismaService.portfolioSnapshot.findMany.mockResolvedValue([]);
       const result = await repository.findAll();
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('findById', () => {
+    it('returns entity when found', async () => {
+      mockPrismaService.portfolioSnapshot.findUnique.mockResolvedValue(snapshotRow);
+      const result = await repository.findById('s1');
+      expect(mockPrismaService.portfolioSnapshot.findUnique).toHaveBeenCalledWith({ where: { id: 's1' } });
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe('s1');
+    });
+
+    it('returns null when not found', async () => {
+      mockPrismaService.portfolioSnapshot.findUnique.mockResolvedValue(null);
+      const result = await repository.findById('missing');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('delete', () => {
+    it('calls prisma delete', async () => {
+      mockPrismaService.portfolioSnapshot.delete.mockResolvedValue(snapshotRow);
+      await repository.delete('s1');
+      expect(mockPrismaService.portfolioSnapshot.delete).toHaveBeenCalledWith({ where: { id: 's1' } });
+    });
+  });
+
+  describe('upsertForDate', () => {
+    it('upserts and maps to entity', async () => {
+      mockPrismaService.portfolioSnapshot.upsert.mockResolvedValue(snapshotRow);
+      const result = await repository.upsertForDate(now, '5000');
+      expect(mockPrismaService.portfolioSnapshot.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { observedAt: now },
+          update: expect.objectContaining({ value: expect.any(Decimal) }),
+        }),
+      );
+      expect(result.id).toBe('s1');
+    });
+  });
+
+  describe('findAllAfter', () => {
+    it('returns snapshots after given date', async () => {
+      mockPrismaService.portfolioSnapshot.findMany.mockResolvedValue([snapshotRow]);
+      const cutoff = new Date('2023-12-31T00:00:00.000Z');
+      const result = await repository.findAllAfter(cutoff);
+      expect(mockPrismaService.portfolioSnapshot.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { observedAt: { gt: cutoff } } }),
+      );
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('updateValue', () => {
+    it('updates value and maps to entity', async () => {
+      const updated = { ...snapshotRow, value: new Decimal('9999') };
+      mockPrismaService.portfolioSnapshot.update.mockResolvedValue(updated);
+      const result = await repository.updateValue('s1', '9999');
+      expect(mockPrismaService.portfolioSnapshot.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 's1' } }),
+      );
+      expect(result.value.toString()).toBe('9999');
     });
   });
 });

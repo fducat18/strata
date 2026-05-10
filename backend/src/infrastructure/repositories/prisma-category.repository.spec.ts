@@ -25,6 +25,7 @@ describe('PrismaCategoryRepository', () => {
       findMany: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
+      update: jest.fn(),
     },
     categoriesOnAssets: {
       count: jest.fn(),
@@ -168,6 +169,35 @@ describe('PrismaCategoryRepository', () => {
       mockPrismaService.category.count.mockResolvedValue(2);
       const result = await repository.countChildren('c1');
       expect(result).toBe(2);
+    });
+  });
+
+  describe('update', () => {
+    it('updates category name and returns entity', async () => {
+      const updated = makeCategoryRow({ name: 'renamed' });
+      mockPrismaService.category.update.mockResolvedValue(updated);
+      const result = await repository.update('c1', { name: 'renamed' });
+      expect(mockPrismaService.category.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'c1' }, data: { name: 'renamed' } }),
+      );
+      expect(result.name).toBe('renamed');
+    });
+
+    it('throws DuplicateNameException on P2002', async () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      });
+      mockPrismaService.category.update.mockRejectedValue(prismaError);
+      await expect(repository.update('c1', { name: 'existing' })).rejects.toThrow(
+        DuplicateNameException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      const unknownError = new Error('DB down');
+      mockPrismaService.category.update.mockRejectedValue(unknownError);
+      await expect(repository.update('c1', { name: 'x' })).rejects.toThrow('DB down');
     });
   });
 });

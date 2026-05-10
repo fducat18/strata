@@ -1,6 +1,6 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { PrismaExceptionFilter } from './prisma-exception.filter.js';
+import { PrismaExceptionFilter, PrismaValidationExceptionFilter } from './prisma-exception.filter.js';
 
 function makePrismaError(code: string): Prisma.PrismaClientKnownRequestError {
   return new Prisma.PrismaClientKnownRequestError('Prisma error message', {
@@ -112,5 +112,30 @@ describe('PrismaExceptionFilter', () => {
       expect(body.message).toBe('A database error occurred.');
       process.env.NODE_ENV = originalEnv;
     });
+  });
+});
+
+describe('PrismaValidationExceptionFilter', () => {
+  let filter: PrismaValidationExceptionFilter;
+  let responseMock: { status: jest.Mock; json: jest.Mock };
+
+  beforeEach(() => {
+    filter = new PrismaValidationExceptionFilter();
+    responseMock = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
+
+  it('returns 400 with VALIDATION_ERROR code', () => {
+    const error = new Prisma.PrismaClientValidationError('Missing required field', {
+      clientVersion: '5.0.0',
+    });
+    const host = buildMockHost(responseMock);
+    filter.catch(error, host);
+    expect(responseMock.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    const body = responseMock.json.mock.calls[0][0];
+    expect(body.code).toBe('VALIDATION_ERROR');
+    expect(body.statusCode).toBe(HttpStatus.BAD_REQUEST);
   });
 });

@@ -53,6 +53,7 @@ describe('AssetController', () => {
     const mockAssetSnapshotService = {
       create: jest.fn(),
       findByAsset: jest.fn(),
+      update: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -187,6 +188,42 @@ describe('AssetController', () => {
         observedAt: new Date('2024-01-01T00:00:00.000Z'),
       });
       expect(result.id).toBe('s1');
+    });
+
+    it('throws BadRequestException for invalid observedAt date', async () => {
+      const dto = { value: '1000', observedAt: 'not-a-date' };
+      await expect(controller.createSnapshot('a1', dto as any)).rejects.toThrow(
+        'Invalid date: observedAt',
+      );
+      expect(assetSnapshotService.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateSnapshot', () => {
+    it('updates snapshot with value and date', async () => {
+      assetSnapshotService.update.mockResolvedValue(sampleSnapshot);
+      const dto = { value: '2000', observedAt: '2024-06-01T00:00:00.000Z' };
+      const result = await controller.updateSnapshot('a1', 's1', dto as any);
+      expect(assetSnapshotService.update).toHaveBeenCalledWith('s1', {
+        value: '2000',
+        observedAt: new Date('2024-06-01T00:00:00.000Z'),
+      });
+      expect(result.id).toBe('s1');
+    });
+
+    it('updates snapshot with value only', async () => {
+      assetSnapshotService.update.mockResolvedValue(sampleSnapshot);
+      const dto = { value: '2000' };
+      await controller.updateSnapshot('a1', 's1', dto as any);
+      expect(assetSnapshotService.update).toHaveBeenCalledWith('s1', { value: '2000' });
+    });
+
+    it('throws BadRequestException for invalid observedAt in update', async () => {
+      const dto = { observedAt: 'not-a-date' };
+      await expect(controller.updateSnapshot('a1', 's1', dto as any)).rejects.toThrow(
+        'Invalid date: observedAt',
+      );
+      expect(assetSnapshotService.update).not.toHaveBeenCalled();
     });
   });
 

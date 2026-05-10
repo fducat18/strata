@@ -15,6 +15,7 @@ describe('PrismaTagRepository', () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       delete: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -110,6 +111,36 @@ describe('PrismaTagRepository', () => {
       expect(mockPrismaService.tag.delete).toHaveBeenCalledWith({
         where: { id: 't1' },
       });
+    });
+  });
+
+  describe('update', () => {
+    it('updates tag name and returns entity', async () => {
+      const updated = { id: 't1', name: 'defi' };
+      mockPrismaService.tag.update.mockResolvedValue(updated);
+      const result = await repository.update('t1', { name: 'defi' });
+      expect(mockPrismaService.tag.update).toHaveBeenCalledWith({
+        where: { id: 't1' },
+        data: { name: 'defi' },
+      });
+      expect(result.name).toBe('defi');
+    });
+
+    it('throws DuplicateNameException on P2002', async () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: '5.0.0',
+      });
+      mockPrismaService.tag.update.mockRejectedValue(prismaError);
+      await expect(repository.update('t1', { name: 'existing' })).rejects.toThrow(
+        DuplicateNameException,
+      );
+    });
+
+    it('rethrows unknown errors', async () => {
+      const unknownError = new Error('DB down');
+      mockPrismaService.tag.update.mockRejectedValue(unknownError);
+      await expect(repository.update('t1', { name: 'x' })).rejects.toThrow('DB down');
     });
   });
 });

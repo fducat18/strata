@@ -20,6 +20,8 @@ describe('PrismaAssetSnapshotRepository', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -97,6 +99,139 @@ describe('PrismaAssetSnapshotRepository', () => {
       mockPrismaService.assetSnapshot.findFirst.mockResolvedValue(null);
       const result = await repository.findLatestByAsset('unknown');
       expect(result).toBeNull();
+    });
+  });
+
+  describe('findLatestPerNonDisposedAsset', () => {
+    it('returns mapped array', async () => {
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([snapshotRow]);
+      const result = await repository.findLatestPerNonDisposedAsset();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('s1');
+    });
+  });
+
+  describe('findLatestPerNonDisposedAssetAsOf', () => {
+    it('returns snapshots up to given date', async () => {
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([snapshotRow]);
+      const cutoff = new Date('2025-01-01T00:00:00.000Z');
+      const result = await repository.findLatestPerNonDisposedAssetAsOf(cutoff);
+      expect(mockPrismaService.assetSnapshot.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ observedAt: { lte: cutoff } }) }),
+      );
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('findEarliestByAsset', () => {
+    it('returns earliest snapshot', async () => {
+      mockPrismaService.assetSnapshot.findFirst.mockResolvedValue(snapshotRow);
+      const result = await repository.findEarliestByAsset('a1');
+      expect(result).not.toBeNull();
+    });
+
+    it('returns null when not found', async () => {
+      mockPrismaService.assetSnapshot.findFirst.mockResolvedValue(null);
+      const result = await repository.findEarliestByAsset('a1');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('updateObservedAt', () => {
+    it('updates and maps entity', async () => {
+      const newDate = new Date('2025-06-01T00:00:00.000Z');
+      mockPrismaService.assetSnapshot.update.mockResolvedValue({ ...snapshotRow, observedAt: newDate });
+      const result = await repository.updateObservedAt('s1', newDate);
+      expect(mockPrismaService.assetSnapshot.update).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        data: { observedAt: newDate },
+      });
+      expect(result.observedAt).toEqual(newDate);
+    });
+  });
+
+  describe('findLatestPerNonDisposedAssetWithGroup', () => {
+    it('maps group from assetType', async () => {
+      const rowWithGroup = { ...snapshotRow, asset: { assetType: { group: 'FINANCIAL' } } };
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([rowWithGroup]);
+      const result = await repository.findLatestPerNonDisposedAssetWithGroup();
+      expect(result[0].group).toBe('FINANCIAL');
+      expect(result[0].value.toString()).toBe('1000');
+    });
+
+    it('falls back to OTHER when assetType is null', async () => {
+      const rowNoType = { ...snapshotRow, asset: { assetType: null } };
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([rowNoType]);
+      const result = await repository.findLatestPerNonDisposedAssetWithGroup();
+      expect(result[0].group).toBe('OTHER');
+    });
+  });
+
+  describe('findLatestPerNonDisposedAssetAsOfWithGroup', () => {
+    it('returns snapshots with group up to date', async () => {
+      const rowWithGroup = { ...snapshotRow, asset: { assetType: { group: 'REAL_ESTATE' } } };
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([rowWithGroup]);
+      const result = await repository.findLatestPerNonDisposedAssetAsOfWithGroup(new Date());
+      expect(result[0].group).toBe('REAL_ESTATE');
+    });
+  });
+
+  describe('findByAssetAndDate', () => {
+    it('returns snapshot within date range', async () => {
+      mockPrismaService.assetSnapshot.findFirst.mockResolvedValue(snapshotRow);
+      const result = await repository.findByAssetAndDate('a1', new Date('2024-01-01T00:00:00.000Z'));
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe('s1');
+    });
+
+    it('returns null when none found', async () => {
+      mockPrismaService.assetSnapshot.findFirst.mockResolvedValue(null);
+      const result = await repository.findByAssetAndDate('a1', new Date());
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findById', () => {
+    it('returns snapshot when found', async () => {
+      mockPrismaService.assetSnapshot.findUnique.mockResolvedValue(snapshotRow);
+      const result = await repository.findById('s1');
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe('s1');
+    });
+
+    it('returns null when not found', async () => {
+      mockPrismaService.assetSnapshot.findUnique.mockResolvedValue(null);
+      const result = await repository.findById('missing');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    it('updates value and observedAt', async () => {
+      const newDate = new Date('2025-06-01T00:00:00.000Z');
+      const updated = { ...snapshotRow, value: new Decimal('2000'), observedAt: newDate };
+      mockPrismaService.assetSnapshot.update.mockResolvedValue(updated);
+      const result = await repository.update('s1', { value: '2000', observedAt: newDate });
+      expect(mockPrismaService.assetSnapshot.update).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 's1' } }),
+      );
+      expect(result.value.toString()).toBe('2000');
+    });
+
+    it('updates only value when observedAt omitted', async () => {
+      mockPrismaService.assetSnapshot.update.mockResolvedValue(snapshotRow);
+      await repository.update('s1', { value: '999' });
+      const callArg = mockPrismaService.assetSnapshot.update.mock.calls[0][0];
+      expect(callArg.data).toEqual({ value: expect.any(Decimal) });
+      expect(callArg.data.observedAt).toBeUndefined();
+    });
+
+    it('updates only observedAt when value omitted', async () => {
+      const newDate = new Date();
+      mockPrismaService.assetSnapshot.update.mockResolvedValue(snapshotRow);
+      await repository.update('s1', { observedAt: newDate });
+      const callArg = mockPrismaService.assetSnapshot.update.mock.calls[0][0];
+      expect(callArg.data).toEqual({ observedAt: newDate });
     });
   });
 });
