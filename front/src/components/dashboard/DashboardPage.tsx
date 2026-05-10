@@ -28,7 +28,7 @@ export function DashboardPage() {
 
   const activeAssets = assets?.filter(a => !a.disposed) || [];
 
-  // Split assets vs liabilities for Finary-style stats
+  // Split assets vs liabilities
   const nonLiabilityAssets = activeAssets.filter(a => a.assetType?.group !== 'LIABILITIES');
   const liabilityAssets = activeAssets.filter(a => a.assetType?.group === 'LIABILITIES');
 

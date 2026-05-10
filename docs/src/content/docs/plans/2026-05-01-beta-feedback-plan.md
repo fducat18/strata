@@ -18,7 +18,7 @@ sidebar:
 - **Quantity**: Keep optional (useful for stocks, crypto, collectibles)
 - **Asset Type taxonomy**: Two-level: keep 13 codes + add `group` field (FINANCIAL, REAL_ESTATE, PERSONAL_PROPERTY, PHYSICAL_COLLECTIONS, LIABILITIES, OTHER)
 - **Transaction wiring**: Creating an asset → acquisition date + price → auto-creates ACQUIRE transaction + initial snapshot (mandatory, every asset). Disposing an asset → disposal date + price → auto-creates DISPOSE transaction + portfolio cascade recalculation.
-- **Loans in chart**: Stacked bars — green assets above axis, red liabilities below (Finary-style)
+- **Loans in chart**: Stacked bars — green assets above axis, red liabilities below
 - **Net worth filters**: Toggle by asset type / by category / by group (4 modes: "Total only" / "By asset type" / "By category" / "By group")
 
 ### Portfolio Snapshot Recalculation — Design
@@ -86,7 +86,7 @@ Migration reset (pre-production clean slate).
 ### E1: Stacked bar chart with 4 filter modes
 
 "Total only" / "By asset type" / "By category" / "By group"
-Liabilities shown in red/below axis (Finary-style).
+Liabilities shown in red/below axis
 
 ---
 
