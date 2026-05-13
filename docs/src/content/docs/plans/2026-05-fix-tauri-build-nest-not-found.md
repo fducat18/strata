@@ -60,7 +60,7 @@ The `.app` loads from the host repo clone (not redistributable — see `bundle-n
 
 ## Execution Summary
 
-**Commit**: _to be filled in_
+**Commit**: `b1dace7`
 
 ### Actual changes
 
