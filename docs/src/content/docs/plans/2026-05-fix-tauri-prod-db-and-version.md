@@ -104,4 +104,32 @@ This ensures cargo reruns `build.rs` when `VERSION_OVERRIDE` changes (otherwise 
 
 ## Execution Summary
 
-_To be appended after implementation._
+**Commit**: `6558f43`
+
+### Actual changes
+
+- `src-tauri/src/lib.rs`: Simplified `data_dir()` — removed prod branch pointing to `~/Library/Application Support/Strata/`; both dev and prod now return `backend/.data/`
+- `src-tauri/Cargo.toml`: Removed `dirs = "6"` (no longer needed)
+- `src-tauri/Cargo.lock`: Auto-updated by cargo (dirs and its transitive deps removed)
+- `scripts/tauri-build.sh`: Added `export VERSION_OVERRIDE="$(git describe --tags --abbrev=0 2>/dev/null || true)"` after root npm install
+- `src-tauri/build.rs`: Added `cargo:rerun-if-env-changed=VERSION_OVERRIDE`
+- `docs/src/content/docs/DesktopApp.md`: Updated all DB path references; architecture diagram updated
+
+### Deviations from plan
+
+None. All changes implemented exactly as planned.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ⏭ not affected |
+| Backend e2e  | ⏭ not affected |
+| Frontend unit | ⏭ not affected |
+| Frontend e2e  | ⏭ not affected |
+| Infra (tauri-build.sh) | ✅ full build succeeded; version shows `1.1.0 (production)`; Strata.app produced |
+
+### Key discoveries
+
+- The `-dirty` in the version string came from `front/.astro/types.d.ts` and `src-tauri/Cargo.lock` being modified in the working tree — `VERSION_OVERRIDE` bypasses all git describe output cleanly.
+- `dirs` crate was the only external dependency added solely for the `~/Library/Application Support/` prod path; removing it reduces the dependency surface.
