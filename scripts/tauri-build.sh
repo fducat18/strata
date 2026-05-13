@@ -16,6 +16,11 @@ echo "▸ Installing root dependencies (Tauri CLI) …"
 cd "$REPO_ROOT"
 npm ci 2>/dev/null || npm install
 
+# Pin version to the latest tag (e.g. 1.1.0) — mirrors docker:prod behaviour.
+# Without this, git describe --dirty produces e.g. "1.1.0-2-gabc1234-dirty".
+export VERSION_OVERRIDE
+VERSION_OVERRIDE="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+
 echo "▸ Installing backend dependencies …"
 cd "$REPO_ROOT/backend"
 npm ci 2>/dev/null || npm install

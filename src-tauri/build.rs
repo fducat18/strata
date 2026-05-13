@@ -33,6 +33,7 @@ fn main() {
   println!("cargo:rerun-if-changed=../scripts/version.mjs");
   println!("cargo:rerun-if-changed=../.git/HEAD");
   println!("cargo:rerun-if-changed=../.git/refs/tags");
+  println!("cargo:rerun-if-env-changed=VERSION_OVERRIDE");
 
   tauri_build::build()
 }

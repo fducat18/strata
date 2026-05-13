@@ -63,18 +63,13 @@ impl Drop for SidecarProcesses {
 }
 
 /// Where the SQLite database lives.
-/// Dev builds → `<repo>/backend/.data/` (shared with docker:dev and start:dev).
-/// Production builds → `~/Library/Application Support/Strata/`.
+/// Both dev and prod Tauri builds use `<repo>/backend/.data/`.
+/// This matches Docker dev (`strata-dev.db`) and Docker prod (`strata.db`),
+/// so switching between the web app and the desktop app preserves data.
 fn data_dir() -> std::path::PathBuf {
-    if is_dev_build() {
-        let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let repo_root = manifest.parent().expect("CARGO_MANIFEST_DIR has no parent");
-        repo_root.join("backend").join(".data")
-    } else {
-        let mut dir = dirs::data_dir().expect("could not determine app data directory");
-        dir.push("Strata");
-        dir
-    }
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let repo_root = manifest.parent().expect("CARGO_MANIFEST_DIR has no parent");
+    repo_root.join("backend").join(".data")
 }
 
 fn ensure_data_dir() -> String {
