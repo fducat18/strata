@@ -22,6 +22,7 @@ flowchart TD
 
     subgraph dev["  🧪 Dev mode  —  npm run docker:dev  "]
         DevDB[("🗄️ strata-dev.db\npre-seeded demo data")]
+        DevDocs["📖 Docs Site\ncd docs && npm run dev\nport 4321"]
     end
 
     subgraph prod["  🚀 Prod mode  —  npm run docker:prod  "]
@@ -47,7 +48,7 @@ flowchart TD
 |---------|-----------|----------|-----------|--------|
 | Backend | NestJS + Prisma + SQLite | `3000` | `3000` | `backend/` |
 | Frontend | Astro 6 + React 19 | `4321` | `4321` | `front/` |
-| Docs | Astro Starlight + nginx | `8001` | `8001` | `docs/` |
+| Docs | Astro Starlight + nginx | `4321` (manual, `cd docs && npm run dev`) | `8001` (nginx) | `docs/` |
 
 ## Dev vs Production
 

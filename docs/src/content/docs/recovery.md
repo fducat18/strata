@@ -19,7 +19,7 @@ git clone https://github.com/fducat18/strata.git
 cd strata
 ```
 
-Make sure your tooling is installed (Node 22+, npm, optionally Docker
+Make sure your tooling is installed (Node 24+, npm, optionally Docker
 Desktop, optionally Rust + Tauri CLI for the desktop app).
 
 ---

@@ -106,7 +106,7 @@ export default defineConfig({
         },
         {
           label: 'Releases',
-          autogenerate: { directory: 'releases' },
+          autogenerate: { directory: 'releases', reversed: true },
         },
         {
           label: 'Architecture Decisions',
@@ -118,7 +118,7 @@ export default defineConfig({
         },
         {
           label: 'Plans',
-          autogenerate: { directory: 'plans' },
+          autogenerate: { directory: 'plans', reversed: true },
         },
 
       ],

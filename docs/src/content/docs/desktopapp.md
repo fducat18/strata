@@ -42,7 +42,7 @@ On launch, the Tauri app:
 ## Prerequisites
 
 - **macOS 13+** (Apple Silicon or Intel)
-- **Node.js 22+** (required to run backend/frontend sidecars; e.g. `brew install node`)
+- **Node.js 24+** (required to run backend/frontend sidecars; e.g. `brew install node`)
 - **Rust 1.77+** (e.g. via Homebrew: `brew install rust`)
 - **Xcode CLI tools**: `xcode-select --install`
 

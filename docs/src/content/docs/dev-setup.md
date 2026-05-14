@@ -42,13 +42,13 @@ load-nvmrc() { [[ -f .nvmrc ]] && nvm use --silent; }
 add-zsh-hook chpwd load-nvmrc && load-nvmrc
 ```
 
-After adding this, open a new terminal and `cd` into the repo — nvm will automatically switch to Node 22.
+After adding this, open a new terminal and `cd` into the repo — nvm will automatically switch to Node 24.
 
 ## Step 2 — Backend
 
 ```bash
 cd backend
-nvm use 22            # Recommended; any Node >=22 works
+nvm use 24            # Recommended; any Node >=22 works
 npm install
 npx prisma db seed          # Load demo data (first run only)
 npm run start:dev           # Starts on http://localhost:3000

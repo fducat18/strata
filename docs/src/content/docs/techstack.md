@@ -7,7 +7,7 @@ title: "Tech Stack"
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| Runtime | Node.js 22+ | Server runtime |
+| Runtime | Node.js 24+ | Server runtime |
 | Framework | NestJS 11 | HTTP framework with DI |
 | Language | TypeScript 5 | Type-safe development |
 | ORM | Prisma | Database access & migrations |

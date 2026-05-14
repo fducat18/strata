@@ -9,7 +9,7 @@ The Strata backend follows **Hexagonal Architecture** (Ports & Adapters) with fo
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| Runtime | Node.js 22 | Server runtime |
+| Runtime | Node.js 24 | Server runtime |
 | Framework | NestJS 11 | HTTP framework, DI container, decorators |
 | Language | TypeScript 5 | End-to-end type safety |
 | ORM | Prisma 7 | Schema-first, type-safe DB access + migrations |

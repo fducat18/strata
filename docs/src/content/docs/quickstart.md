@@ -7,7 +7,7 @@ title: "Quick Start"
 ## Prerequisites
 
 - **Docker** — for containerized development (recommended). Works with standalone `docker-compose` v2 OR Docker Desktop.
-- **Node.js 22** — required only for local development without Docker. [nodejs.org](https://nodejs.org/)
+- **Node.js 24** — required only for local development without Docker. [nodejs.org](https://nodejs.org/)
 
 :::tip[First time? Run the prerequisite check]
 ```bash
