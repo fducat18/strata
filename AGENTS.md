@@ -76,9 +76,43 @@ These are **service-level invariants**, not DB constraints. The repository layer
 
 **Every approved plan must be saved to the doc site BEFORE implementation starts.**
 
-- Location: `docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md`
+### Filename format — STRICTLY enforced
+
+```
+docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md
+```
+
+| Part | Example | Rule |
+|---|---|---|
+| `YYYY` | `2026` | 4-digit year |
+| `MM` | `05` | 2-digit month, zero-padded |
+| `DD` | `13` | 2-digit day, zero-padded — **NEVER omit the day** |
+| `short-title` | `fix-tauri-build` | kebab-case, descriptive |
+
+✅ `2026-05-13-fix-tauri-build-nest-not-found.md`  
+❌ `2026-05-fix-tauri-build-nest-not-found.md` — **missing day → Astro build fails**  
+❌ `plan.md` — never use a generic name
+
+> **This violation has been made 3 times.** A missing day causes a YAML/build error in the Astro Starlight docs site and breaks `docker:prod`. Check the date with `date +%Y-%m-%d` if unsure.
+
+### Frontmatter — required
+
+Every plan doc MUST start with valid YAML frontmatter:
+
+```yaml
+---
+title: "Short descriptive title"
+description: "One sentence describing the problem and fix."
+---
+```
+
+- Always **quote** the `description` value — unquoted colons (e.g., `nest: command not found`) break YAML parsing.
+
+### Purpose
+
 - Plans are the project's decision log, similar to Architecture Decision Records (ADRs).
 - This preserves why decisions were made and what trade-offs were considered.
+- The plans sidebar is **auto-generated** — no need to edit `docs/astro.config.mjs`.
 
 ---
 
