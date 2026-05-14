@@ -112,14 +112,45 @@ Release notes are auto-generated from conventional commit messages since the pre
 ```bash
 # 1. Ensure tests pass
 npm test --prefix backend && npm run test:e2e --prefix backend
-npm test --prefix front && npm run test:e2e --prefix front
+npm test --prefix front
 
-# 2. Tag and push (bumps all 6 files atomically)
+# 2. Tag and push (bumps 6 version files, commits, tags, creates GitHub Release)
 npm run release -- 1.4.2
 
-# 3. Build the production stack
+# 3. Write the release notes doc
+#    Create docs/src/content/docs/releases/v1-4-2.md
+#    Update docs/src/content/docs/releases/index.md (add row to table)
+#    Commit and push
+
+# 4. Build the production stack
 npm run docker:prod        # Docker
 npm run tauri:prod         # Desktop app (macOS)
+```
+
+### Release notes doc
+
+Every release needs a corresponding Markdown page in `docs/src/content/docs/releases/`:
+
+| File | Content |
+|---|---|
+| `vX-Y-Z.md` | Human-readable release notes — what changed and why |
+| `index.md` | Index table — add a row for the new version |
+
+**Frontmatter template** (`docs/src/content/docs/releases/vX-Y-Z.md`):
+```yaml
+---
+title: "Release Notes — vX.Y.Z"
+description: "One sentence summary of what's in this release."
+sidebar:
+  order: N   # 1 = newest, increment for each older release
+---
+```
+
+After adding the doc, commit and push so the live docs site updates:
+```bash
+git add docs/src/content/docs/releases/
+git commit -m "docs(releases): add v1.4.2 release notes"
+git push
 ```
 
 ## Where the version is shown

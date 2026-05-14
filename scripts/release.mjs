@@ -223,5 +223,8 @@ if (dryRun) {
   console.log(`   All 6 version files updated to ${version}.`);
   console.log(`   The app will report version ${version} (env: production) on a clean build.`);
   console.log(`   GitHub Release: https://github.com/fducat18/strata/releases/tag/${tag}`);
-  console.log(`   Next: npm run docker:prod  OR  npm run tauri:prod\n`);
+  console.log(`\n📝  Next: add the release notes doc to the docs site:`);
+  console.log(`      docs/src/content/docs/releases/v${version.replace(/\./g, '-')}.md`);
+  console.log(`      docs/src/content/docs/releases/index.md  (add row to table)`);
+  console.log(`   Then: npm run docker:prod  OR  npm run tauri:prod\n`);
 }
