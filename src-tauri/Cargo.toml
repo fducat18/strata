@@ -1,6 +1,6 @@
 [package]
 name = "strata-desktop"
-version = "1.2.0"
+version = "1.2.1"
 description = "Strata — desktop app for asset tracking & net-worth"
 authors = ["francoiducat"]
 license = "ISC"
