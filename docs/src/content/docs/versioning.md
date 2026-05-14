@@ -105,6 +105,8 @@ Use `--no-gh-release` to push the git tag without creating a GitHub Release (e.g
 npm run release -- 1.2.3 --no-gh-release
 ```
 
+Release notes are auto-generated from conventional commit messages since the previous tag, grouped by type (features, bug fixes, docs, other). The `chore: release` commit itself is excluded.
+
 ## How to release
 
 ```bash

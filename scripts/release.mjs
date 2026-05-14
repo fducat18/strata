@@ -116,6 +116,64 @@ if (dryRun) {
   console.log(`  ✓ src-tauri/tauri.conf.json`);
 }
 
+// ── Generate release notes from git log ──────────────────────────────────────
+
+function generateReleaseNotes(currentTag) {
+  // Find the previous tag
+  let prevTag;
+  try {
+    prevTag = execSync('git describe --tags --abbrev=0 HEAD^', { encoding: 'utf8' }).trim();
+  } catch {
+    prevTag = null;
+  }
+
+  const range = prevTag ? `${prevTag}..${currentTag}` : currentTag;
+  const log = execSync(
+    `git log ${range} --pretty=format:"%s"`,
+    { encoding: 'utf8' }
+  ).trim().split('\n').filter(Boolean);
+
+  const sections = {
+    feat: { heading: '### New features', items: [] },
+    fix:  { heading: '### Bug fixes',    items: [] },
+    perf: { heading: '### Performance',  items: [] },
+    docs: { heading: '### Documentation', items: [] },
+    other: { heading: '### Other changes', items: [] },
+  };
+
+  for (const msg of log) {
+    // Skip release commits and pure doc/chore commits
+    if (/^chore: release/.test(msg)) continue;
+    const m = msg.match(/^(feat|fix|perf|docs|chore|refactor|style|test|build|ci)(\([^)]+\))?!?:\s*(.+)/);
+    if (!m) {
+      sections.other.items.push(msg);
+      continue;
+    }
+    const [, type,, subject] = m;
+    const capitalized = subject.charAt(0).toUpperCase() + subject.slice(1);
+    if (type === 'feat') sections.feat.items.push(`- ${capitalized}`);
+    else if (type === 'fix') sections.fix.items.push(`- ${capitalized}`);
+    else if (type === 'perf') sections.perf.items.push(`- ${capitalized}`);
+    else if (type === 'docs') sections.docs.items.push(`- ${capitalized}`);
+    else sections.other.items.push(`- ${capitalized}`);
+  }
+
+  const lines = [`## What's changed\n`];
+  for (const { heading, items } of Object.values(sections)) {
+    if (items.length === 0) continue;
+    lines.push(heading);
+    lines.push(...items);
+    lines.push('');
+  }
+
+  const compareUrl = prevTag
+    ? `https://github.com/fducat18/strata/compare/${prevTag}...${currentTag}`
+    : `https://github.com/fducat18/strata/commits/${currentTag}`;
+  lines.push(`**Full Changelog**: ${compareUrl}`);
+
+  return lines.join('\n');
+}
+
 // ── Commit, push HEAD, tag, push tag ─────────────────────────────────────────
 
 const filesToStage = [
@@ -138,7 +196,17 @@ if (!noPush) {
   run(`git push origin ${tag}`, { stdio: 'inherit' });
 }
 if (!noPush && !noGhRelease) {
-  run(`gh release create ${tag} --generate-notes --title "${tag}"`, { stdio: 'inherit' });
+  if (dryRun) {
+    console.log(`[dry-run] gh release create ${tag} --title "${tag}" --notes-file <generated>`);
+  } else {
+    const notes = generateReleaseNotes(tag);
+    const { writeFileSync: wfs, mkdtempSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join: pjoin } = await import('node:path');
+    const tmp = pjoin(mkdtempSync(pjoin(tmpdir(), 'strata-release-')), 'notes.md');
+    wfs(tmp, notes);
+    run(`gh release create ${tag} --title "${tag}" --notes-file "${tmp}"`, { stdio: 'inherit' });
+  }
 }
 
 if (dryRun) {
@@ -149,7 +217,7 @@ if (dryRun) {
   console.log(`\n⚠️   --no-push mode: push manually when ready:`);
   console.log(`      git push origin HEAD`);
   console.log(`      git push origin ${tag}`);
-  console.log(`      gh release create ${tag} --generate-notes --title "${tag}"\n`);
+  console.log(`      gh release create ${tag} --title "${tag}" --notes-file <notes.md>\n`);
 } else {
   console.log(`\n✅  Released ${tag}`);
   console.log(`   All 6 version files updated to ${version}.`);
