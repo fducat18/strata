@@ -79,3 +79,36 @@ Dates computed at runtime → all time filters always have data.
 4. Seed creates 15 monthly snapshots per demo asset
 5. All 6 time filters (1D/7D/1M/3M/YTD/1Y) show data in dev stack
 6. Backend unit + e2e tests pass
+
+## Execution Summary
+
+**Commit**: `2375915`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `package.json` | `docker:dev` now runs `STRATA_ENV=development gen-version.mjs all && docker-compose build --parallel` before `docker-compose up` |
+| `backend/prisma/seed.ts` | Replaced single hardcoded snapshot at `2025-01-15` with 15 monthly relative-date snapshots per asset; added `buildSnapshotHistory()` + `DEMO_ASSET_HISTORY` constants; added back `seedPortfolioSnapshot()` (1 record required by e2e test) |
+| `docs/.../2026-05-05-docker-startup-optimization.md` | Section 6 rewritten; Results table updated |
+| `docs/.../adr-003-database-strategy.md` | docker:dev row updated |
+| `docs/.../2026-05-14-fix-docker-dev-and-seed.md` | This plan doc |
+
+### Deviations from plan
+
+- **Portfolio snapshot seed**: I had planned to remove all portfolio snapshot seeding, but the e2e test `GET /api/v1/portfolio-snapshots → returns seeded snapshots` depends on at least 1 seeded portfolio snapshot. Added back a single minimal record (`seedPortfolioSnapshot()`). The old `HISTORICAL_SNAPSHOTS` array (4 records, Jan–Apr 2025) was replaced by this single record.
+- **Loan delta correction**: Initial delta of `-429` produced `179994` at index 14 (not `180000`), causing the e2e portfolio value assertion to fail by 6. Fixed to `startValue: 186020, monthlyDelta: -430` → exactly `180000` at index 14 → net worth = `239200` as expected by tests.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ 315 tests passed (30 suites) |
+| Backend e2e  | ✅ 70 tests passed (8 suites) |
+| Frontend unit | ✅ 393 tests passed (63 files) |
+| Frontend e2e  | ⏭ skipped (needs running app) |
+
+### Key discoveries
+
+- The e2e test `GET /api/v1/portfolio-snapshots → returns seeded snapshots` violates Convention 6 (it depends on seeded data). Left for a future cleanup; re-adding a minimal portfolio snapshot seed unblocks it.
+- Relative-date snapshot math: `monthlyDelta` must be chosen so `startValue + 14 * delta` equals the expected current value exactly (for integer comparison in e2e). Loan required adjusting delta from `-429` to `-430` and startValue from `186000` to `186020`.
