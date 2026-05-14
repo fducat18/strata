@@ -70,3 +70,37 @@ None — implemented exactly as planned.
 ### Key discoveries
 - The GitHub `/releases` page only shows Release objects, not bare git tags. Tags always appear at `/releases/tag/X` but that page shows a "draft" UI — the proper release page requires a Release object created via API or `gh`.
 - `--generate-notes` produces a markdown changelog from commits between the previous tag and the new one — no manual release notes needed.
+
+---
+
+## Follow-up — Release Notes Quality & Docs Site Integration
+
+### Problems addressed (follow-up session)
+
+1. `--generate-notes` only outputs "Full Changelog: X...Y" without PRs → notes were useless
+2. `/docs/releases/` had no v1.1.1 page
+3. Sidebar order was not controlled — newest could appear last
+4. Release process docs did not tell the developer to create the release notes page
+
+### Changes
+
+| File | Change |
+|---|---|
+| `scripts/release.mjs` | Replaced `--generate-notes` with local conventional-commit parser (`generateReleaseNotes()`); added post-release reminder to create release notes doc |
+| `docs/src/content/docs/releases/v1-1-1.md` | NEW: v1.1.1 human-readable release notes (sidebar.order: 1) |
+| `docs/src/content/docs/releases/index.md` | Added v1.1.1 row; sidebar.order: 0 (always first) |
+| `docs/src/content/docs/releases/v1-1-0.md` | Added sidebar.order: 2 |
+| `docs/src/content/docs/releases/v1-0-0.md` | Added sidebar.order: 3 |
+| `docs/src/content/docs/versioning.md` | Expanded "How to release" with release notes doc step, frontmatter template, commit/push instructions |
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Docs build | ✅ 67 pages built cleanly |
+| GitHub Release | ✅ v1.1.1 visible at /releases |
+| Docs release page | ✅ v1.1.1 visible at /docs/releases/v1-1-1 |
+
+### Commit
+
+`1f920f9`
