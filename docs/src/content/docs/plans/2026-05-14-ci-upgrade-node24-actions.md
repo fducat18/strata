@@ -43,7 +43,7 @@ Discovered two gaps while working on this plan:
 
 ## Execution Summary
 
-**Commit**: <!-- to fill -->
+**Commit**: `d419233`
 
 ### Actual changes
 
