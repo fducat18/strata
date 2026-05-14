@@ -170,6 +170,18 @@ export class AssetController {
     return mapAssetSnapshotToResponse(snapshot);
   }
 
+  @Delete(':id/snapshots/:snapshotId')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a snapshot for an asset' })
+  @ApiResponse({ status: 204 })
+  @ApiStandardErrors([404, 500])
+  async deleteSnapshot(
+    @Param('id') _assetId: string,
+    @Param('snapshotId') snapshotId: string,
+  ): Promise<void> {
+    await this.assetSnapshotService.delete(snapshotId);
+  }
+
   @Post(':id/tags/:tagId')
   @ApiOperation({ summary: 'Attach a tag to an asset' })
   @ApiResponse({ status: 201, type: AssetResponseDto })

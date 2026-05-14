@@ -150,4 +150,8 @@ export class PrismaAssetSnapshotRepository extends IAssetSnapshotRepository {
     });
     return this.mapToEntity(result);
   }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.assetSnapshot.delete({ where: { id } });
+  }
 }

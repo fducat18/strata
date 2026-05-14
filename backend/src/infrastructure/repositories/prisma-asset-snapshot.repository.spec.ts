@@ -22,6 +22,7 @@ describe('PrismaAssetSnapshotRepository', () => {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
   };
 
@@ -232,6 +233,14 @@ describe('PrismaAssetSnapshotRepository', () => {
       await repository.update('s1', { observedAt: newDate });
       const callArg = mockPrismaService.assetSnapshot.update.mock.calls[0][0];
       expect(callArg.data).toEqual({ observedAt: newDate });
+    });
+  });
+
+  describe('delete', () => {
+    it('calls prisma.assetSnapshot.delete with the given id', async () => {
+      mockPrismaService.assetSnapshot.delete.mockResolvedValue(snapshotRow);
+      await repository.delete('s1');
+      expect(mockPrismaService.assetSnapshot.delete).toHaveBeenCalledWith({ where: { id: 's1' } });
     });
   });
 });

@@ -23,6 +23,7 @@ describe('AssetSnapshotService', () => {
     findByAssetAndDate: jest.fn(),
     findById: jest.fn(),
     update: jest.fn(),
+    delete: jest.fn(),
   };
 
   const mockAssetRepo = {
@@ -160,6 +161,22 @@ describe('AssetSnapshotService', () => {
       mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
       await service.update('s1', { value: '2000', observedAt: olderDate });
       expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(olderDate);
+    });
+  });
+
+  describe('delete', () => {
+    it('throws AssetSnapshotNotFoundException when snapshot does not exist', async () => {
+      mockAssetSnapshotRepo.findById.mockResolvedValue(null);
+      await expect(service.delete('unknown')).rejects.toThrow(AssetSnapshotNotFoundException);
+    });
+
+    it('deletes snapshot and triggers portfolio recalculation from its date', async () => {
+      mockAssetSnapshotRepo.findById.mockResolvedValue(sampleSnapshot);
+      mockAssetSnapshotRepo.delete.mockResolvedValue(undefined);
+      mockPortfolioSnapshotService.recalculateFromDate.mockResolvedValue(undefined);
+      await service.delete('s1');
+      expect(mockAssetSnapshotRepo.delete).toHaveBeenCalledWith('s1');
+      expect(mockPortfolioSnapshotService.recalculateFromDate).toHaveBeenCalledWith(sampleSnapshot.observedAt);
     });
   });
 });

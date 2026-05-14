@@ -5,16 +5,25 @@ interface Props {
   pending: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  title?: string;
+  message?: string;
 }
 
-export function DeleteConfirmDialog({ open, pending, onClose, onConfirm }: Props) {
+export function DeleteConfirmDialog({
+  open,
+  pending,
+  onClose,
+  onConfirm,
+  title = 'Delete Asset',
+  message = 'Are you sure you want to delete this asset? This action cannot be undone.',
+}: Props) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Delete Asset</DialogTitle>
+        <DialogTitle>{title}</DialogTitle>
       </DialogHeader>
       <p className="text-sm text-muted-foreground">
-        Are you sure you want to delete this asset? This action cannot be undone.
+        {message}
       </p>
       <DialogFooter>
         <Button variant="outline" onClick={onClose} disabled={pending}>

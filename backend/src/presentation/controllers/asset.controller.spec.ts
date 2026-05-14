@@ -54,6 +54,7 @@ describe('AssetController', () => {
       create: jest.fn(),
       findByAsset: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -224,6 +225,14 @@ describe('AssetController', () => {
         'Invalid date: observedAt',
       );
       expect(assetSnapshotService.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteSnapshot', () => {
+    it('calls assetSnapshotService.delete with snapshotId', async () => {
+      assetSnapshotService.delete.mockResolvedValue(undefined);
+      await controller.deleteSnapshot('a1', 's1');
+      expect(assetSnapshotService.delete).toHaveBeenCalledWith('s1');
     });
   });
 

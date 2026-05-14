@@ -108,14 +108,19 @@ describe('AssetTypesPage', () => {
     });
   });
 
-  it('deletes an asset type when confirmed', async () => {
+  it('deletes an asset type when confirmed in dialog', async () => {
     mockUseAssetTypes.mockReturnValue({ isLoading: false, isError: false, data: sampleTypes, refetch: vi.fn() } as any);
     mockMutation.mutateAsync.mockResolvedValue(undefined);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     render(<AssetTypesPage />);
     const deleteBtn = screen.getByLabelText('Delete asset type CHECKING_ACCOUNT');
     fireEvent.click(deleteBtn);
+
+    // Dialog should appear
+    expect(screen.getByText('Delete Asset Type')).toBeInTheDocument();
+
+    // Confirm deletion
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
 
     await waitFor(() => {
       expect(mockMutation.mutateAsync).toHaveBeenCalledWith('at1');

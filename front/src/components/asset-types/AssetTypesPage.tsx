@@ -22,6 +22,7 @@ import {
 } from '@/components/ui';
 import { Plus, Pencil, Trash2, Layers } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
+import { DeleteConfirmDialog } from '@/components/assets/DeleteConfirmDialog';
 import type { AssetType } from '@/lib/types';
 
 const GROUP_COLORS: Record<string, string> = {
@@ -58,6 +59,7 @@ export function AssetTypesPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [editingType, setEditingType] = useState<AssetType | null>(null);
+  const [deletingType, setDeletingType] = useState<AssetType | null>(null);
 
   const createForm = useForm<CreateFormData>({
     resolver: zodResolver(createSchema),
@@ -103,10 +105,11 @@ export function AssetTypesPage() {
     }
   });
 
-  const handleDelete = async (type: AssetType) => {
-    if (!confirm(`Delete asset type "${type.label}"? This will fail if any assets use this type.`)) return;
+  const handleDeleteConfirm = async () => {
+    if (!deletingType) return;
     try {
-      await deleteMutation.mutateAsync(type.id);
+      await deleteMutation.mutateAsync(deletingType.id);
+      setDeletingType(null);
     } catch (err: unknown) {
       const message = (err as any)?.message ?? 'An unexpected error occurred';
       useUIStore.getState().pushToast({ variant: 'error', message });
@@ -168,7 +171,7 @@ export function AssetTypesPage() {
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(type)}
+                          onClick={() => setDeletingType(type)}
                           className="text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                           aria-label={`Delete asset type ${type.code}`}
                           title="Delete"
@@ -292,6 +295,15 @@ export function AssetTypesPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={!!deletingType}
+        pending={deleteMutation.isPending}
+        onClose={() => setDeletingType(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Asset Type"
+        message={deletingType ? `Delete asset type "${deletingType.label}"? This will fail if any assets use this type.` : ''}
+      />
     </div>
   );
 }

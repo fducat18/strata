@@ -85,6 +85,15 @@ export function useUpdateAssetSnapshot() {
   });
 }
 
+export function useDeleteAssetSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ assetId, snapshotId }: { assetId: string; snapshotId: string }) =>
+      assetApi.deleteSnapshot(assetId, snapshotId),
+    onSuccess: (_, { assetId }) => invalidateAssetQueries(qc, assetId),
+  });
+}
+
 export function useAddTagToAsset() {
   const qc = useQueryClient();
   return useMutation({

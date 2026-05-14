@@ -40,4 +40,6 @@ export abstract class IAssetSnapshotRepository {
   abstract findById(id: string): Promise<AssetSnapshot | null>;
   /** Update value and/or observedAt of a snapshot. */
   abstract update(id: string, data: UpdateAssetSnapshotData): Promise<AssetSnapshot>;
+  /** Delete a snapshot by its ID. */
+  abstract delete(id: string): Promise<void>;
 }

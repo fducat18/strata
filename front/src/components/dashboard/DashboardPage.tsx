@@ -54,7 +54,7 @@ export function DashboardPage() {
     .sort((a, b) => b.value - a.value);
 
   const netWorth = currentValue
-    ? formatMoney(currentValue.value, { currency: currentValue.currency || currency, locale })
+    ? formatMoney(currentValue.value, { currency: currentValue.currency || currency, locale, minimumFractionDigits: 0, maximumFractionDigits: 0 })
     : '—';
 
   const fmtOpts = { currency, locale, minimumFractionDigits: 0 as const, maximumFractionDigits: 0 as const };

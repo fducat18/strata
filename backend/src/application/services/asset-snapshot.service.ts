@@ -57,4 +57,13 @@ export class AssetSnapshotService {
     await this.portfolioSnapshotService.recalculateFromDate(fromDate);
     return snapshot;
   }
+
+  async delete(id: string): Promise<void> {
+    const existing = await this.assetSnapshotRepository.findById(id);
+    if (!existing) {
+      throw new AssetSnapshotNotFoundException(`Snapshot ${id} not found`);
+    }
+    await this.assetSnapshotRepository.delete(id);
+    await this.portfolioSnapshotService.recalculateFromDate(existing.observedAt);
+  }
 }

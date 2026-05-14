@@ -1,0 +1,16 @@
+meta {
+  name: DeleteAssetSnapshot
+  type: http
+  seq: 14
+}
+
+delete {
+  url: http://localhost:3000/api/v1/assets/:id/snapshots/:snapshotId
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{asset_id}}
+  snapshotId: {{snapshot_id}}
+}

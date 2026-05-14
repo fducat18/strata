@@ -3,10 +3,12 @@ import { AssetSnapshotsList } from '../AssetSnapshotsList';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { AssetSnapshot } from '@/lib/types';
 
-const mockMutateAsync = vi.fn().mockResolvedValue({});
+const mockUpdateMutateAsync = vi.fn().mockResolvedValue({});
+const mockDeleteMutateAsync = vi.fn().mockResolvedValue({});
 
 vi.mock('@/lib/hooks', () => ({
-  useUpdateAssetSnapshot: vi.fn(() => ({ mutateAsync: mockMutateAsync, isPending: false })),
+  useUpdateAssetSnapshot: vi.fn(() => ({ mutateAsync: mockUpdateMutateAsync, isPending: false })),
+  useDeleteAssetSnapshot: vi.fn(() => ({ mutateAsync: mockDeleteMutateAsync, isPending: false })),
 }));
 
 vi.mock('@/stores/uiStore', () => ({
@@ -35,6 +37,8 @@ const snapshots: AssetSnapshot[] = [
 describe('AssetSnapshotsList', () => {
   beforeEach(() => {
     useSettingsStore.setState({ locale: 'en-US', currency: 'EUR' });
+    mockUpdateMutateAsync.mockReset().mockResolvedValue({});
+    mockDeleteMutateAsync.mockReset().mockResolvedValue({});
   });
 
   it('renders snapshots table headers', () => {
@@ -62,12 +66,35 @@ describe('AssetSnapshotsList', () => {
     expect(rows).toHaveLength(3);
   });
 
-  it('sorts snapshots newest first', () => {
+  it('sorts snapshots newest first by default', () => {
     render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
     const rows = screen.getAllByRole('row');
-    // s1 (Jan 15) should appear before s2 (Jan 10) in sorted order
-    expect(rows[1].textContent).toContain('Jan');
-    expect(rows[2].textContent).toContain('Jan');
+    // s1 (Jan 15) before s2 (Jan 10)
+    expect(rows[1].textContent).toContain('15');
+    expect(rows[2].textContent).toContain('10');
+  });
+
+  it('toggles sort to ascending when Date header clicked', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.click(screen.getByLabelText(/sort by date/i));
+    const rows = screen.getAllByRole('row');
+    // After toggle asc: s2 (Jan 10) before s1 (Jan 15)
+    expect(rows[1].textContent).toContain('10');
+    expect(rows[2].textContent).toContain('15');
+  });
+
+  it('renders snapshot dates without time', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    // No colon in time format — dates should not contain "02:00" or similar
+    const rows = screen.getAllByRole('row');
+    expect(rows[1].textContent).not.toMatch(/\d{2}:\d{2}/);
+  });
+
+  it('renders snapshot values with no decimal places', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    // 10000 formatted without decimals — should not contain ".00"
+    expect(screen.queryByText(/10,000\.00/)).not.toBeInTheDocument();
+    expect(screen.getByText(/10,000/)).toBeInTheDocument();
   });
 
   it('renders acquisition date row when acquisitionDate provided', () => {
@@ -99,7 +126,6 @@ describe('AssetSnapshotsList', () => {
         onAddSnapshot={vi.fn()}
       />
     );
-    // Price should appear formatted in the acquisition row
     expect(screen.getByLabelText('Acquisition date row').textContent).toContain('9');
   });
 
@@ -107,21 +133,62 @@ describe('AssetSnapshotsList', () => {
     render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
     fireEvent.click(screen.getAllByLabelText('Edit snapshot')[0]);
     expect(screen.getByText('Edit Snapshot')).toBeInTheDocument();
-    // Edit dialog should pre-fill value from the snapshot
     expect((screen.getByLabelText('Value (EUR)') as HTMLInputElement).value).toBe('10000');
   });
 
   it('calls mutateAsync when edit dialog Save clicked (handleEditSave)', async () => {
-    mockMutateAsync.mockResolvedValue({});
     render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
     fireEvent.click(screen.getAllByLabelText('Edit snapshot')[0]);
     fireEvent.change(screen.getByLabelText('Value (EUR)'), { target: { value: '12000' } });
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockUpdateMutateAsync).toHaveBeenCalledWith(expect.objectContaining({
         assetId: 'a1',
         data: expect.objectContaining({ value: '12000' }),
       }));
     });
+  });
+
+  it('opens delete dialog when trash icon clicked', () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.click(screen.getAllByLabelText('Delete snapshot')[0]);
+    expect(screen.getByText('Delete Snapshot')).toBeInTheDocument();
+  });
+
+  it('calls deleteSnapshot mutateAsync when delete confirmed', async () => {
+    render(<AssetSnapshotsList assetId="a1" snapshots={snapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.click(screen.getAllByLabelText('Delete snapshot')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+    await waitFor(() => {
+      expect(mockDeleteMutateAsync).toHaveBeenCalledWith({ assetId: 'a1', snapshotId: 's1' });
+    });
+  });
+
+  it('defaults to showing 10 rows per page', () => {
+    const manySnapshots = Array.from({ length: 15 }, (_, i) => ({
+      id: `s${i}`,
+      assetId: 'a1',
+      value: '1000',
+      observedAt: new Date(2024, 0, i + 1).toISOString(),
+      createdAt: new Date(2024, 0, i + 1).toISOString(),
+    }));
+    render(<AssetSnapshotsList assetId="a1" snapshots={manySnapshots} onAddSnapshot={vi.fn()} />);
+    const rows = screen.getAllByRole('row');
+    // 1 header + 10 data rows
+    expect(rows).toHaveLength(11);
+  });
+
+  it('shows all rows when "All" page size selected', () => {
+    const manySnapshots = Array.from({ length: 15 }, (_, i) => ({
+      id: `s${i}`,
+      assetId: 'a1',
+      value: '1000',
+      observedAt: new Date(2024, 0, i + 1).toISOString(),
+      createdAt: new Date(2024, 0, i + 1).toISOString(),
+    }));
+    render(<AssetSnapshotsList assetId="a1" snapshots={manySnapshots} onAddSnapshot={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Snapshots per page'), { target: { value: 'all' } });
+    const rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(16); // 1 header + 15
   });
 });
