@@ -1,8 +1,6 @@
 ---
 title: "2026-05-01: Beta Feedback Plan"
 description: Approved implementation plan from first beta test session. Covers snapshot automation, transaction wiring, AssetType groups, chart improvements, and CRUD.
-sidebar:
-  order: 2
 ---
 
 **Status**: ✅ Complete
