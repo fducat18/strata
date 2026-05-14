@@ -52,18 +52,21 @@ Add `gh release create vX.Y.Z --generate-notes --title "vX.Y.Z"` at the end of t
 
 ## Execution Summary
 
-**Commit**: _TBD_
+**Commit**: `3ea0b8c`
 
 ### Actual changes
-<!-- filled after -->
+- `scripts/release.mjs`: added step 9 (`gh release create`), `--no-gh-release` flag, updated header + success message + `--no-push` instructions
+- `docs/src/content/docs/versioning.md`: documented step 9 and `--no-gh-release` flag
+- `gh release create v1.1.1` run retroactively to populate `/releases` for the already-pushed tag
 
 ### Deviations from plan
-<!-- filled after -->
+None — implemented exactly as planned.
 
 ### Test results
 | Gate | Result |
 |---|---|
-| Script dry-run | ✅ / ❌ |
+| Script dry-run | ✅ shows `[dry-run] gh release create v1.2.0 --generate-notes --title "v1.2.0"` |
 
 ### Key discoveries
-<!-- filled after -->
+- The GitHub `/releases` page only shows Release objects, not bare git tags. Tags always appear at `/releases/tag/X` but that page shows a "draft" UI — the proper release page requires a Release object created via API or `gh`.
+- `--generate-notes` produces a markdown changelog from commits between the previous tag and the new one — no manual release notes needed.
