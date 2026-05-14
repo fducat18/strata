@@ -1,6 +1,6 @@
 # AGENTS.md — Project-Level Conventions for AI Agents
 
-This document defines **13 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
+This document defines **14 permanent conventions** that all AI agents (GitHub Copilot, Claude, OpenAI Codex, Cursor, etc.) must follow when working on the Strata project.
 
 ## 1. Documentation Philosophy
 
@@ -135,6 +135,30 @@ This rule prevents frontend work from silently depending on unimplemented or bro
 
 ---
 
+## 10. Infra Test Gate
+
+**Dockerfile / docker-compose / build-script changes MUST be verified by running the affected command before declaring done.**
+
+- Run `docker compose build <service>` after any Dockerfile change.
+- Run `./scripts/<script>.sh` after any build script change.
+- Never declare "done" for infra changes without a successful run.
+
+Do not assume modern tooling — check versions first (`docker buildx version`, `docker compose version`). BuildKit is NOT available in standalone docker-compose v5.x.
+
+---
+
+## 11. Do-No-Harm Baseline
+
+**For any optimization or refactor task, document the working baseline before changing anything.**
+
+- Run the command BEFORE and AFTER changes.
+- Record both results in the execution summary.
+- "Faster is useless if broken."
+
+If the baseline run fails, stop and investigate before making changes.
+
+---
+
 ## 12. Plan Execution Summary
 
 **After implementation completes, append an `## Execution Summary` section to the plan doc.**
@@ -172,9 +196,27 @@ A doc that documents the wrong path is worse than no doc at all.
 
 ---
 
+## 14. Semver Release Rule
+
+**Every completed plan must be followed by a semver release.**
+
+```bash
+# From repo root — bumps 6 files, commits, tags, and pushes
+npm run release -- X.Y.Z
+```
+
+- Use a **patch** release (`X.Y.Z+0.0.1`) for bug fixes, CI changes, dependency bumps, and refactors.
+- Use a **minor** release for new features.
+- Use a **major** release for breaking changes.
+- `--dry-run` is available to preview without pushing.
+
+A plan is not closed until the release tag exists on the remote.
+
+---
+
 ## Summary
 
-These 13 conventions ensure:
+These 14 conventions ensure:
 - **Consistency** across all AI-assisted work
 - **Quality gates** prevent incomplete releases
 - **Traceability** through plans and decision history (intent AND outcome)
@@ -182,5 +224,6 @@ These 13 conventions ensure:
 - **Documentation parity** with implementation
 - **Data integrity** through invariant enforcement
 - **Full-stack coverage** preventing frontend/backend mismatches
+- **Versioned releases** for every shipped change
 
 When in doubt, ask the project maintainer. When clear, follow these rules strictly.

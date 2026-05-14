@@ -26,6 +26,7 @@ Before presenting any plan and before making any code change, go through this ch
 | 11 | **Do-no-harm baseline**: For optimization tasks, document the working baseline before changing anything. Run the command BEFORE and AFTER changes. "Faster is useless if broken." | Optimizing? Verify it works first. |
 | 12 | **Plan Execution Summary**: after all test gates pass, append `## Execution Summary` to the plan doc with: actual changes (vs. plan), deviations + reasons, test results, commit SHA(s), key discoveries. | Append before closing task. |
 | 13 | **Doc Grep Rule**: before committing any change that renames a path, command, env var, or data location, run `grep -r '<old-value>' docs/` and update every match inline. Never commit code that leaves stale references in the docs. | Renaming paths/files/commands? grep docs first. |
+| 14 | **Semver Release Rule**: every completed plan must be followed by `npm run release -- X.Y.Z` (patch for fixes/CI/refactors, minor for features, major for breaking changes). Plan is not closed until the release tag exists on the remote. | Run release after all gates pass. |
 
 ## Naming convention for plan docs
 ```
