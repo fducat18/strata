@@ -1,5 +1,5 @@
 ---
-title: "Fix: Docker prod re-seeds database on every startup"
+title: "2026-05-10: Fix Docker prod re-seeds database on every startup"
 ---
 
 ## Problem

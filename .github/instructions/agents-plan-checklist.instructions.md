@@ -20,7 +20,7 @@ Before presenting any plan and before making any code change, go through this ch
 | 5 | **Bug-to-Test**: every bug found via manual/Docker testing → new automated test (unit or e2e) that would have caught it | Is this a bug fix? Write the test first |
 | 6 | **Seed isolation**: tests use own data, never touch seeded demo records, clean up after themselves | Do new tests respect this? |
 | 7 | **Transaction invariants**: every asset has exactly 1 ACQUIRE and 0 or 1 DISPOSE (service-level, not DB constraint) | Touching asset transactions? |
-| 8 | **Plan history**: save plan to `docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md` BEFORE implementation starts. The plans sidebar is **auto-generated** — no need to edit `docs/astro.config.mjs`. **DD is mandatory — `2026-05-fix-foo.md` (missing day) breaks the Astro build.** Quote `description:` values in frontmatter (colons break YAML). | Plan saved to doc site? |
+| 8 | **Plan history**: save plan to `docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md` BEFORE implementation starts. The plans sidebar is **auto-generated** — no need to edit `docs/astro.config.mjs`. **DD is mandatory — `2026-05-fix-foo.md` (missing day) breaks the Astro build.** Title must be `"YYYY-MM-DD: Short title"` (date-prefixed) — sidebar sorts alphabetically by title, so the date prefix guarantees chronological order. Quote both `title:` and `description:` (unquoted colons break YAML). | Plan saved to doc site? |
 | 9 | **Infra test gate**: Dockerfile / docker-compose / build-script changes MUST be verified by running the affected command before declaring done. Run `docker-compose build <service>` for Dockerfile changes. Never declare "done" for infra changes without a successful run. | Touching infra files? Run them. |
 | 10 | **Environment compatibility**: Before using platform-specific Docker or shell features, check availability first (`docker buildx version`, `docker compose version`). Do not assume modern tooling (e.g., BuildKit is NOT available in standalone docker-compose v5.x). | Check tool versions first. |
 | 11 | **Do-no-harm baseline**: For optimization tasks, document the working baseline before changing anything. Run the command BEFORE and AFTER changes. "Faster is useless if broken." | Optimizing? Verify it works first. |
@@ -31,9 +31,10 @@ Before presenting any plan and before making any code change, go through this ch
 ```
 docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md
 ```
-- ✅ `2026-05-13-fix-tauri-build-nest-not-found.md`
+- ✅ `2026-05-13-fix-tauri-build-nest-not-found.md` with `title: "2026-05-13: Fix tauri-build.sh — nest: command not found"`
 - ❌ `2026-05-fix-tauri-build-nest-not-found.md` — **missing day → Astro build fails**
-- Always include valid YAML frontmatter with `title:` and quoted `description:`
+- ❌ `title: "Fix tauri-build"` — **missing date prefix → sidebar sorts alphabetically by title, not chronologically**
+- Always include valid YAML frontmatter with `title: "YYYY-MM-DD: ..."` and quoted `description:`
 
 ## Test gate commands
 ```bash

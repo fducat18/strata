@@ -1,5 +1,5 @@
 ---
-title: "Plan — fix dev DB consistency + web dark-mode navigation flash"
+title: "2026-05-09: Fix dev DB consistency + web dark-mode navigation flash"
 ---
 
 ## Context

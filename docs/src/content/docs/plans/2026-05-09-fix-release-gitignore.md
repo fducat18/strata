@@ -1,5 +1,5 @@
 ---
-title: "Fix: release script fails due to src-tauri/ in root .gitignore"
+title: "2026-05-09: Fix release script fails due to src-tauri/ in root .gitignore"
 description: "Root cause analysis and fix for npm run release failing with 'paths are ignored by .gitignore'"
 ---
 

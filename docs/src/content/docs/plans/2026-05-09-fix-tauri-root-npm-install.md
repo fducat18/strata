@@ -1,5 +1,5 @@
 ---
-title: Fix — missing root npm install in tauri dev/build scripts
+title: "2026-05-09: Fix missing root npm install in tauri dev/build scripts"
 description: Add root npm install to tauri-dev.sh and tauri-build.sh so the @tauri-apps/cli symlink is always valid before npx tauri dev/build is called.
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Fix: Tauri Prod — Wrong DB Path and Wrong Version"
+title: "2026-05-13: Fix Tauri Prod — Wrong DB Path and Wrong Version"
 description: "Fix Tauri prod build using the wrong database (seeded demo data instead of real data) and displaying the wrong version string."
 ---
 

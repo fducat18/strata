@@ -1,5 +1,5 @@
 ---
-title: "Fix sidebar/menu flash on navigation (FOUC in dark mode)"
+title: "2026-05-09: Fix sidebar/menu flash on navigation (FOUC in dark mode)"
 date: 2026-05-09
 ---
 

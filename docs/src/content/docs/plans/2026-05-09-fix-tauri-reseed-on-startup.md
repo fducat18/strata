@@ -1,5 +1,5 @@
 ---
-title: "Fix: Tauri re-seeds deleted demo assets on every startup"
+title: "2026-05-09: Fix Tauri re-seeds deleted demo assets on every startup"
 ---
 
 ## Problem

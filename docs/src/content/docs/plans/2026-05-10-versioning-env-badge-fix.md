@@ -1,5 +1,5 @@
 ---
-title: "Plan — Versioning Env Badge Fix"
+title: "2026-05-10: Versioning Env Badge Fix"
 description: "Fix docs version badge: docker:dev shows PROD, strata.ducatillon.net shows 0.0.0-dev DEV. Four file changes, zero dashboard config."
 ---
 

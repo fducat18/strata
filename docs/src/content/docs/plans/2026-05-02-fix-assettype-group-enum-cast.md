@@ -1,5 +1,5 @@
 ---
-title: 2026-05-02 — Fix AssetTypeGroup enum cast in Prisma repository
+title: "2026-05-02: Fix AssetTypeGroup enum cast in Prisma repository"
 description: Fixes TypeScript build failure in Docker caused by passing string where Prisma expects AssetTypeGroup enum, and adds AGENTS.md enforcement via instruction file.
 ---
 

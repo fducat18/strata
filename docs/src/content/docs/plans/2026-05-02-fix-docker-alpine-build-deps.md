@@ -1,5 +1,5 @@
 ---
-title: "Fix Docker Alpine Build — Missing Native-Addon Build Tools"
+title: "2026-05-02: Fix Docker Alpine Build — Missing Native-Addon Build Tools"
 date: 2026-05-02
 status: approved
 ---

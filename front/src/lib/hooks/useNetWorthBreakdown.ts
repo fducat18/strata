@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useAssets } from './assets';
-import { usePortfolioSnapshots } from './portfolio-snapshots';
 import type { Asset, AssetSnapshot } from '../types';
 
 export const FILTER_MODES = ['total', 'by-group', 'by-type', 'by-category'] as const;
@@ -17,6 +16,13 @@ export const GROUP_COLORS: Record<string, string> = {
   LIABILITIES: '#ef4444',
   OTHER: '#6b7280',
 };
+
+/** Distinct palette for by-type and by-category modes (12 visually different colors). */
+const DISTINCT_COLORS = [
+  '#3b82f6', '#22c55e', '#f97316', '#a855f7',
+  '#ef4444', '#06b6d4', '#ec4899', '#14b8a6',
+  '#f59e0b', '#6366f1', '#84cc16', '#e11d48',
+];
 
 const LIABILITY_GROUP = 'LIABILITIES';
 
@@ -44,29 +50,36 @@ export function useNetWorthBreakdown(mode: FilterMode, since?: Date): {
   keyColors: Record<string, string>;
 } {
   const { data: assets } = useAssets();
-  const { data: portfolioSnapshots } = usePortfolioSnapshots();
 
   return useMemo(() => {
-    if (!assets || !portfolioSnapshots || portfolioSnapshots.length === 0) {
+    if (!assets) {
       return { data: [], keys: [], keyColors: {} };
     }
 
     const activeAssets = assets.filter((a) => !a.disposed);
 
-    // Apply time-range filter if provided
-    const filteredSnapshots = since
-      ? portfolioSnapshots.filter((s) => new Date(s.observedAt) >= since)
-      : portfolioSnapshots;
+    // Collect all unique dates from asset snapshots across active assets
+    const allDates = new Set<string>();
+    for (const asset of activeAssets) {
+      for (const snap of (asset.snapshots ?? [])) {
+        if (!since || new Date(snap.observedAt) >= since) {
+          allDates.add(snap.observedAt);
+        }
+      }
+    }
 
-    const sortedSnapshots = [...filteredSnapshots].sort(
-      (a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime(),
+    if (allDates.size === 0) {
+      return { data: [], keys: [], keyColors: {} };
+    }
+
+    const sortedDates = [...allDates].sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
 
     const allKeys = new Set<string>();
     const keyColorsMap: Record<string, string> = {};
 
-    const data: BreakdownDataPoint[] = sortedSnapshots.map((snap) => {
-      const dateStr = snap.observedAt;
+    const data: BreakdownDataPoint[] = sortedDates.map((dateStr) => {
       const point: BreakdownDataPoint = { date: dateStr };
 
       if (mode === 'total') {
@@ -98,12 +111,13 @@ export function useNetWorthBreakdown(mode: FilterMode, since?: Date): {
       } else if (mode === 'by-type') {
         for (const asset of activeAssets) {
           const typeCode = asset.assetType?.code ?? 'UNKNOWN';
-          const group = asset.assetType?.group ?? 'OTHER';
           const val = getLatestSnapshotValueAtDate(asset, dateStr);
           const signedVal = isLiability(asset) ? -val : val;
           point[typeCode] = ((point[typeCode] as number) || 0) + signedVal;
+          if (!keyColorsMap[typeCode]) {
+            keyColorsMap[typeCode] = DISTINCT_COLORS[allKeys.size % DISTINCT_COLORS.length];
+          }
           allKeys.add(typeCode);
-          keyColorsMap[typeCode] = GROUP_COLORS[group] ?? '#6b7280';
         }
       } else {
         // by-category
@@ -115,12 +129,10 @@ export function useNetWorthBreakdown(mode: FilterMode, since?: Date): {
           const val = getLatestSnapshotValueAtDate(asset, dateStr);
           const signedVal = isLiability(asset) ? -val : val;
           point[categoryName] = ((point[categoryName] as number) || 0) + signedVal;
-          allKeys.add(categoryName);
-          // Use group color as category color
-          const group = asset.assetType?.group ?? 'OTHER';
           if (!keyColorsMap[categoryName]) {
-            keyColorsMap[categoryName] = GROUP_COLORS[group] ?? '#6b7280';
+            keyColorsMap[categoryName] = DISTINCT_COLORS[allKeys.size % DISTINCT_COLORS.length];
           }
+          allKeys.add(categoryName);
         }
       }
 
@@ -128,5 +140,5 @@ export function useNetWorthBreakdown(mode: FilterMode, since?: Date): {
     });
 
     return { data, keys: Array.from(allKeys), keyColors: keyColorsMap };
-  }, [assets, portfolioSnapshots, mode, since]);
+  }, [assets, mode, since]);
 }

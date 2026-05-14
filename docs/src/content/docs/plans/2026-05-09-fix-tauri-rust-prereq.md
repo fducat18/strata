@@ -1,5 +1,5 @@
 ---
-title: Fix — missing Rust/Cargo prerequisite for Tauri desktop
+title: "2026-05-09: Fix missing Rust/Cargo prerequisite for Tauri desktop"
 description: Add Rust/Cargo pre-flight checks to tauri-dev.sh, tauri-build.sh, and check-prereqs.mjs so missing Rust produces a clear, actionable error instead of a cryptic cargo metadata failure.
 ---
 

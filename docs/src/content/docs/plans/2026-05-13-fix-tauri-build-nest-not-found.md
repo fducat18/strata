@@ -1,5 +1,5 @@
 ---
-title: "Fix: tauri-build.sh — nest: command not found"
+title: "2026-05-13: Fix tauri-build.sh — nest: command not found"
 description: "Fix the Tauri production build failing with nest: command not found by installing full backend dependencies (including devDependencies) before the build step."
 ---
 

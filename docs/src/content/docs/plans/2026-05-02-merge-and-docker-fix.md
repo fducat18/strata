@@ -1,5 +1,5 @@
 ---
-title: 2026-05-02 — Merge all branches + fix Docker startup bug
+title: "2026-05-02: Merge all branches + fix Docker startup bug"
 description: Merge all development branches into main via fast-forward and fix the Colima false-positive in check-ports.mjs.
 ---
 

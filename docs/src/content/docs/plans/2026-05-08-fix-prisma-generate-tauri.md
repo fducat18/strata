@@ -1,5 +1,5 @@
 ---
-title: Fix — missing prisma generate in Tauri dev/build flow
+title: "2026-05-08: Fix missing prisma generate in Tauri dev/build flow"
 description: Add explicit prisma generate step to tauri-dev.sh, tauri-build.sh, and the backend prebuild script so the Prisma client is always generated before TypeScript compilation.
 ---
 

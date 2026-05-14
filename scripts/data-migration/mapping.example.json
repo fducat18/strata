@@ -1,0 +1,32 @@
+{
+  "_comment": "Template config — copy to mapping.local.json and customise. NO real asset names here.",
+  "xlsx_path": "/absolute/path/to/your-workbook.xlsx",
+  "sheet": "Banques",
+  "db_path": "~/Library/Application Support/Strata-Dev/strata.db",
+  "table_headers": ["2023/2024", "2022/2023"],
+  "skip_rows": ["TOTAL", "GRAND TOTAL", "Growth"],
+  "renames": [
+    { "from": "Old Asset Name", "to": "New Asset Name" }
+  ],
+  "rows": {
+    "row label as it appears in xlsx, lowercase": {
+      "action": "map",
+      "asset_name": "Existing Asset Name In Strata"
+    },
+    "another row label": {
+      "action": "create",
+      "asset_name": "New Asset",
+      "asset_type_code": "CHECKING_ACCOUNT"
+    },
+    "row to ignore": {
+      "action": "skip"
+    }
+  },
+  "context_overrides": [
+    {
+      "row_label": "ambiguous row label",
+      "before": "2024-01-01",
+      "asset_name": "Asset Variant A"
+    }
+  ]
+}

@@ -101,12 +101,16 @@ Every plan doc MUST start with valid YAML frontmatter:
 
 ```yaml
 ---
-title: "Short descriptive title"
+title: "YYYY-MM-DD: Short descriptive title"
 description: "One sentence describing the problem and fix."
 ---
 ```
 
-- Always **quote** the `description` value — unquoted colons (e.g., `nest: command not found`) break YAML parsing.
+- The `title` **must start with the full date** (`YYYY-MM-DD:`) — Starlight `autogenerate` sorts the sidebar alphabetically by title, so a date prefix guarantees chronological ordering.
+- Always **quote** both `title` and `description` — unquoted colons (e.g., `nest: command not found`) break YAML parsing.
+
+✅ `title: "2026-05-14: Fix history filters and chart colors"`
+❌ `title: "Fix history filters"` — missing date → sidebar sorts by first letter, not date
 
 ### Purpose
 

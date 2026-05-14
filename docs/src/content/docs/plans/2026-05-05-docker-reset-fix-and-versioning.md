@@ -1,5 +1,5 @@
 ---
-title: "2026-05-05 — Docker Reset Fix + Versioning"
+title: "2026-05-05: Docker Reset Fix + Versioning"
 description: "Restore broken docker:reset, fix docker:nuke, full version consistency across all 6 files, plans sidebar autogenerate, sem-ver AI skill."
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Unify dev database — strata-dev.db across all dev modes"
+title: "2026-05-09: Unify dev database — strata-dev.db across all dev modes"
 date: 2026-05-09
 ---
 

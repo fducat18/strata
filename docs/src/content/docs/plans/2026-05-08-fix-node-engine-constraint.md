@@ -1,5 +1,5 @@
 ---
-title: "2026-05-08 — Remove better-sqlite3 adapter + relax Node engine to >=22 + always-on Swagger"
+title: "2026-05-08: Remove better-sqlite3 adapter + relax Node engine to >=22 + always-on Swagger"
 description: Eliminate native C++ ABI constraint, support Node >=22, and simplify Swagger setup.
 ---
 

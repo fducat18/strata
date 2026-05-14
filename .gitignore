@@ -53,4 +53,12 @@ front/test-results/
 backend/certs/*.crt
 
 # Plan / working notes (session artifacts)
-issues/
+/issues/
+
+/data-migration/
+issues/done/consistency.md
+# Personal data migration (xlsx → Strata) — local-only, never online
+/scripts/data-migration/mapping.local.json
+/scripts/data-migration/output/
+/docs/src/content/docs/plans/2026-05-14-xlsx-data-migration.md
+/docs/src/content/docs/data-migration.md

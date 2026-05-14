@@ -21,17 +21,18 @@ that start/stop automatically with the app.
 │  └──────────────┬────────────────┘  │
 │                 │                   │
 │  ┌──────────────▼────────────────┐  │
-│  │  SQLite (dev: backend/.data/  │  │
-│  │  prod: ~/Library/App Sup…)    │  │
+│  │  SQLite (backend/.data/)      │  │
+│  │  dev: strata-dev.db           │  │
+│  │  prod: strata.db              │  │
 │  └───────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```
 
 On launch, the Tauri app:
 
-1. Creates the data directory if needed:
-   - **`npm run tauri:dev`**: `<repo>/backend/.data/` — shared with `npm run docker:dev` and `npm run start:dev`
-   - **Production `.app` build**: `~/Library/Application Support/Strata/`
+1. Creates the data directory if needed: `<repo>/backend/.data/`
+   - **`npm run tauri:dev`** uses `strata-dev.db` — shared with `npm run docker:dev` and `npm run start:dev`
+   - **Production `.app` build** uses `strata.db` — shared with `npm run docker:prod`
 2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database
 3. Starts the NestJS backend on port 3456
 4. Starts the Astro frontend on port 4321
@@ -88,9 +89,13 @@ xattr -cr /path/to/Strata.app
 
 ## Data Location
 
+All Tauri builds (dev and prod) use **`<repo>/backend/.data/`** as the data directory.
+This means the Tauri desktop app and the Docker stack always share the same database file —
+switching between them preserves your data.
+
 | Item | Path |
 |------|------|
-| SQLite database (prod/tagged build) | `~/Library/Application Support/Strata/strata.db` |
+| SQLite database (prod/tagged build) | `<repo>/backend/.data/strata.db` *(shared with `docker:prod`)* |
 | SQLite database (`tauri:dev`) | `<repo>/backend/.data/strata-dev.db` *(shared with `docker:dev` and `start:dev`)* |
 | Tauri logs | `~/Library/Logs/net.ducatillon.strata/Strata.log` |
 
@@ -103,15 +108,16 @@ The desktop app behavior is runtime-mode based:
 | Concern | Dev build | Production build |
 |---|---|---|
 | Window title | `Strata <version> (DEV)` | `Strata <version>` |
-| Data folder | `backend/.data/` (repo-relative, shared with docker:dev) | `~/Library/Application Support/Strata/` |
-| Goal | Safe experiments, same data as Docker dev | Real data |
+| Data folder | `backend/.data/` (repo-relative, shared with docker:dev) | `backend/.data/` (repo-relative, shared with docker:prod) |
+| DB file | `strata-dev.db` | `strata.db` |
+| Goal | Safe experiments, same data as Docker dev | Real data, same as Docker prod |
 
-This separation prevents accidental corruption of production data during local testing. Because `tauri:dev` uses `backend/.data/`, all local dev modes (Tauri dev, Docker dev, `npm run start:dev`) share the same database file.
+All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:dev`) use the same `backend/.data/` directory — only the filename differs between dev and prod.
 
 ## Smoke checklist (after build)
 
 1. Launch app and verify window title includes version (and `(DEV)` when expected).
-2. Open **File → Reveal Data Folder** and verify it opens `backend/.data/` (repo-relative) in dev builds or `~/Library/Application Support/Strata/` in production builds.
+2. Open **File → Reveal Data Folder** and verify it opens `backend/.data/` in Finder (both dev and prod builds).
 3. Confirm backend health by opening `http://localhost:3456/api/v1/health` while app is running.
 4. Create an asset and add a snapshot; restart app; verify data persists.
 5. Trigger **Settings → Backup → Export**, then import into a fresh dev DB.
@@ -121,7 +127,7 @@ This separation prevents accidental corruption of production data during local t
 
 | Menu | Item | Action |
 |------|------|--------|
-| File | Reveal Data Folder | Opens `backend/.data/` (dev) or `~/Library/Application Support/Strata/` (prod) in Finder |
+| File | Reveal Data Folder | Opens `backend/.data/` in Finder (both dev and prod builds) |
 | File | Close Window | Closes the window |
 | Strata | About Strata | Shows the about dialog |
 | Strata | Quit Strata | Quits the app and stops all sidecars |

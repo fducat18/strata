@@ -1,5 +1,5 @@
 ---
-title: "Dashboard & Asset CRUD Fixes — May 2026"
+title: "2026-05-02: Dashboard title: "Dashboard & Asset CRUD Fixes — May 2026" Asset CRUD Fixes"
 description: "Fixes Y-axis zeros on net worth chart, category/tag/acquisitionDate not saved on asset edit, and dashboard UI improvements (stats cards, allocation chart, time range filters)."
 ---
 

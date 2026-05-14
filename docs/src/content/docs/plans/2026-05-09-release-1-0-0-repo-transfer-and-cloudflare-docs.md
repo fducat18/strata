@@ -1,5 +1,5 @@
 ---
-title: "Plan — Release 1.0.0, Repo Transfer, Cloudflare Docs Proxy"
+title: "2026-05-09: Release 1.0.0, Repo Transfer, Cloudflare Docs Proxy"
 description: "Implementation plan for v1.0.0 release notes, repo canonicalization to fducat18/strata, and Cloudflare /docs proxy setup."
 ---
 

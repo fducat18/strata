@@ -1,5 +1,5 @@
 ---
-title: "2026-05-05 — Docker Startup Optimization"
+title: "2026-05-05: Docker Startup Optimization"
 ---
 
 ## Problem

@@ -1,5 +1,5 @@
 ---
-title: "Fix tauri:dev astro command not found + release --no-push flag"
+title: "2026-05-08: Fix tauri:dev astro command not found + release --no-push flag"
 description: "Root cause analysis and fix for the multi-machine Google Drive symlink issue, tauri-dev.sh hardening, and a new --no-push flag for the release script."
 ---
 
