@@ -198,16 +198,22 @@ A doc that documents the wrong path is worse than no doc at all.
 
 ## 14. Semver Release Rule
 
-**Every completed plan must be followed by a semver release.**
+**Every completed plan must be followed by a semver release AND release notes.**
 
-**ALWAYS determine the current version before releasing:**
+**3-step release process — all 3 steps are mandatory:**
 
 ```bash
-# Step 1 — check the latest tag (MANDATORY before every release)
+# Step 1 — check current version (NEVER guess or remember)
 git tag --sort=-v:refname | head -5
 
-# Step 2 — compute the next version from the result above, then release
+# Step 2 — compute next version and release
 npm run release -- X.Y.Z
+```
+
+```
+# Step 3 — create the release notes doc (MANDATORY — plan is NOT closed without this)
+# File: docs/src/content/docs/releases/vX-Y-Z.md   (use dashes, e.g. v1-2-0.md)
+# Also: update docs/src/content/docs/releases/index.md (add row at top of table)
 ```
 
 - Use a **patch** release (`X.Y.Z → X.Y.Z+1`) for bug fixes, CI changes, dependency bumps, and refactors.
@@ -216,7 +222,7 @@ npm run release -- X.Y.Z
 - `--dry-run` is available to preview without pushing.
 - **Never guess or remember the version** — always read it from `git tag` first.
 
-A plan is not closed until the release tag exists on the remote.
+**A plan is not closed until the release tag exists on the remote AND `vX-Y-Z.md` exists in the doc site.**
 
 ---
 

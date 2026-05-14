@@ -26,7 +26,7 @@ Before presenting any plan and before making any code change, go through this ch
 | 11 | **Do-no-harm baseline**: For optimization tasks, document the working baseline before changing anything. Run the command BEFORE and AFTER changes. "Faster is useless if broken." | Optimizing? Verify it works first. |
 | 12 | **Plan Execution Summary**: after all test gates pass, append `## Execution Summary` to the plan doc with: actual changes (vs. plan), deviations + reasons, test results, commit SHA(s), key discoveries. | Append before closing task. |
 | 13 | **Doc Grep Rule**: before committing any change that renames a path, command, env var, or data location, run `grep -r '<old-value>' docs/` and update every match inline. Never commit code that leaves stale references in the docs. | Renaming paths/files/commands? grep docs first. |
-| 14 | **Semver Release Rule**: every completed plan must be followed by a semver release. **First run `git tag --sort=-v:refname \| head -5` to get the current version**, then compute the next version (patch/minor/major) and run `npm run release -- X.Y.Z`. Never guess the version — always read it from git tags first. Plan is not closed until the release tag exists on the remote. | Run `git tag` first, then release. |
+| 14 | **Semver Release Rule** — 3 mandatory steps: **(1)** `git tag --sort=-v:refname \| head -5` to get current version. **(2)** `npm run release -- X.Y.Z` (patch/minor/major). **(3)** Create `docs/src/content/docs/releases/vX-Y-Z.md` + add row to `index.md`. Plan is NOT closed until all 3 steps are done. | Did you do all 3 steps? |
 
 ## Naming convention for plan docs
 ```
