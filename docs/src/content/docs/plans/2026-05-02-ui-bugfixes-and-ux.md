@@ -1,5 +1,5 @@
 ---
-title: "2026-05-02: UI Bug Fixes title: "UI Bug Fixes & UX Improvements — May 2026" UX Improvements"
+title: "2026-05-02: UI Bug Fixes & UX Improvements"
 description: "Fixes blank page bug (QueryClient context), loan net worth inflation, missing snapshot duplicate guard, missing edit UI, chart improvements, and new snapshot editing feature."
 ---
 

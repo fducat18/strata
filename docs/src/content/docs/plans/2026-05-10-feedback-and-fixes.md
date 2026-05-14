@@ -1,5 +1,5 @@
 ---
-title: "2026-05-10: Feedback title: "2026-05 — Feedback & Fixes" Fixes"
+title: "2026-05-10: Feedback & Fixes"
 description: CI fixes, Node 24 upgrade, versioning, docs styling, favicon, white-flash, acquisition date, delete dialog, Codecov badges.
 ---
 
