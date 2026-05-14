@@ -179,13 +179,26 @@ async function seedDemoAssets(): Promise<void> {
       },
     });
 
-    await prisma.assetSnapshot.create({
-      data: {
-        assetId: asset.id,
-        value: demo.snapshotValue ?? demo.unitPrice * demo.quantity,
-        observedAt: new Date('2025-01-15'),
-      },
-    });
+    const snapshots = buildSnapshotHistory(demo.name);
+    for (const snap of snapshots) {
+      await prisma.assetSnapshot.create({
+        data: {
+          assetId: asset.id,
+          value: snap.value,
+          observedAt: snap.observedAt,
+        },
+      });
+    }
+    if (snapshots.length === 0) {
+      // Fallback: single snapshot at acquisition date
+      await prisma.assetSnapshot.create({
+        data: {
+          assetId: asset.id,
+          value: demo.snapshotValue ?? demo.unitPrice * demo.quantity,
+          observedAt: new Date('2025-01-15'),
+        },
+      });
+    }
 
     for (const tagName of demo.tags) {
       const tag = await prisma.tag.findUnique({ where: { name: tagName } });
@@ -213,33 +226,52 @@ async function seedDemoAssets(): Promise<void> {
   }
 }
 
-// Historical portfolio snapshots (standalone — not linked to any portfolio table).
-// Values: Jan=231000, Feb=234500, Mar=237200, Apr=239200 (matches asset sum)
-const HISTORICAL_SNAPSHOTS = [
-  { date: '2025-01-01', value: 231000.0 },
-  { date: '2025-02-01', value: 234500.0 },
-  { date: '2025-03-01', value: 237200.0 },
-  { date: '2025-04-01', value: 239200.0 },
-];
+// Historical monthly deltas for each demo asset (per month, 14 months back to today).
+// index 0 = 14 months ago, index 14 = today (runtime date).
+const DEMO_ASSET_HISTORY: Record<string, { startValue: number; monthlyDelta: number }> = {
+  'BNP Checking Account':  { startValue: 3830,   monthlyDelta: +30   },
+  'Livret A Savings':      { startValue: 21900,  monthlyDelta: +75   },
+  'Apartment Paris 11e':   { startValue: 368200, monthlyDelta: +1200 },
+  // startValue computed so that at index 14 (today) = 180000 exactly
+  // 186020 - 14 * 430 = 186020 - 6020 = 180000
+  'Home Loan — BNP':       { startValue: 186020, monthlyDelta: -430  },
+  'Toyota Yaris 2022':     { startValue: 6400,   monthlyDelta: -100  },
+  'Renault Kangoo 2019':   { startValue: 2560,   monthlyDelta: -40   },
+};
 
-async function seedHistoricalSnapshots(): Promise<void> {
-  for (const snap of HISTORICAL_SNAPSHOTS) {
-    const observedAt = new Date(snap.date);
-    const existing = await prisma.portfolioSnapshot.findFirst({
-      where: { observedAt },
-    });
-    if (!existing) {
-      await prisma.portfolioSnapshot.create({
-        data: {
-          value: snap.value,
-          currency: 'EUR',
-          notes: `Historical seed — ${snap.date}`,
-          observedAt,
-        },
-      });
-    }
+/** Returns an array of {observedAt, value} covering 14 months ago → today (15 points). */
+function buildSnapshotHistory(assetName: string): { observedAt: Date; value: number }[] {
+  const hist = DEMO_ASSET_HISTORY[assetName];
+  if (!hist) return [];
+  const now = new Date();
+  const points: { observedAt: Date; value: number }[] = [];
+  for (let i = 14; i >= 0; i--) {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - i);
+    // Zero out time to midnight UTC for clean dates
+    d.setHours(0, 0, 0, 0);
+    const monthIndex = 14 - i;
+    const value = Math.max(0, hist.startValue + monthIndex * hist.monthlyDelta);
+    points.push({ observedAt: d, value: Math.round(value * 100) / 100 });
   }
-  console.log(`  ✅ Historical portfolio snapshots seeded (Jan–Apr 2025)`);
+  return points;
+}
+
+async function seedPortfolioSnapshot(): Promise<void> {
+  const existing = await prisma.portfolioSnapshot.findFirst({
+    where: { notes: 'Historical seed — initial' },
+  });
+  if (!existing) {
+    await prisma.portfolioSnapshot.create({
+      data: {
+        value: 239200.0,
+        currency: 'EUR',
+        notes: 'Historical seed — initial',
+        observedAt: new Date('2025-04-01'),
+      },
+    });
+  }
+  console.log(`  ✅ Portfolio snapshot seeded`);
 }
 
 async function main(): Promise<void> {
@@ -248,7 +280,7 @@ async function main(): Promise<void> {
   await seedDemoCategories();
   await seedDemoTags();
   await seedDemoAssets();
-  await seedHistoricalSnapshots();
+  await seedPortfolioSnapshot();
   console.log('🌱 Seeding complete!');
 }
 

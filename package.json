@@ -10,7 +10,7 @@
     "tauri:nuke": "bash scripts/tauri-nuke.sh",
     "tauri:build": "bash scripts/tauri-build.sh",
     "tauri:prod": "bash scripts/tauri-build.sh && open src-tauri/target/release/bundle/macos/Strata.app",
-    "docker:dev": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && DB_FILE=strata-dev.db docker-compose up",
+    "docker:dev": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --parallel && DB_FILE=strata-dev.db docker-compose up",
     "docker:reset": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && DB_FILE=strata-dev.db docker-compose down && rm -f backend/.data/strata-dev.db && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --parallel && DB_FILE=strata-dev.db docker-compose up",
     "docker:nuke": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && DB_FILE=strata-dev.db docker-compose down && rm -f backend/.data/strata-dev.db && docker image prune -a -f && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --no-cache --parallel && DB_FILE=strata-dev.db docker-compose up",
     "docker:prod": "DB_FILE=strata.db NODE_ENV=production RESTART_POLICY=always sh -c 'export VERSION_OVERRIDE=$(git describe --tags --abbrev=0 2>/dev/null) && node scripts/gen-version.mjs all && docker-compose up --build -d'",

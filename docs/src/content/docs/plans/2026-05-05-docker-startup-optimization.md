@@ -69,7 +69,22 @@ Added `all` as a valid target to `scripts/gen-version.mjs`. Running `node script
 
 ### 6. `docker:dev` behavior change
 
-Previously `docker:dev` ran `docker-compose up --build` (rebuild with layer cache). Now it runs `docker-compose up` (start existing images, no rebuild). This gives a ~10s daily startup. Run `docker:reset` to build or rebuild images.
+Previously `docker:dev` ran `docker-compose up --build` (rebuild with layer cache), then was changed to
+`docker-compose up` (start existing images, no rebuild) for ~10s daily startup.
+
+**As of 2026-05-14**, `docker:dev` was reverted to always regenerate version files and rebuild images
+(layer-cached) before starting. This ensures:
+- Version always shows `DEV` label regardless of how images were last built
+- Code changes are always picked up without needing to remember to run `docker:reset`
+
+Updated behavior table:
+
+| Command | Gen version | Build | DB | Use case |
+|---|---|---|---|---|
+| `docker:dev` | ✅ DEV | ✅ layer-cached | Preserved | Daily dev start — always fresh code, keeps data |
+| `docker:reset` | ✅ DEV | ✅ layer-cached | **Wiped** | After migrations, unknown DB state |
+| `docker:nuke` | ✅ DEV | ✅ no-cache | **Wiped** | Full clean rebuild |
+| `docker:prod` | ✅ PROD | ✅ build | `strata.db` | Production deployment |
 
 ### 7. `tauri:prod` for beta testing
 
@@ -89,7 +104,7 @@ New `scripts/release.mjs`:
 |---|---|---|
 | `docker:reset` warm (2nd run+) | ~4-6 min | ~1-2 min |
 | `docker:reset` cold (first ever) | ~4-6 min | ~4-6 min |
-| `docker:dev` daily start | ~2-3 min | ~10s |
+| `docker:dev` (layer-cached build + start) | ~2-3 min | ~1-2 min |
 | Frontend ready after backend up | ~30-50s | ~15-20s |
 
 ## Files Changed

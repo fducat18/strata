@@ -61,7 +61,7 @@ Current demo assets (total net worth ≈ €239,200):
 
 | Command | DB used | What happens |
 |---------|---------|--------------|
-| `npm run docker:dev` | `strata-dev.db` | Builds + starts Docker. **Keeps** existing dev DB (demo data + any manual additions). |
+| `npm run docker:dev` | `strata-dev.db` | Generates version (DEV), layer-cached build, starts Docker. **Keeps** existing dev DB (demo data + any manual additions). |
 | `npm run docker:reset` | `strata-dev.db` | Destroys dev DB, rebuilds images from scratch, **re-seeds** fresh demo data. Use after migrations or when DB state is unknown. |
 | `npm run docker:prod` | `strata.db` | Production mode. Swagger disabled. Real data never touched by seed. |
 
