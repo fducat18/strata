@@ -84,8 +84,9 @@ Steps executed:
 5. `git push origin HEAD`
 6. `git tag vX.Y.Z`
 7. `git push origin vX.Y.Z`
+8. `gh release create vX.Y.Z --generate-notes --title "vX.Y.Z"` — creates the GitHub Release with auto-generated changelog (requires `gh` CLI, authenticated)
 
-Use `--dry-run` to preview all steps without executing git commands:
+Use `--dry-run` to preview all steps without executing git/gh commands:
 ```bash
 npm run release -- 1.2.3 --dry-run
 ```
@@ -96,6 +97,12 @@ npm run release -- 1.2.3 --no-push
 # Then push manually when ready:
 #   git push origin HEAD
 #   git push origin v1.2.3
+#   gh release create v1.2.3 --generate-notes --title "v1.2.3"
+```
+
+Use `--no-gh-release` to push the git tag without creating a GitHub Release (e.g. in CI without `gh` auth):
+```bash
+npm run release -- 1.2.3 --no-gh-release
 ```
 
 ## How to release

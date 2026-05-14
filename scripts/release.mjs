@@ -3,8 +3,9 @@
 //
 // Usage:
 //   npm run release -- X.Y.Z
-//   npm run release -- X.Y.Z --dry-run   (prints steps, no git commands executed)
-//   npm run release -- X.Y.Z --no-push   (bumps, commits, tags — skips git push)
+//   npm run release -- X.Y.Z --dry-run        (prints steps, no git/gh commands executed)
+//   npm run release -- X.Y.Z --no-push        (bumps, commits, tags — skips git push + gh release)
+//   npm run release -- X.Y.Z --no-gh-release  (skip gh release create; tag only)
 //   node scripts/release.mjs X.Y.Z
 //
 // What it does:
@@ -18,6 +19,8 @@
 //   6. git push origin HEAD  (skipped with --no-push)
 //   7. git tag vX.Y.Z
 //   8. git push origin vX.Y.Z  (skipped with --no-push)
+//   9. gh release create vX.Y.Z --generate-notes --title "vX.Y.Z"
+//        (skipped with --no-push or --no-gh-release; requires gh CLI authenticated)
 //
 // After this, `git describe` returns `X.Y.Z` (env: production) on a clean build.
 
@@ -31,6 +34,7 @@ const args = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const flags = process.argv.slice(2).filter(a => a.startsWith('--'));
 const dryRun = flags.includes('--dry-run');
 const noPush = flags.includes('--no-push');
+const noGhRelease = flags.includes('--no-gh-release');
 const version = args[0];
 
 if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
@@ -133,6 +137,9 @@ run(`git tag ${tag}`, { stdio: 'inherit' });
 if (!noPush) {
   run(`git push origin ${tag}`, { stdio: 'inherit' });
 }
+if (!noPush && !noGhRelease) {
+  run(`gh release create ${tag} --generate-notes --title "${tag}"`, { stdio: 'inherit' });
+}
 
 if (dryRun) {
   console.log('\n✅  Dry run complete. Run without --dry-run to execute.\n');
@@ -141,10 +148,12 @@ if (dryRun) {
   console.log(`   All 6 version files updated to ${version}.`);
   console.log(`\n⚠️   --no-push mode: push manually when ready:`);
   console.log(`      git push origin HEAD`);
-  console.log(`      git push origin ${tag}\n`);
+  console.log(`      git push origin ${tag}`);
+  console.log(`      gh release create ${tag} --generate-notes --title "${tag}"\n`);
 } else {
   console.log(`\n✅  Released ${tag}`);
   console.log(`   All 6 version files updated to ${version}.`);
   console.log(`   The app will report version ${version} (env: production) on a clean build.`);
+  console.log(`   GitHub Release: https://github.com/fducat18/strata/releases/tag/${tag}`);
   console.log(`   Next: npm run docker:prod  OR  npm run tauri:prod\n`);
 }
