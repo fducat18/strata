@@ -200,15 +200,21 @@ A doc that documents the wrong path is worse than no doc at all.
 
 **Every completed plan must be followed by a semver release.**
 
+**ALWAYS determine the current version before releasing:**
+
 ```bash
-# From repo root — bumps 6 files, commits, tags, and pushes
+# Step 1 — check the latest tag (MANDATORY before every release)
+git tag --sort=-v:refname | head -5
+
+# Step 2 — compute the next version from the result above, then release
 npm run release -- X.Y.Z
 ```
 
-- Use a **patch** release (`X.Y.Z+0.0.1`) for bug fixes, CI changes, dependency bumps, and refactors.
-- Use a **minor** release for new features.
-- Use a **major** release for breaking changes.
+- Use a **patch** release (`X.Y.Z → X.Y.Z+1`) for bug fixes, CI changes, dependency bumps, and refactors.
+- Use a **minor** release (`X.Y.Z → X.Y+1.0`) for new features.
+- Use a **major** release (`X.Y.Z → X+1.0.0`) for breaking changes.
 - `--dry-run` is available to preview without pushing.
+- **Never guess or remember the version** — always read it from `git tag` first.
 
 A plan is not closed until the release tag exists on the remote.
 
