@@ -67,3 +67,37 @@ Backfilled all existing plan documents to follow this format so the sidebar sort
 ## Execution Summary
 
 *(To be appended after implementation completes)*
+
+## Execution Summary
+
+**Commit**: `185cf43`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `front/src/lib/hooks/useNetWorthBreakdown.ts` | Removed `usePortfolioSnapshots` dependency; X-axis now uses asset snapshot dates; added `DISTINCT_COLORS` (12 colors); `by-type`/`by-category` colors assigned by encounter order, not group |
+| `front/src/lib/hooks/__tests__/useNetWorthBreakdown.test.tsx` | Removed portfolio snapshot mocks; rewrote filter test to use asset snapshot dates; added color distinctness assertions for `by-type` and `by-category`; added carry-forward value test |
+| `AGENTS.md` | Convention #8 updated: added `title: "YYYY-MM-DD: Short title"` format requirement |
+| `.github/instructions/agents-plan-checklist.instructions.md` | Row #8 and naming convention section updated to specify date-prefixed title format |
+| ~28 existing plan docs | Titles backfilled to `"YYYY-MM-DD: ..."` format |
+| `docs/src/content/docs/plans/2026-05-14-fix-history-filters-and-colors.md` | This plan doc (created before implementation) |
+
+### Deviations from plan
+
+None. The implementation followed the plan exactly. The `usePortfolioSnapshots` hook was left in place (still used by the portfolio value KPI card via `useCurrentPortfolioValue`) — only removed from the chart hook.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ⏭ skipped (not affected) |
+| Backend e2e  | ⏭ skipped (not affected) |
+| Frontend unit | ✅ 393 tests passed (63 files) |
+| Frontend e2e  | ⏭ skipped (smoke tests would need running app) |
+
+### Key discoveries
+
+- Portfolio snapshots are standalone records (no FK to assets). The KPI card (`useCurrentPortfolioValue`) still uses them correctly — the chart hook was the only consumer that needed to change its date source.
+- With asset-based dates, the `since` filter now naturally excludes dates from before the selected range (asset snapshots older than `since` are simply not included as data points), which is the correct semantic.
+- Color assignment in `by-type`/`by-category` relies on `allKeys.size` checked *before* `allKeys.add()`, ensuring stable first-encounter assignment (first new key → index 0, second → 1, etc.) across multiple data points.
