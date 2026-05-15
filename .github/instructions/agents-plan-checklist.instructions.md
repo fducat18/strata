@@ -63,6 +63,24 @@ cd front && npm run test:e2e            # e2e (Playwright)
 
 **Rule**: never add a new exported function, hook, or method without a unit test. Untested exports drop function coverage below the CI gate.
 
+## Release notes doc format
+
+```
+# File: docs/src/content/docs/releases/vX-Y-Z.md  (dashes, e.g. v1-2-5.md)
+```
+
+Required frontmatter:
+```yaml
+---
+title: "vX.Y.Z"
+description: "One sentence summary of changes."
+---
+```
+
+**Title rule: `"vX.Y.Z"` only — NO subtitle after the colon.** All releases from v1.0.0 through v1.2.2 use this format. Do not append a description to the title (e.g. ~~`"v1.2.3: Desktop install script + doc site fixes"`~~).
+
+The content of the page carries the full details — the title is for the sidebar and page heading only.
+
 ## Post-implementation checklist (run after all test gates pass)
 
 Before closing any task that had an approved plan, append `## Execution Summary` to the plan doc:

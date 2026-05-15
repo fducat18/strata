@@ -92,18 +92,6 @@ fn find_node() -> String {
     "node".to_string()
 }
 
-fn find_npx() -> String {
-    for candidate in &[
-        "/opt/homebrew/bin/npx",
-        "/usr/local/bin/npx",
-        "/usr/bin/npx",
-    ] {
-        if std::path::Path::new(candidate).exists() {
-            return candidate.to_string();
-        }
-    }
-    "npx".to_string()
-}
 
 /// Resolve the repo root directory.
 /// Bundling Node + sources into the .app is tracked in
@@ -114,10 +102,17 @@ fn repo_root(_app: &tauri::App) -> std::path::PathBuf {
 }
 
 fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Result<(), String> {
-    let npx = find_npx();
+    let node = find_node();
+    // Use the local prisma binary directly via node so this works when PATH is
+    // stripped (e.g. GUI app launched from /Applications — no /opt/homebrew/bin).
+    let prisma_js = backend_path
+        .join("node_modules")
+        .join("prisma")
+        .join("build")
+        .join("index.js");
     log::info!("Running prisma migrate deploy …");
-    let status = Command::new(&npx)
-        .args(["prisma", "migrate", "deploy"])
+    let status = Command::new(&node)
+        .args([prisma_js.to_str().unwrap(), "migrate", "deploy"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .stdout(std::process::Stdio::piped())
@@ -135,10 +130,15 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Res
 }
 
 fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
-    let npx = find_npx();
+    let node = find_node();
+    let prisma_js = backend_path
+        .join("node_modules")
+        .join("prisma")
+        .join("build")
+        .join("index.js");
     log::info!("Running prisma db seed …");
-    let status = Command::new(&npx)
-        .args(["prisma", "db", "seed"])
+    let status = Command::new(&node)
+        .args([prisma_js.to_str().unwrap(), "db", "seed"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .stdout(std::process::Stdio::piped())
