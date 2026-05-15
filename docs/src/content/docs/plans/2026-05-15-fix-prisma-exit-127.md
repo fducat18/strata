@@ -64,3 +64,35 @@ node backend/node_modules/prisma/build/index.js db seed
 | 12 | Execution summary | Append after done |
 | 13 | Doc grep | No renames |
 | 14 | Semver release | v1.2.5 patch |
+
+## Execution Summary
+
+**Commit**: 168ec98
+
+### Actual changes
+
+- `src-tauri/src/lib.rs` — removed `find_npx()`; updated `run_prisma_migrate` and `run_prisma_seed` to call `node backend/node_modules/prisma/build/index.js` directly
+- `docs/releases/v1-2-3.md` — title stripped to `"v1.2.3"`
+- `docs/releases/v1-2-4.md` — title stripped to `"v1.2.4"`
+- `docs/strataapp.md` — Why Strata callout shortened to one line
+- `.github/instructions/agents-plan-checklist.instructions.md` — added "Release notes doc format" section clarifying title = `"vX.Y.Z"` only
+- `docs/plans/2026-05-15-fix-prisma-exit-127.md` — this file
+
+### Deviations from plan
+
+None. Implementation followed the plan exactly.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Rust compile (`cargo check`) | ✅ 0 errors, 0 warnings |
+| `npm run tauri:install` | ✅ Built and installed to /Applications |
+| Double-click launch | ✅ Backend healthy on port 3456, no error dialog |
+| Backend unit / e2e | ⏭ not affected |
+| Frontend unit / e2e | ⏭ not affected |
+
+### Key discoveries
+
+- `find_node()` already hardcoded the absolute Mach-O binary path — no additional path resolution needed.
+- `/opt/homebrew/bin/npx` is a symlink to a JS file (`npm/bin/npx-cli.js`) with `#!/usr/bin/env node` — the shebang is what fails in stripped-PATH environments, not the binary existence check.
