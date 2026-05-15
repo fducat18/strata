@@ -53,3 +53,38 @@ Verify no remaining `sidebar: order:` overrides in plan/release files. Confirm `
 | 12 | Execution summary | ✅ Will append below |
 | 13 | Doc grep | ✅ N/A — no renames |
 | 14 | Semver release | ✅ Patch release after completion |
+
+## Execution Summary
+
+**Commit**: `0385c9f`
+
+### Actual changes
+
+| File | Change |
+|---|---|
+| `scripts/tauri-install.sh` | Created — build → xattr -cr → cp -r to /Applications |
+| `package.json` | Added `tauri:install` script |
+| `docs/src/content/docs/desktopapp.md` | Added "Install to /Applications" section + known limitations table |
+| `docs/src/content/docs/architecture.md` | Rewrote Mermaid diagram (3 subgraphs: dockerdev/docsdev/prod), rewrote Services table |
+| `docs/src/content/docs/strataapp.md` | Replaced duplicated callout with "Why Strata?" intro hook |
+| `docs/src/content/docs/plans/index.md` | Added new plan row at top of table |
+
+### Deviations from plan
+
+- **Sidebar ordering (T6)**: no code change needed — no orphan `sidebar: order:` overrides found in any plan/release file. `reversed: true` already in `astro.config.mjs`. If the deployed site still shows wrong order, cause is Cloudflare Pages cache; force-rebuild by pushing a trivial commit.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ⏭ Skipped — no logic change |
+| Backend e2e | ⏭ Skipped — no logic change |
+| Frontend unit | ⏭ Skipped — no logic change |
+| Frontend e2e | ⏭ Skipped — no logic change |
+| Docs build | ✅ 75 pages, 0 errors (`cd docs && npm run build`) |
+| Infra gate | ✅ `npm run tauri:install` exited 0; `Strata.app` confirmed at `/Applications/Strata.app` |
+
+### Key discoveries
+
+- `CARGO_MANIFEST_DIR` is baked in at compile time — the `.app` works only on the machine/path where it was built. Moving the repo breaks it. This is a pre-existing limitation, documented in the known limitations table.
+- macOS Gatekeeper blocks unsigned `.app` bundles from any source including local builds. `xattr -cr` in the install script clears the quarantine flag transparently — the user never sees a Gatekeeper error.
