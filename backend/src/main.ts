@@ -2,7 +2,8 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
+import * as path from 'path';
 import { AppModule } from './app.module.js';
 
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:4321', 'tauri://localhost'];
@@ -19,7 +20,18 @@ function parseAllowedOrigins(): string[] {
 async function bootstrap() {
   console.log('⚙️  Running database migrations...');
   try {
-    execSync('npx prisma migrate deploy', {
+    // Use process.execPath (absolute node binary path) + the local prisma
+    // script so this works when PATH is stripped — e.g. when spawned as a
+    // child process by the Tauri desktop app launched from /Applications.
+    const prismaJs = path.join(
+      __dirname,
+      '..',
+      'node_modules',
+      'prisma',
+      'build',
+      'index.js',
+    );
+    execFileSync(process.execPath, [prismaJs, 'migrate', 'deploy'], {
       stdio: 'inherit',
       env: { ...process.env },
     });
