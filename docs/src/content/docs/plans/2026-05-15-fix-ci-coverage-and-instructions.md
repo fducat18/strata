@@ -77,3 +77,34 @@ Update test gate commands block to show threshold-enforcing commands explicitly.
 | 12 | Execution summary | ✅ Will append after T7 |
 | 13 | Doc grep | ✅ N/A — no renames |
 | 14 | Semver release | ✅ T8 — patch v1.2.4 |
+
+## Execution Summary
+
+**Commit**: ae2b58b
+
+### Actual changes
+
+- `front/src/lib/api/__tests__/assets.test.ts` — added `updateSnapshot` and `deleteSnapshot` tests
+- `front/src/lib/__tests__/theme.test.ts` — added `initTheme` describe block (2 tests, mocking `window.matchMedia`)
+- `front/src/lib/hooks/__tests__/assets.test.ts` — new file; tests `useUpdateAssetSnapshot` and `useDeleteAssetSnapshot` via `renderHook`
+- `.github/instructions/astro.instructions.md` — added "Coverage Gate (CI-Enforced — MANDATORY)" section
+- `.github/instructions/nestjs.instructions.md` — added "Coverage Gate (CI-Enforced — MANDATORY)" section
+- `.github/instructions/agents-plan-checklist.instructions.md` — replaced test gate commands block with threshold-enforcing commands and coverage table
+
+### Deviations from plan
+
+None. All 6 planned tasks executed as specified.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Frontend unit (`npx vitest run --coverage`) | ✅ exit 0, functions 100%, all thresholds pass |
+| Backend unit | ⏭ not affected |
+| Backend e2e | ⏭ not affected |
+| Frontend e2e | ⏭ not affected |
+
+### Key discoveries
+
+- `window.matchMedia` is not implemented in jsdom — requires explicit mock (`vi.fn().mockReturnValue(...)`) for `initTheme` tests.
+- Hook tests need `QueryClientProvider` wrapper; `@testing-library/react` `renderHook` handles this cleanly.
