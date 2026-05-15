@@ -84,6 +84,21 @@ describe('assetApi', () => {
     expect(result).toEqual(snapshot);
   });
 
+  it('updateSnapshot calls PUT /assets/:assetId/snapshots/:snapshotId', async () => {
+    const snapshot = { id: 's1', assetId: 'a1', value: '600' };
+    mockPut.mockResolvedValue({ data: snapshot });
+    const req = { value: '600', observedAt: '2024-06-01T00:00:00Z' };
+    const result = await assetApi.updateSnapshot('a1', 's1', req);
+    expect(mockPut).toHaveBeenCalledWith('/assets/a1/snapshots/s1', req);
+    expect(result).toEqual(snapshot);
+  });
+
+  it('deleteSnapshot calls DELETE /assets/:assetId/snapshots/:snapshotId', async () => {
+    mockDelete.mockResolvedValue({ data: undefined });
+    await assetApi.deleteSnapshot('a1', 's1');
+    expect(mockDelete).toHaveBeenCalledWith('/assets/a1/snapshots/s1');
+  });
+
   it('addTag calls POST /assets/:id/tags/:tagId', async () => {
     mockPost.mockResolvedValue({ data: undefined });
     await assetApi.addTag('a1', 't1');

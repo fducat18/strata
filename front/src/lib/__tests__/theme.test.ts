@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getStoredTheme, setTheme, applyTheme } from '@/lib/theme';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { getStoredTheme, setTheme, applyTheme, initTheme } from '@/lib/theme';
 
 describe('theme', () => {
   beforeEach(() => {
@@ -45,6 +45,31 @@ describe('theme', () => {
       expect(document.documentElement.style.backgroundColor).toBe('#0f172a');
       expect(document.documentElement.style.color).toBe('#f8fafc');
       expect(document.documentElement.style.colorScheme).toBe('dark');
+    });
+  });
+
+  describe('initTheme', () => {
+    beforeEach(() => {
+      window.matchMedia = vi.fn().mockReturnValue({
+        matches: false,
+        addEventListener: vi.fn(),
+      });
+    });
+
+    it('registers matchMedia listener when stored theme is system', () => {
+      const addEventListenerMock = vi.fn();
+      window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: addEventListenerMock });
+      localStorage.setItem('strata.theme', 'system');
+      initTheme();
+      expect(addEventListenerMock).toHaveBeenCalledWith('change', expect.any(Function));
+    });
+
+    it('does not register matchMedia listener for non-system theme', () => {
+      const addEventListenerMock = vi.fn();
+      window.matchMedia = vi.fn().mockReturnValue({ matches: false, addEventListener: addEventListenerMock });
+      localStorage.setItem('strata.theme', 'dark');
+      initTheme();
+      expect(addEventListenerMock).not.toHaveBeenCalled();
     });
   });
 });

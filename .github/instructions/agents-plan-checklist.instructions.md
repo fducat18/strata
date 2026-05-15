@@ -38,16 +38,30 @@ docs/src/content/docs/plans/YYYY-MM-DD-<short-title>.md
 - Always include valid YAML frontmatter with `title: "YYYY-MM-DD: ..."` and quoted `description:`
 
 ## Test gate commands
+
+> ⚠️ **`npm test` alone does NOT enforce coverage thresholds.** Only the commands below enforce them.
+
 ```bash
-# Backend
+# Backend — threshold-enforcing commands
 cd backend && npm run build        # TypeScript compile
-cd backend && npm test             # unit tests (≥90% coverage)
+cd backend && npm run test:cov     # ← unit tests WITH coverage thresholds (≥90% stmt/fn/line, ≥80% branch)
 cd backend && npm run test:e2e     # e2e tests
 
-# Frontend
-cd front && npm test               # unit tests (≥90% coverage)
-cd front && npm run test:e2e       # e2e (Playwright)
+# Frontend — threshold-enforcing commands
+cd front && npx vitest run --coverage   # ← unit tests WITH coverage thresholds (≥90% stmt/fn/line, ≥80% branch)
+cd front && npm run test:e2e            # e2e (Playwright)
 ```
+
+**Coverage thresholds (identical for backend and frontend):**
+
+| Metric | Threshold |
+|---|---|
+| Statements | 90% |
+| Branches | 80% |
+| Functions | 90% |
+| Lines | 90% |
+
+**Rule**: never add a new exported function, hook, or method without a unit test. Untested exports drop function coverage below the CI gate.
 
 ## Post-implementation checklist (run after all test gates pass)
 

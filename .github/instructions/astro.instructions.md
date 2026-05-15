@@ -145,6 +145,45 @@ const blog = defineCollection({
 - Use environment variables for configuration management
 - Enable compression and caching for production builds
 
+## Coverage Gate (CI-Enforced — MANDATORY)
+
+The CI pipeline enforces these thresholds on every push to `main` via `npx vitest run --coverage`. If any threshold is not met, the Frontend build fails.
+
+### Thresholds
+
+| Metric | Threshold |
+|---|---|
+| Statements | **90%** |
+| Branches | **80%** |
+| Functions | **90%** |
+| Lines | **90%** |
+
+### Enforcing command (MUST use this, not `npm test`)
+
+```bash
+# From front/
+npx vitest run --coverage   # ← enforces thresholds — FAILS if below
+npm test                    # ← does NOT enforce thresholds — do not use as a gate
+```
+
+**Always run `npx vitest run --coverage` before committing frontend changes.**
+
+### Excluded from coverage collection (vitest.config.ts)
+
+```
+src/env.d.ts  **/*.astro  src/lib/version.ts  src/test-setup.ts
+src/pages/**  src/layouts/**  src/**/index.ts  src/**/index.tsx
+src/lib/types.ts  src/components/assets/AssetDetailPage.tsx
+```
+
+### Rule
+
+**Never add a new exported function or hook without at least one unit test.**
+Adding untested exports drops function coverage below the 90% gate.
+If you add a new hook, utility function, or API method, write the test first or immediately after.
+
+---
+
 ## Key Astro v5.0 Updates
 
 ### Breaking Changes

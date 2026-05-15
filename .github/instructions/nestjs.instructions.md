@@ -262,6 +262,43 @@ export class AllExceptionsFilter implements ExceptionFilter {
 - Implement proper log levels (error, warn, log, debug, verbose)
 - Add contextual information to logs
 
+## Coverage Gate (CI-Enforced — MANDATORY)
+
+The CI pipeline enforces these thresholds on every push to `main`. If any threshold is not met, the build fails.
+
+### Thresholds
+
+| Metric | Threshold |
+|---|---|
+| Statements | **90%** |
+| Branches | **80%** |
+| Functions | **90%** |
+| Lines | **90%** |
+
+### Enforcing command (MUST use this, not `npm test`)
+
+```bash
+# From backend/
+npm run test:cov      # ← this enforces thresholds and will fail if below
+npm test              # ← this does NOT enforce thresholds — do not use as a gate
+```
+
+**Always run `npm run test:cov` before committing backend changes.**
+
+### Excluded from coverage collection
+
+```
+_generated/**  *.module.ts  main.ts  *.dto.ts  dto/**  responses/**  index.ts
+```
+
+### Rule
+
+**Never add a new exported function or method without at least one unit test.**
+Adding untested functions drops function coverage below the 90% gate.
+If you add a new use-case, service method, filter, mapper, or repository method, write the test first or immediately after.
+
+---
+
 ## Testing Strategies
 
 ### **Unit Testing**
