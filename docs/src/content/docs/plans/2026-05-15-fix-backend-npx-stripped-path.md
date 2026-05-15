@@ -54,3 +54,32 @@ execFileSync(process.execPath, [prismaJs, 'migrate', 'deploy'], {
 | 12 | Execution summary | Append after done |
 | 13 | Doc grep | N/A |
 | 14 | Semver release | v1.2.6 patch |
+
+## Execution Summary
+
+**Commit**: 52a118f
+
+### Actual changes
+
+- `backend/src/main.ts` — replaced `execSync('npx prisma migrate deploy')` with `execFileSync(process.execPath, [prismaJs, 'migrate', 'deploy'])` using local `node_modules/prisma/build/index.js`
+
+### Deviations from plan
+
+None.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend build (`nest build`) | ✅ success |
+| Backend unit (`npm test`) | ✅ 319 tests passed |
+| `npm run tauri:install` | ✅ built and installed |
+| Double-click launch | ✅ backend healthy on port 3456, dashboard loads |
+| Backend e2e | ⏭ not affected |
+| Frontend unit / e2e | ⏭ not affected |
+
+### Key discoveries
+
+- `backend/dist/` is gitignored — tauri-build.sh rebuilds it from source during `npm run tauri:install`. The fix only needs to be in `src/main.ts`.
+- `process.execPath` in the child NestJS process equals the node binary that Tauri used to spawn it (`find_node()` result), so the pattern is self-consistent.
+- `__dirname` in compiled CJS `dist/main.js` = `backend/dist/`, so `path.join(__dirname, '..', 'node_modules', ...)` = `backend/node_modules/prisma/build/index.js` ✅
