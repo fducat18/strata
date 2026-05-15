@@ -20,15 +20,17 @@ flowchart TD
     Front["🖥️ Astro + React — Frontend\nport 4321"]
     Back["⚙️ NestJS — Backend\nport 3000"]
 
-    subgraph dev["  🧪 Dev mode  —  npm run docker:dev  "]
+    subgraph dockerdev["  🧪 Docker Dev  —  npm run docker:dev  "]
         DevDB[("🗄️ strata-dev.db\npre-seeded demo data")]
-        DevDocs["📖 Docs Site\ncd docs && npm run dev\nport 4321"]
     end
 
-    subgraph prod["  🚀 Prod mode  —  npm run docker:prod  "]
+    subgraph docsdev["  📖 Docs Dev  —  cd docs && npm run dev  "]
+        DevDocs["📖 Docs Site\nport 4321\n⚠️ cannot run alongside docker:dev\n(same port)"]
+    end
+
+    subgraph prod["  🚀 Prod  —  npm run docker:prod  "]
         ProdDB[("🗄️ strata.db\nyour real data")]
-        Nginx["🔁 nginx\nport 8001"]
-        Docs["📖 Docs Site\nstatic HTML"]
+        Nginx["🔁 nginx\nport 8001\n(frontend + static docs)"]
     end
 
     You -->|opens| Browser
@@ -36,19 +38,20 @@ flowchart TD
     Front -->|HTTP /api/v1| Back
     Back -->|reads & writes| DevDB
     Back -->|reads & writes| ProdDB
-    Nginx -->|serves| Docs
+    Nginx -->|serves| prod
 ```
 
-> **Dev** (`docker:dev`): backend uses `strata-dev.db` (seeded demo data). Docs are available locally via `npm run dev` in the `docs/` folder (Starlight on port 4321). nginx is not started.
-> **Prod** (`docker:prod`): backend uses `strata.db` (your real data). nginx serves the pre-built static docs site on port 8001.
+> **Docker Dev** (`docker:dev`): backend at port 3000, frontend at port 4321, using `strata-dev.db`. The docs site is **not started** — run it separately with `cd docs && npm run dev`, but note it also uses port 4321, so you can't run both at the same time.
+>
+> **Docker Prod** (`docker:prod`): backend at port 3000, nginx at port 8001 serves both the frontend and the pre-built static docs site.
 
 ## Services at a Glance
 
-| Service | Technology | Dev Port | Prod Port | Source |
-|---------|-----------|----------|-----------|--------|
-| Backend | NestJS + Prisma + SQLite | `3000` | `3000` | `backend/` |
-| Frontend | Astro 6 + React 19 | `4321` | `4321` | `front/` |
-| Docs | Astro Starlight + nginx | `4321` (manual, `cd docs && npm run dev`) | `8001` (nginx) | `docs/` |
+| Service | Technology | Dev Port | Prod Port | Notes |
+|---------|-----------|----------|-----------|-------|
+| Backend | NestJS + Prisma + SQLite | `3000` | `3000` | Always port 3000 |
+| Frontend | Astro 6 + React 19 | `4321` (docker:dev) | `8001` via nginx | nginx proxies prod frontend |
+| Docs | Astro Starlight | `4321` (manual, `cd docs && npm run dev`) | `8001` via nginx | ⚠️ port 4321 conflicts with docker:dev frontend |
 
 ## Dev vs Production
 

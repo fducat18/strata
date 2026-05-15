@@ -3,7 +3,7 @@ title: "Strata App Overview"
 description: Most people don't know their real net worth. Strata fixes that — one place to track every asset you own, whatever it is.
 ---
 
-> 🛡️ **How do I operate Strata?** Backup, recovery, migrations, and versioning — everything you need to keep your data safe and the app running.
+> 💡 **Why Strata?** Most people have no idea what they actually own or what it's all worth. Strata gives you one place to track everything — investments, real estate, collections, cash — and shows your true net worth in a single view.
 
 ## 📖 Strata App
 

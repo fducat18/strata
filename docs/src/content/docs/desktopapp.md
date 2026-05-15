@@ -68,6 +68,32 @@ Or use the convenience script:
 ./scripts/tauri-dev.sh
 ```
 
+## Install to /Applications (Recommended)
+
+Run once to build and install Strata as a proper macOS app you can launch from Finder, Spotlight, or the Dock:
+
+```bash
+npm run tauri:install
+```
+
+This single command:
+1. Builds `Strata.app` (backend + frontend + Rust shell)
+2. Clears the macOS quarantine flag (the app is unsigned)
+3. Copies it to `/Applications/Strata.app`
+
+After that, **double-click Strata in Finder or Spotlight** — no terminal needed.
+
+> **Known limitations** — acceptable for personal use on the machine where the repo lives:
+>
+> | Limitation | Details |
+> |---|---|
+> | Repo must stay at this path | Paths to `backend/dist/` and `front/dist/` are baked in at compile time |
+> | Node.js must be installed | The app spawns `node` from `/opt/homebrew/bin/node` or `/usr/local/bin/node` |
+> | Data lives in the repo | `backend/.data/strata.db` — shared with `docker:prod` |
+> | App is unsigned | `tauri:install` clears the quarantine flag automatically |
+>
+> For a fully self-contained `.app` that bundles Node.js and the build artifacts, see `issues/done/bundle-node-runtime.md` (deferred feature).
+
 ## Building the .app / .dmg
 
 ```bash
