@@ -19,12 +19,20 @@ import { DisposeDialog } from './DisposeDialog';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 
 interface Props {
-  assetId: string;
+  assetId?: string;
+}
+
+function resolveAssetId(explicitId?: string): string | null {
+  if (explicitId) return explicitId;
+  if (typeof window === 'undefined') return null;
+  const id = new URLSearchParams(window.location.search).get('id');
+  return id && id.length > 0 ? id : null;
 }
 
 export function AssetDetailPage({ assetId }: Props) {
-  const { data: asset, isLoading, isError } = useAsset(assetId);
-  const { data: snapshots = [] } = useAssetSnapshots(assetId);
+  const resolvedAssetId = resolveAssetId(assetId);
+  const { data: asset, isLoading, isError } = useAsset(resolvedAssetId ?? '');
+  const { data: snapshots = [] } = useAssetSnapshots(resolvedAssetId ?? '');
   const { data: allTags = [] } = useTags();
   const { data: allCategories = [] } = useCategories();
   const { data: assetTypes = [] } = useAssetTypes();
@@ -42,6 +50,7 @@ export function AssetDetailPage({ assetId }: Props) {
   const [showDispose, setShowDispose] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  if (!resolvedAssetId) return <EmptyState title="Asset not found" />;
   if (isLoading) return <Loading />;
 
   if (!asset) {
@@ -71,7 +80,7 @@ export function AssetDetailPage({ assetId }: Props) {
     acquisitionDate: string;
   }) => {
     try {
-      await updateMutation.mutateAsync({ id: assetId, data: values });
+      await updateMutation.mutateAsync({ id: resolvedAssetId, data: values });
       setShowEdit(false);
     } catch (err: unknown) {
       useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
@@ -84,7 +93,7 @@ export function AssetDetailPage({ assetId }: Props) {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteMutation.mutateAsync(assetId);
+      await deleteMutation.mutateAsync(resolvedAssetId);
       setShowDeleteConfirm(false);
       window.location.assign('/assets');
     } catch (err: unknown) {
@@ -94,7 +103,7 @@ export function AssetDetailPage({ assetId }: Props) {
 
   const handleDispose = async (disposalDate: string, disposalPrice: string) => {
     try {
-      await disposeMutation.mutateAsync({ id: assetId, data: { disposalDate, disposalPrice } });
+      await disposeMutation.mutateAsync({ id: resolvedAssetId, data: { disposalDate, disposalPrice } });
       setShowDispose(false);
     } catch (err: unknown) {
       useUIStore.getState().pushToast({ variant: 'error', message: (err as any)?.message ?? 'An unexpected error occurred' });
@@ -104,7 +113,7 @@ export function AssetDetailPage({ assetId }: Props) {
   const handleSnapshot = async (value: string, observedAt: string) => {
     try {
       await snapshotMutation.mutateAsync({
-        id: assetId,
+        id: resolvedAssetId,
         data: { value, observedAt: new Date(observedAt).toISOString() },
       });
       setShowSnapshot(false);
@@ -133,19 +142,19 @@ export function AssetDetailPage({ assetId }: Props) {
         <AssetTagsCard
           asset={asset}
           availableTags={availableTags}
-          onAdd={(tagId) => addTagMutation.mutate({ assetId, tagId })}
-          onRemove={(tagId) => removeTagMutation.mutate({ assetId, tagId })}
+          onAdd={(tagId) => addTagMutation.mutate({ assetId: resolvedAssetId, tagId })}
+          onRemove={(tagId) => removeTagMutation.mutate({ assetId: resolvedAssetId, tagId })}
         />
         <AssetCategoriesCard
           asset={asset}
           availableCategories={availableCategories}
-          onAdd={(categoryId) => addCategoryMutation.mutate({ assetId, categoryId })}
-          onRemove={(categoryId) => removeCategoryMutation.mutate({ assetId, categoryId })}
+          onAdd={(categoryId) => addCategoryMutation.mutate({ assetId: resolvedAssetId, categoryId })}
+          onRemove={(categoryId) => removeCategoryMutation.mutate({ assetId: resolvedAssetId, categoryId })}
         />
       </div>
 
       <AssetSnapshotsList
-        assetId={assetId}
+        assetId={resolvedAssetId}
         snapshots={snapshots}
         acquisitionDate={asset.acquisitionDate}
         acquisitionPrice={asset.transactions?.find(t => t.type === 'ACQUIRE')?.unitPrice}

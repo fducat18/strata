@@ -93,14 +93,14 @@ npm run tauri:dev
 ```bash
 npm run tauri:prod
 ```
-The .app auto-spawns the NestJS backend (port `3456`) and Astro frontend (port `6543`) as sidecars. In `tauri:dev`, SQLite lives at `backend/.data/strata-dev.db` (shared with Docker dev). In production `.app` builds, SQLite lives at `~/Library/Application Support/Strata/strata.db`.
+The .app serves bundled frontend assets and auto-spawns only the NestJS backend sidecar (port `3456`). In `tauri:dev`, SQLite lives at `backend/.data/strata-dev.db` (shared with Docker dev). In production `.app` builds, SQLite lives at `backend/.data/strata.db` (shared with Docker prod).
 
 **Reset dev data** — fresh DB with seeded demo data, keep Astro build cache:
 ```bash
 npm run tauri:reset
 ```
 
-The window title shows the version (e.g. `Strata 1.4.2`). `tauri:dev` shows `(DEV)` and uses `backend/.data/strata-dev.db`. Production `.app` builds use `~/Library/Application Support/Strata/strata.db`. See [Versioning](/docs/versioning/) and
+The window title shows the version (e.g. `Strata 1.4.2`). `tauri:dev` shows `(DEV)` and uses `backend/.data/strata-dev.db`. Production `.app` builds use `backend/.data/strata.db`. See [Versioning](/docs/versioning/) and
 [Recovery](/docs/recovery/) for the full story.
 
 ## Releasing a New Version

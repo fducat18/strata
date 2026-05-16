@@ -160,7 +160,7 @@ export function AssetListPage() {
                   <TableRow key={asset.id}>
                     <TableCell>
                       <div>
-                        <a href={`/assets/${asset.id}`} className="font-medium hover:text-primary">
+                        <a href={`/assets/detail?id=${asset.id}`} className="font-medium hover:text-primary">
                           {asset.name}
                         </a>
                         {asset.quantity != null && (

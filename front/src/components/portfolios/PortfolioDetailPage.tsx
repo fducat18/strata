@@ -133,7 +133,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                 {activeAssets.map(asset => (
                   <TableRow key={asset.id}>
                     <TableCell>
-                      <a href={`/assets/${asset.id}`} className="font-medium hover:text-primary">{asset.name}</a>
+                      <a href={`/assets/detail?id=${asset.id}`} className="font-medium hover:text-primary">{asset.name}</a>
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">

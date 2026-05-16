@@ -2,21 +2,27 @@
 //
 // Responsibilities:
 // 1. Start the NestJS backend as a child process (port 3456)
-// 2. Start the Astro frontend server as a child process (port 6543)
-// 3. Wait until both servers are healthy before navigating to the frontend
-// 4. Stop both servers when the app quits (incl. Cmd-Q, panic, abort)
+// 2. Start the NestJS backend sidecar (desktop-only API, localhost protected)
+// 3. Wait until backend is healthy, then notify the bundled frontend loader
+// 4. Stop sidecars when the app quits (incl. Cmd-Q, panic, abort)
 // 5. Provide IPC commands for revealing the data folder + reading version
 
+use rand::RngCore;
+use std::fs;
+use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use serde::Serialize;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{Emitter, Manager, RunEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 const BACKEND_PORT: u16 = 3456;
-const FRONTEND_PORT: u16 = 6543;
+const DESKTOP_TOKEN_HEADER: &str = "X-Strata-Desktop-Token";
+const DESKTOP_TOKEN_ENV: &str = "STRATA_DESKTOP_API_TOKEN";
+const BACKEND_PID_FILE: &str = "strata-desktop-backend.pid";
 
 /// Build-time version metadata (injected by build.rs from scripts/version.mjs).
 const APP_VERSION: &str = env!("STRATA_VERSION");
@@ -40,7 +46,7 @@ fn runtime_env_label() -> &'static str {
 /// path (window close, RunEvent::ExitRequested, panic — Drop guarantees it).
 struct SidecarProcesses {
     backend: Option<Child>,
-    frontend: Option<Child>,
+    backend_pid_file: Option<PathBuf>,
 }
 
 impl SidecarProcesses {
@@ -48,11 +54,11 @@ impl SidecarProcesses {
         if let Some(ref mut child) = self.backend {
             kill_child("backend", child);
         }
-        if let Some(ref mut child) = self.frontend {
-            kill_child("frontend", child);
+        if let Some(ref pid_file) = self.backend_pid_file {
+            let _ = fs::remove_file(pid_file);
         }
         self.backend = None;
-        self.frontend = None;
+        self.backend_pid_file = None;
     }
 }
 
@@ -77,6 +83,16 @@ fn ensure_data_dir() -> String {
     std::fs::create_dir_all(&dir).expect("could not create data directory");
     let db_file = if is_dev_build() { "strata-dev.db" } else { "strata.db" };
     format!("file:{}", dir.join(db_file).display())
+}
+
+fn backend_pid_file_path() -> PathBuf {
+    data_dir().join(BACKEND_PID_FILE)
+}
+
+fn random_hex_token() -> String {
+    let mut bytes = [0u8; 32];
+    rand::thread_rng().fill_bytes(&mut bytes);
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 fn find_node() -> String {
@@ -155,6 +171,7 @@ fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
 fn spawn_backend(
     backend_path: &std::path::Path,
     database_url: &str,
+    desktop_token: &str,
 ) -> Result<Child, String> {
     let node = find_node();
     let main_js = backend_path.join("dist").join("main.js");
@@ -175,56 +192,60 @@ fn spawn_backend(
         .env("PORT", BACKEND_PORT.to_string())
         .env("NODE_ENV", "production")
         .env("ENABLE_SWAGGER", "false")
-        .env("ALLOWED_ORIGINS", "tauri://localhost,http://localhost:6543")
+        .env("ALLOWED_ORIGINS", "tauri://localhost")
+        .env(DESKTOP_TOKEN_ENV, desktop_token)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| format!("failed to start NestJS backend: {} (is Node.js installed?)", e))
 }
 
-fn spawn_frontend(front_path: &std::path::Path) -> Result<Child, String> {
-    let node = find_node();
-    let entry = front_path.join("dist").join("server").join("entry.mjs");
-
-    if !entry.exists() {
-        return Err(format!(
-            "frontend bundle not found at {} — run `cd front && npm run build`",
-            entry.display()
-        ));
+fn cleanup_stale_backend(pid_file: &PathBuf) {
+    let Ok(raw_pid) = fs::read_to_string(pid_file) else {
+        return;
+    };
+    let Ok(pid) = raw_pid.trim().parse::<u32>() else {
+        let _ = fs::remove_file(pid_file);
+        return;
+    };
+    let pid_arg = pid.to_string();
+    let running = Command::new("kill")
+        .args(["-0", &pid_arg])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    if running {
+        log::warn!("Found stale backend process pid={} — terminating", pid);
+        let _ = Command::new("kill").args(["-TERM", &pid_arg]).status();
+        thread::sleep(Duration::from_millis(250));
+        let _ = Command::new("kill").args(["-KILL", &pid_arg]).status();
     }
-
-    log::info!("Starting frontend: {} {}", node, entry.display());
-
-    Command::new(&node)
-        .arg(&entry)
-        .current_dir(front_path)
-        .env("HOST", "0.0.0.0")
-        .env("PORT", FRONTEND_PORT.to_string())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("failed to start Astro frontend: {} (is Node.js installed?)", e))
+    let _ = fs::remove_file(pid_file);
 }
 
-fn wait_for_server(url: &str, name: &str, max_attempts: u32) -> bool {
+fn wait_for_backend(url: &str, desktop_token: &str, max_attempts: u32) -> bool {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(2))
         .build()
         .unwrap();
 
     for attempt in 1..=max_attempts {
-        match client.get(url).send() {
+        match client
+            .get(url)
+            .header(DESKTOP_TOKEN_HEADER, desktop_token)
+            .send()
+        {
             Ok(resp) if resp.status().is_success() => {
-                log::info!("{} healthy after {} attempts", name, attempt);
+                log::info!("Backend healthy after {} attempts", attempt);
                 return true;
             }
             _ => {
-                log::info!("{} health check {}/{} …", name, attempt, max_attempts);
+                log::info!("Backend health check {}/{} …", attempt, max_attempts);
                 thread::sleep(Duration::from_millis(500));
             }
         }
     }
-    log::error!("{} did not become healthy after {} attempts", name, max_attempts);
+    log::error!("Backend did not become healthy after {} attempts", max_attempts);
     false
 }
 
@@ -239,7 +260,7 @@ fn reveal_data_folder() {
 
 #[tauri::command]
 fn get_backend_url() -> String {
-    format!("http://localhost:{}", BACKEND_PORT)
+    format!("http://localhost:{}/api/v1", BACKEND_PORT)
 }
 
 #[tauri::command]
@@ -249,6 +270,13 @@ fn get_app_version() -> serde_json::Value {
         "env": runtime_env_label(),
         "gitSha": APP_GIT_SHA,
     })
+}
+
+#[derive(Clone, Serialize)]
+struct BackendReadyPayload {
+    ready: bool,
+    backend_api_url: String,
+    desktop_token: String,
 }
 
 fn kill_child(name: &str, child: &mut Child) {
@@ -269,7 +297,7 @@ fn window_title() -> String {
 pub fn run() {
     let sidecars: Arc<Mutex<SidecarProcesses>> = Arc::new(Mutex::new(SidecarProcesses {
         backend: None,
-        frontend: None,
+        backend_pid_file: None,
     }));
     let sidecars_for_setup = Arc::clone(&sidecars);
     let sidecars_for_window = Arc::clone(&sidecars);
@@ -342,12 +370,13 @@ pub fn run() {
 
             let database_url = ensure_data_dir();
             log::info!("Database URL: {}", database_url);
+            let desktop_token = random_hex_token();
+            let backend_pid_file = backend_pid_file_path();
+            cleanup_stale_backend(&backend_pid_file);
 
             let root = repo_root(app);
             let backend_path = root.join("backend");
-            let front_path = root.join("front");
             log::info!("Backend path: {}", backend_path.display());
-            log::info!("Frontend path: {}", front_path.display());
 
             if let Err(e) = run_prisma_migrate(&backend_path, &database_url) {
                 let msg = format!("Database migration failed:\n{}", e);
@@ -366,7 +395,7 @@ pub fn run() {
                 log::info!("Existing database detected — skipping seed.");
             }
 
-            let backend = match spawn_backend(&backend_path, &database_url) {
+            let backend = match spawn_backend(&backend_path, &database_url, &desktop_token) {
                 Ok(c) => c,
                 Err(e) => {
                     log::error!("{}", e);
@@ -378,38 +407,34 @@ pub fn run() {
                     std::process::exit(1);
                 }
             };
-            let frontend = match spawn_frontend(&front_path) {
-                Ok(c) => c,
-                Err(e) => {
-                    log::error!("{}", e);
-                    app.dialog()
-                        .message(&e)
-                        .title("Strata — frontend failed to start")
-                        .kind(MessageDialogKind::Error)
-                        .blocking_show();
-                    std::process::exit(1);
-                }
-            };
+            let _ = fs::write(&backend_pid_file, backend.id().to_string());
             {
                 let mut s = sidecars_for_setup.lock().unwrap();
                 s.backend = Some(backend);
-                s.frontend = Some(frontend);
+                s.backend_pid_file = Some(backend_pid_file.clone());
             }
 
             let handle = app.handle().clone();
             thread::spawn(move || {
                 let backend_url = format!("http://localhost:{}/api/v1/health", BACKEND_PORT);
-                let frontend_url = format!("http://localhost:{}/", FRONTEND_PORT);
+                let backend_api_url = format!("http://localhost:{}/api/v1", BACKEND_PORT);
 
-                let backend_ok = wait_for_server(&backend_url, "Backend", 30);
-                let frontend_ok = wait_for_server(&frontend_url, "Frontend", 30);
+                let backend_ok = wait_for_backend(&backend_url, &desktop_token, 30);
 
-                if backend_ok && frontend_ok {
-                    log::info!("All services ready — navigating to frontend");
-                    let _ = handle.emit("backend-ready", true);
+                if backend_ok {
+                    log::info!("Backend ready — navigating to bundled frontend");
+                    let _ = handle.emit("backend-ready", BackendReadyPayload {
+                        ready: true,
+                        backend_api_url,
+                        desktop_token,
+                    });
                 } else {
-                    log::error!("Some services failed to start");
-                    let _ = handle.emit("backend-ready", false);
+                    log::error!("Backend failed to start");
+                    let _ = handle.emit("backend-ready", BackendReadyPayload {
+                        ready: false,
+                        backend_api_url: String::new(),
+                        desktop_token: String::new(),
+                    });
                     if let Some(window) = handle.get_webview_window("main") {
                         let _ = window.dialog()
                             .message("One of Strata's background services did not become healthy. Check the logs (Help → Reveal Data Folder).")

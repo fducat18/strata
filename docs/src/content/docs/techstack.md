@@ -43,8 +43,8 @@ title: "Tech Stack"
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
 | Shell | Tauri v2 (Rust) | Native macOS window, system webview |
-| Sidecar | NestJS + Astro | Backend and frontend spawned as child processes |
-| Data dir | ~/Library/Application Support/Strata/ | Isolated SQLite for real data |
+| Runtime model | Tauri + bundled frontend + NestJS sidecar | Native shell serves static UI and runs backend child process |
+| Data dir | `backend/.data/` | Shared SQLite location for web and desktop modes |
 
 ## Documentation
 

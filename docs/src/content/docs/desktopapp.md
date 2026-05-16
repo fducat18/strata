@@ -4,8 +4,8 @@ title: "Strata Desktop App (macOS)"
 
 
 Strata can run as a native macOS desktop app using [Tauri v2](https://v2.tauri.app/).
-The app bundles the NestJS backend and Astro frontend as child processes ("sidecars")
-that start/stop automatically with the app.
+The app serves bundled frontend assets and runs a NestJS backend sidecar
+that starts/stops automatically with the app.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ that start/stop automatically with the app.
 ┌─────────────────────────────────────┐
 │         Tauri WebView (macOS)       │
 │  ┌───────────────────────────────┐  │
-│  │   Astro SSR (localhost:6543)  │  │
+│  │   Bundled Frontend Assets      │  │
 │  └──────────────┬────────────────┘  │
 │                 │ HTTP              │
 │  ┌──────────────▼────────────────┐  │
@@ -34,15 +34,14 @@ On launch, the Tauri app:
    - **`npm run tauri:dev`** uses `strata-dev.db` — shared with `npm run docker:dev` and `npm run start:dev`
    - **Production `.app` build** uses `strata.db` — shared with `npm run docker:prod`
 2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database
-3. Starts the NestJS backend on port 3456
-4. Starts the Astro frontend on port 6543
-5. Shows a loading screen, then redirects to the frontend once healthy
-6. On quit, kills both child processes
+3. Starts the NestJS backend sidecar on port 3456 (desktop-auth protected)
+5. Shows a loading screen, then redirects to bundled frontend once backend is healthy
+6. On quit, kills child processes and removes stale pid tracking
 
 ## Prerequisites
 
 - **macOS 13+** (Apple Silicon or Intel)
-- **Node.js 24+** (required to run backend/frontend sidecars; e.g. `brew install node`)
+- **Node.js 24+** (required to run backend sidecar; e.g. `brew install node`)
 - **Rust 1.77+** (e.g. via Homebrew: `brew install rust`)
 - **Xcode CLI tools**: `xcode-select --install`
 
@@ -56,7 +55,7 @@ npm install  # root (installs @tauri-apps/cli)
 
 # 2. Build both apps
 cd backend && npm run build && cd ..
-cd front && PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build && cd ..
+cd front && STRATA_DESKTOP_STATIC=1 PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build && cd ..
 
 # 3. Launch the desktop app
 npx tauri dev
@@ -144,10 +143,10 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 
 1. Launch app and verify window title includes version (and `(DEV)` when expected).
 2. Open **File → Reveal Data Folder** and verify it opens `backend/.data/` in Finder (both dev and prod builds).
-3. Confirm backend health by opening `http://localhost:3456/api/v1/health` while app is running.
+3. Confirm desktop backend hardening: opening `http://localhost:3456/api/v1/health` directly should be rejected (401/403) while app usage works normally.
 4. Create an asset and add a snapshot; restart app; verify data persists.
 5. Trigger **Settings → Backup → Export**, then import into a fresh dev DB.
-6. Quit app and confirm sidecar ports 3456/6543 are released.
+6. Quit app and confirm backend sidecar port 3456 is released.
 
 ## Menu Items
 
@@ -163,7 +162,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 | Service | Port | Notes |
 |---------|------|-------|
 | NestJS backend | 3456 | API at `http://localhost:3456/api/v1` |
-| Astro frontend | 6543 | Web UI at `http://localhost:6543` |
+| Astro frontend | n/a (desktop) | Bundled static assets inside the app |
 
 ## Troubleshooting
 
@@ -173,24 +172,23 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 - Check logs in `~/Library/Logs/net.ducatillon.strata/Strata.log`
 - Ensure port 3456 is free: `lsof -i :3456`
 
-### Frontend fails to start
+### Frontend fails to load
 
-- Check that `front/dist/server/entry.mjs` exists (`cd front && npm run build`)
-- Ensure port 6543 is free: `lsof -i :6543`
+- Check that `src-tauri/frontend-dist/app/index.html` exists after running `npm run tauri:build`
+- Rebuild desktop assets with `STRATA_DESKTOP_STATIC=1` (handled automatically by `tauri-build.sh`/`tauri-dev.sh`)
 
 ### API URL mismatch
 
 The frontend's API URL is baked at build time. Rebuild with:
 
 ```bash
-cd front && PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build
+cd front && STRATA_DESKTOP_STATIC=1 PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build
 ```
 
 ### Leftover processes after crash
 
 ```bash
-lsof -i :3456 -t | xargs kill -9
-lsof -i :6543 -t | xargs kill -9
+lsof -ti :3456 | xargs -I{} kill {}
 ```
 
 ## Source checkout recommendation

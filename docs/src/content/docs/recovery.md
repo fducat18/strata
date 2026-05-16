@@ -7,7 +7,7 @@ back"** scenario. Three personas:
 
 1. You used the **Docker** setup → your data lives on a host volume.
 2. You used the **Strata desktop app** → your data lives under
-   `~/Library/Application Support/Strata/strata.db` (macOS).
+   `backend/.data/strata.db` in your checkout.
 3. You only have a **JSON backup** export.
 
 ---
@@ -60,15 +60,14 @@ The desktop `.app` keeps its DB at:
 
 | Build flavour | Path |
 |---|---|
-| Production (tagged release) | `~/Library/Application Support/Strata/strata.db` |
+| Production (tagged release) | `<repo>/backend/.data/strata.db` |
 | `tauri:dev` local run | `<repo>/backend/.data/strata-dev.db` |
 
 Restore is just:
 
 ```bash
-mkdir -p "$HOME/Library/Application Support/Strata"
-cp /path/to/your/strata.db \
-   "$HOME/Library/Application Support/Strata/strata.db"
+mkdir -p backend/.data
+cp /path/to/your/strata.db backend/.data/strata.db
 ```
 
 Then launch the app. The current data folder is shown in **About → Strata**
@@ -107,7 +106,7 @@ After any restore:
 - **Daily SQLite copy** if you're a heavy user (small file, fast):
 
   ```bash
-  cp "$HOME/Library/Application Support/Strata/strata.db" \
+  cp "backend/.data/strata.db" \
      "$HOME/iCloud/Strata-Backups/strata-$(date +%Y%m%d).db"
   ```
 

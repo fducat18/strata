@@ -18,6 +18,23 @@ export interface ApiError {
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+const DESKTOP_BACKEND_URL_KEY = 'STRATA_DESKTOP_BACKEND_URL';
+const DESKTOP_TOKEN_KEY = 'STRATA_DESKTOP_TOKEN';
+const DESKTOP_TOKEN_HEADER = 'X-Strata-Desktop-Token';
+
+function getDesktopSessionValue(key: string): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const value = window.sessionStorage.getItem(key);
+  return value && value.length > 0 ? value : undefined;
+}
+
+function getDesktopBackendUrl(): string | undefined {
+  return getDesktopSessionValue(DESKTOP_BACKEND_URL_KEY);
+}
+
+function getDesktopToken(): string | undefined {
+  return getDesktopSessionValue(DESKTOP_TOKEN_KEY);
+}
 
 function normalizeError(err: AxiosError<{ message?: string; code?: string; requestId?: string }>): ApiError {
   const status = err.response?.status ?? 0;
@@ -33,7 +50,7 @@ function normalizeError(err: AxiosError<{ message?: string; code?: string; reque
 
 export function createApiClient(): AxiosInstance {
   const client = axios.create({
-    baseURL: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000/api/v1',
+    baseURL: getDesktopBackendUrl() || import.meta.env.PUBLIC_API_URL || 'http://localhost:3000/api/v1',
     headers: { 'Content-Type': 'application/json' },
     timeout: DEFAULT_TIMEOUT_MS,
   });
@@ -41,6 +58,10 @@ export function createApiClient(): AxiosInstance {
   client.interceptors.request.use((config) => {
     if (!config.headers['X-Request-ID']) {
       config.headers['X-Request-ID'] = crypto.randomUUID();
+    }
+    const desktopToken = getDesktopToken();
+    if (desktopToken && !config.headers[DESKTOP_TOKEN_HEADER]) {
+      config.headers[DESKTOP_TOKEN_HEADER] = desktopToken;
     }
     return config;
   });

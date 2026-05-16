@@ -84,4 +84,4 @@ See the [Backup & Recovery](/docs/backup/) page for the complete procedure.
 - Developers can run `docker:reset` freely without fear of losing real data
 - The `.data/` directory is git-ignored — no accidental commit of database files
 - Switching between dev and prod requires only changing the `DB_FILE` env var (or running the appropriate `npm run` command)
-- In the Tauri desktop app, the database lives in `~/Library/Application Support/Strata/strata.db` (not in the repo)
+- In the Tauri desktop app, the database stays in `backend/.data/strata.db` to keep parity with web/docker production mode

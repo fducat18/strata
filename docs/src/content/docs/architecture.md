@@ -44,6 +44,8 @@ flowchart TD
 > **Docker Dev** (`docker:dev`): backend at port 3000, frontend at port 6543, using `strata-dev.db`. The docs site is **not started** — run it separately with `cd docs && npm run dev` on port 8001.
 >
 > **Docker Prod** (`docker:prod`): backend at port 3000, nginx at port 8001 serves both the frontend and the pre-built static docs site.
+>
+> **Desktop (Tauri)**: frontend is bundled into the app (no localhost frontend URL). Tauri spawns a backend sidecar on port 3456 with desktop-only request auth.
 
 ## Services at a Glance
 

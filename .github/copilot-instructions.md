@@ -9,7 +9,7 @@ Strata is a personal asset-tracking app: a **NestJS + Prisma (SQLite)** backend,
 ```
 backend/       NestJS (hexagonal: domain/ application/ infrastructure/ presentation/)
 front/         Astro 6 + React 19 + Tailwind v4 (Zustand + react-query)
-src-tauri/     Tauri v2 desktop shell (Rust); spawns backend (port 3456) + front (port 6543)
+src-tauri/     Tauri v2 desktop shell (Rust); serves bundled frontend + spawns backend sidecar (port 3456)
 docs/          Astro Starlight docs site (Markdown-first)
 scripts/       Repo-wide Node scripts (version.mjs, gen-version.mjs, release.mjs, tauri-*.sh)
 issues/        Lightweight in-tree tracker for deferred work
@@ -75,7 +75,7 @@ backend/src/
 
 **Frontend** keeps server state in `react-query` and ephemeral UI state in **Zustand** stores under `front/src/stores/`. SSR pages live in `front/src/pages/`; islands live in `front/src/components/`.
 
-**Tauri** spawns the NestJS backend on `127.0.0.1:3456` and the Astro SSR front on `127.0.0.1:6543` as sidecars. SQLite lives in `~/Library/Application Support/Strata/strata.db` (prod) or `Strata-Dev/` (dev). System Node is required (bundling deferred — see `issues/bundle-node-runtime.md`).
+**Tauri** serves bundled frontend assets from `src-tauri/frontend-dist` and spawns the NestJS backend sidecar on `127.0.0.1:3456` with desktop-only auth. SQLite still shares the same files as web mode (`backend/.data/strata-dev.db` in dev and `backend/.data/strata.db` in prod). System Node is required (bundling deferred — see `issues/bundle-node-runtime.md`).
 
 ## Versioning (single source of truth: git tag)
 
@@ -116,7 +116,7 @@ Use the Bruno collection at `.bruno/Strata/` for ready-to-run requests.
 
 ## Config
 
-- `DATABASE_URL` controls the DB (defaults to `backend/prisma/dev.db` in dev, `~/Library/Application Support/Strata*/strata.db` in the desktop app).
+- `DATABASE_URL` controls the DB (defaults to `backend/.data/strata-dev.db` in dev and `backend/.data/strata.db` in prod, including desktop app builds).
 - `backend/.env` for local overrides (loaded by NestJS `ConfigModule`). Never commit secrets.
 - Docker compose mounts a host volume for SQLite persistence in both profiles.
 

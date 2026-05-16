@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/tauri-build.sh — Build Strata .app + .dmg
+# scripts/tauri-build.sh — Build Strata .app bundle
 #
 # Produces an unsigned macOS .app and .dmg in src-tauri/target/release/bundle/
 #
@@ -11,6 +11,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_PORT=3456
 API_URL="http://localhost:${BACKEND_PORT}/api/v1"
+TAURI_FRONT_DIST="$REPO_ROOT/src-tauri/frontend-dist/app"
 
 echo "▸ Installing root dependencies (Tauri CLI) …"
 cd "$REPO_ROOT"
@@ -35,8 +36,12 @@ echo "▸ Installing frontend dependencies …"
 cd "$REPO_ROOT/front"
 npm ci 2>/dev/null || npm install
 
-echo "▸ Building frontend with PUBLIC_API_URL=${API_URL} …"
-PUBLIC_API_URL="$API_URL" npm run build
+echo "▸ Building desktop frontend (static) with PUBLIC_API_URL=${API_URL} …"
+STRATA_DESKTOP_STATIC=1 PUBLIC_API_URL="$API_URL" npm run build
+echo "▸ Syncing desktop frontend bundle to src-tauri/frontend-dist/app …"
+rm -rf "$TAURI_FRONT_DIST"
+mkdir -p "$TAURI_FRONT_DIST"
+cp -R dist/* "$TAURI_FRONT_DIST/"
 
 echo "▸ Building Tauri app …"
 cd "$REPO_ROOT"

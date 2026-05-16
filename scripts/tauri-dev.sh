@@ -3,7 +3,7 @@
 #
 # Installs dependencies, rebuilds both frontend (with correct API URL) and backend,
 # then launches `npx tauri dev` which opens the Tauri webview.
-# The Tauri app itself spawns the backend + frontend sidecars.
+# The Tauri app itself spawns only the backend sidecar; frontend is bundled static assets.
 #
 # Note: if the repo is synced via Google Drive, node_modules symlinks are
 # broken after switching machines. The npm install steps below self-heal this.
@@ -13,6 +13,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_PORT=3456
 API_URL="http://localhost:${BACKEND_PORT}/api/v1"
+TAURI_FRONT_DIST="$REPO_ROOT/src-tauri/frontend-dist/app"
 
 if [[ "$REPO_ROOT" == *"Google Drive"* ]]; then
   echo "⚠️  Repo is inside Google Drive. node_modules symlinks may be broken after"
@@ -28,8 +29,12 @@ echo "▸ Installing frontend dependencies …"
 cd "$REPO_ROOT/front"
 npm ci 2>/dev/null || npm install
 
-echo "▸ Building frontend with PUBLIC_API_URL=${API_URL} …"
-PUBLIC_API_URL="$API_URL" npm run build
+echo "▸ Building desktop frontend (static) with PUBLIC_API_URL=${API_URL} …"
+STRATA_DESKTOP_STATIC=1 PUBLIC_API_URL="$API_URL" npm run build
+echo "▸ Syncing desktop frontend bundle to src-tauri/frontend-dist/app …"
+rm -rf "$TAURI_FRONT_DIST"
+mkdir -p "$TAURI_FRONT_DIST"
+cp -R dist/* "$TAURI_FRONT_DIST/"
 
 echo "▸ Installing backend dependencies …"
 cd "$REPO_ROOT/backend"

@@ -39,22 +39,19 @@
     <p>Starting services…</p>
   </div>
   <script>
-    // Tauri will emit 'backend-ready' once both servers are up.
-    // This page is shown briefly while they start.
+    // Tauri emits backend-ready with desktop bootstrap payload.
     const { listen } = window.__TAURI__?.event ?? {};
     if (listen) {
-      listen('backend-ready', () => {
-        window.location.href = 'http://localhost:6543';
+      listen('backend-ready', ({ payload }) => {
+        if (!payload?.ready) {
+          document.querySelector('p').textContent = 'Backend failed to start. Check logs.';
+          return;
+        }
+        sessionStorage.setItem('STRATA_DESKTOP_BACKEND_URL', payload.backend_api_url);
+        sessionStorage.setItem('STRATA_DESKTOP_TOKEN', payload.desktop_token);
+        window.location.href = '/app/';
       });
     }
-    // Fallback: poll the frontend server directly
-    const poll = setInterval(async () => {
-      try {
-        const r = await fetch('http://localhost:6543', { mode: 'no-cors' });
-        clearInterval(poll);
-        window.location.href = 'http://localhost:6543';
-      } catch (_) {}
-    }, 1000);
   </script>
 </body>
 </html>

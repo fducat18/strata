@@ -43,6 +43,7 @@ import {
   PrismaValidationExceptionFilter,
 } from './presentation/filters/index.js';
 import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware.js';
+import { DesktopAuthMiddleware } from './infrastructure/middleware/desktop-auth.middleware.js';
 
 @Module({
   imports: [
@@ -93,6 +94,6 @@ import { RequestIdMiddleware } from './infrastructure/middleware/request-id.midd
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, DesktopAuthMiddleware).forRoutes('*');
   }
 }
