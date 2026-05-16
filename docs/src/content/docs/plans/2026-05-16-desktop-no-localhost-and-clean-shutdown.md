@@ -60,7 +60,7 @@ Additional invariant:
 
 ## Execution Summary
 
-**Commits**: `12f573d`, `044d5d9`
+**Commits**: `12f573d`, `044d5d9`, `c3cdf29`, `b7f3d48`, `a1bcca4`
 
 ### Actual changes
 
@@ -89,3 +89,4 @@ Additional invariant:
 ### Key discoveries
 
 - Desktop static bundling required removing Astro dynamic route generation; the asset detail page needed a static-compatible route to complete `STRATA_DESKTOP_STATIC=1` builds.
+- Runtime verification of packaged app revealed one close path where backend listener persisted; fixed by extending Tauri exit-event cleanup coverage.
