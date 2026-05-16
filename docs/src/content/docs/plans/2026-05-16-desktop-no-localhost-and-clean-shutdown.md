@@ -54,6 +54,38 @@ Additional invariant:
 | 9 | Infra gate | ✅ If infra touched |
 | 10 | Env compatibility | ✅ Planned |
 | 11 | Do-no-harm baseline | ✅ N/A |
-| 12 | Execution summary | ⏳ After implementation |
+| 12 | Execution summary | ✅ Completed |
 | 13 | Doc grep rule | ✅ Planned |
-| 14 | Semver release + notes | ⏳ After implementation |
+| 14 | Semver release + notes | ✅ Completed |
+
+## Execution Summary
+
+**Commits**: `12f573d`, `044d5d9`
+
+### Actual changes
+
+- Desktop runtime no longer launches Astro localhost sidecar; it serves bundled frontend assets from `src-tauri/frontend-dist/app`.
+- Added desktop-only backend auth middleware requiring `x-strata-desktop-token` when `STRATA_DESKTOP_API_TOKEN` is set.
+- Tauri now generates per-launch token, passes it to backend env, emits it to loader, and frontend API client attaches token automatically.
+- Added startup stale-process cleanup (pid-file based) and hardened shutdown flow for backend sidecar lifecycle.
+- Updated desktop scripts (`tauri-build.sh`, `tauri-dev.sh`) to produce and sync desktop static frontend bundle.
+- Updated docs (`desktopapp`, `quickstart`, `architecture`, `configuration`, `recovery`, `techstack`, ADR/config instructions) to reflect no-localhost desktop frontend + shared DB invariant.
+
+### Deviations from plan
+
+- Asset detail routing changed from dynamic `/assets/:id` to static-friendly `/assets/detail?id=...` to unblock desktop static Astro build (dynamic route prevented static output).
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit | ✅ `npm run test:cov` |
+| Backend e2e | ✅ `npm run test:e2e` |
+| Frontend unit | ✅ `npx vitest run --coverage` |
+| Frontend e2e | ✅ `npm run test:e2e` |
+| Docs build | ✅ `cd docs && npm run build` |
+| Desktop build | ✅ `./scripts/tauri-build.sh` |
+
+### Key discoveries
+
+- Desktop static bundling required removing Astro dynamic route generation; the asset detail page needed a static-compatible route to complete `STRATA_DESKTOP_STATIC=1` builds.

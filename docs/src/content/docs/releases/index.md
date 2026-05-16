@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.2.8](./v1-2-8) | Desktop hardening: no localhost frontend page serving, desktop-token backend auth, stale sidecar cleanup + shutdown reliability |
 | [v1.2.7](./v1-2-7) | Frontend port migration to 6543 across Docker/Tauri/runtime docs, plus theme e2e hydration-race stabilization |
 | [v1.2.6](./v1-2-6) | Fix backend crash on desktop launch — npx in main.ts fails with stripped macOS PATH |
 | [v1.2.5](./v1-2-5) | Fix Prisma exit 127 on desktop launch (PATH stripping), release title format, shorten Why Strata callout |
