@@ -60,7 +60,7 @@ Additional invariant:
 
 ## Execution Summary
 
-**Commits**: `12f573d`, `044d5d9`, `c3cdf29`, `b7f3d48`, `a1bcca4`
+**Commits**: `12f573d`, `044d5d9`, `c3cdf29`, `b7f3d48`, `a1bcca4`, `c1d01a2`, `b91ebe1`
 
 ### Actual changes
 
@@ -69,6 +69,9 @@ Additional invariant:
 - Tauri now generates per-launch token, passes it to backend env, emits it to loader, and frontend API client attaches token automatically.
 - Added startup stale-process cleanup (pid-file based) and hardened shutdown flow for backend sidecar lifecycle.
 - Updated desktop scripts (`tauri-build.sh`, `tauri-dev.sh`) to produce and sync desktop static frontend bundle.
+- Hardened `tauri-install.sh` with strict post-install runtime checks (backend-up marker, no legacy frontend sidecar, clean backend shutdown).
+- Added startup cleanup for stale legacy desktop frontend sidecar process on `:4321` (`front/dist/server/entry.mjs` orphan).
+- Added direct WebView bootstrap fallback (`window.eval`) so backend-ready navigation to `/app/` succeeds even if loader event binding is missed.
 - Updated docs (`desktopapp`, `quickstart`, `architecture`, `configuration`, `recovery`, `techstack`, ADR/config instructions) to reflect no-localhost desktop frontend + shared DB invariant.
 
 ### Deviations from plan
@@ -85,8 +88,10 @@ Additional invariant:
 | Frontend e2e | ✅ `npm run test:e2e` |
 | Docs build | ✅ `cd docs && npm run build` |
 | Desktop build | ✅ `./scripts/tauri-build.sh` |
+| Desktop install/runtime | ✅ `npm run tauri:install` (strict post-install checks) |
 
 ### Key discoveries
 
 - Desktop static bundling required removing Astro dynamic route generation; the asset detail page needed a static-compatible route to complete `STRATA_DESKTOP_STATIC=1` builds.
 - Runtime verification of packaged app revealed one close path where backend listener persisted; fixed by extending Tauri exit-event cleanup coverage.
+- Regression root cause for reported `:4321` usage was a stale orphan legacy sidecar process from older desktop runtime, not current bundled-frontend desktop startup.

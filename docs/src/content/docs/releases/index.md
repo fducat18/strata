@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.2.10](./v1-2-10) | Fix desktop install regression: strict post-install checks, stale legacy `:4321` cleanup, robust bundled-frontend navigation fallback |
 | [v1.2.9](./v1-2-9) | Desktop quit-path hotfix: backend sidecar now reliably stops on app close; no lingering localhost listener |
 | [v1.2.8](./v1-2-8) | Desktop hardening: no localhost frontend page serving, desktop-token backend auth, stale sidecar cleanup + shutdown reliability |
 | [v1.2.7](./v1-2-7) | Frontend port migration to 6543 across Docker/Tauri/runtime docs, plus theme e2e hydration-race stabilization |
