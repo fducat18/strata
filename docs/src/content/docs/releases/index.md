@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.2.7](./v1-2-7) | Frontend port migration to 6543 across Docker/Tauri/runtime docs, plus theme e2e hydration-race stabilization |
 | [v1.2.6](./v1-2-6) | Fix backend crash on desktop launch — npx in main.ts fails with stripped macOS PATH |
 | [v1.2.5](./v1-2-5) | Fix Prisma exit 127 on desktop launch (PATH stripping), release title format, shorten Why Strata callout |
 | [v1.2.4](./v1-2-4) | Fix CI frontend coverage gate (89% → 100%), add 5 missing unit tests, correct coverage gate commands in agent instructions |

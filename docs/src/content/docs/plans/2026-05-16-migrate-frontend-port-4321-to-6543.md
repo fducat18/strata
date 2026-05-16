@@ -70,13 +70,13 @@ After running `npm run docker:prod` and `npm run docker:reset`, frontend still s
 | 9 | Infra test gate | ✅ Planned in T4 |
 | 10 | Environment compatibility checks | ✅ Planned in T4 |
 | 11 | Do-no-harm baseline | ✅ N/A |
-| 12 | Execution summary append | ✅ Pending completion |
+| 12 | Execution summary append | ✅ Completed |
 | 13 | Doc grep rule | ✅ Planned in T3 |
-| 14 | Semver release + release notes | ✅ Pending completion |
+| 14 | Semver release + release notes | ✅ Completed (`v1.2.7`) |
 
 ## Execution Summary
 
-**Commit**: _Not committed in this workspace yet_
+**Commit**: `23687e5` (implementation), `64d852a` (release bump/tag)
 
 ### Actual changes
 
