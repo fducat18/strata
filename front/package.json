@@ -1,6 +1,6 @@
 {
   "name": "@strata/front",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "Strata asset management frontend",
   "private": true,
   "scripts": {
