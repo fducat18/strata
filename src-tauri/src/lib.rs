@@ -471,7 +471,10 @@ pub fn run() {
             _ => {}
         })
         .on_window_event(move |_window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
+            if matches!(
+                event,
+                tauri::WindowEvent::Destroyed | tauri::WindowEvent::CloseRequested { .. }
+            ) {
                 if let Ok(mut s) = sidecars_for_window.lock() {
                     s.shutdown_all();
                 }
@@ -483,7 +486,7 @@ pub fn run() {
     // RunEvent::ExitRequested ensures cleanup on Cmd-Q paths that don't
     // route through Window::Destroyed.
     app.run(move |_app_handle, event| {
-        if let RunEvent::ExitRequested { .. } = event {
+        if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
             if let Ok(mut s) = sidecars_for_run.lock() {
                 s.shutdown_all();
             }
