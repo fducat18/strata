@@ -74,7 +74,7 @@ When starting with Docker, the seed step is skipped automatically if the databas
 ```bash
 cd front
 npm install
-npm run dev                 # Starts on http://localhost:4321
+npm run dev                 # Starts on http://localhost:6543
 ```
 
 The frontend expects the backend at `http://localhost:3000/api/v1` by default.
@@ -126,7 +126,7 @@ Open three terminal tabs:
 cd backend && npm run start:dev
 
 # Tab 2 — Frontend
-cd front && npm run dev       # http://localhost:4321
+cd front && npm run dev       # http://localhost:6543
 
 # Tab 3 — Docs (optional, for authoring)
 cd docs && npm run dev        # http://localhost:8001
@@ -145,4 +145,3 @@ cd front
 npm test            # Unit tests (Vitest)
 npm run test:e2e    # E2E tests (Playwright)
 ```
-

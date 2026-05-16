@@ -85,7 +85,7 @@ export default defineConfig({
             { label: 'Desktop App', slug: 'desktopapp' },
             { label: 'Tech Stack', slug: 'techstack' },
             { label: 'Data Model', slug: 'datamodel' },
-            { label: 'Portfolio Recalculation', slug: 'technical/portfolio-snapshot-recalculation' },
+            { label: 'Portfolio Recalculation', slug: 'portfolio-snapshot-recalculation' },
           ],
         },
         {

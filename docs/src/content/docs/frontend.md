@@ -80,7 +80,7 @@ flowchart TD
 ```bash
 cd front
 npm install
-npm run dev      # Development server at http://localhost:4321
+npm run dev      # Development server at http://localhost:6543
 npm run build    # Production build
 npm run preview  # Preview production build
 npm test         # Vitest unit tests

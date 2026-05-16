@@ -9,7 +9,7 @@ Strata is a personal asset-tracking app: a **NestJS + Prisma (SQLite)** backend,
 ```
 backend/       NestJS (hexagonal: domain/ application/ infrastructure/ presentation/)
 front/         Astro 6 + React 19 + Tailwind v4 (Zustand + react-query)
-src-tauri/     Tauri v2 desktop shell (Rust); spawns backend (port 3456) + front (port 4321)
+src-tauri/     Tauri v2 desktop shell (Rust); spawns backend (port 3456) + front (port 6543)
 docs/          Astro Starlight docs site (Markdown-first)
 scripts/       Repo-wide Node scripts (version.mjs, gen-version.mjs, release.mjs, tauri-*.sh)
 issues/        Lightweight in-tree tracker for deferred work
@@ -31,14 +31,14 @@ npx prisma migrate dev --name <change>   # after schema.prisma edit
 
 # Frontend (cd front)
 npm install
-npm run dev                 # Astro on :4321
+npm run dev                 # Astro on :6543
 npm test                    # Vitest (~65 tests)
 npm run test:e2e            # Playwright e2e
 npm run build               # SSR via @astrojs/node
 
 # Docs (cd docs)
 npm install
-npm run dev                 # Starlight on :4321
+npm run dev                 # Starlight on :8001
 npm run build               # static → dist/
 
 # Desktop (repo root)
@@ -75,7 +75,7 @@ backend/src/
 
 **Frontend** keeps server state in `react-query` and ephemeral UI state in **Zustand** stores under `front/src/stores/`. SSR pages live in `front/src/pages/`; islands live in `front/src/components/`.
 
-**Tauri** spawns the NestJS backend on `127.0.0.1:3456` and the Astro SSR front on `127.0.0.1:4321` as sidecars. SQLite lives in `~/Library/Application Support/Strata/strata.db` (prod) or `Strata-Dev/` (dev). System Node is required (bundling deferred — see `issues/bundle-node-runtime.md`).
+**Tauri** spawns the NestJS backend on `127.0.0.1:3456` and the Astro SSR front on `127.0.0.1:6543` as sidecars. SQLite lives in `~/Library/Application Support/Strata/strata.db` (prod) or `Strata-Dev/` (dev). System Node is required (bundling deferred — see `issues/bundle-node-runtime.md`).
 
 ## Versioning (single source of truth: git tag)
 

@@ -25,7 +25,7 @@ Strata has two Astro projects. Both use Astro, but with **different output modes
 | Pages generated | At **request time** (live, per user visit) | At **build time** (once, into plain HTML files) |
 | Needs a runtime process | ✅ Node.js must be running | ❌ No process needed — just files on disk |
 | Served by | `@astrojs/node` adapter (Node.js) | nginx — a lightweight static file server |
-| Port | 4321 (dev + Docker) | 8001 (dev + Docker) |
+| Port | 6543 (dev + Docker) | 8001 (dev + Docker) |
 
 **Why `output: "server"` for the frontend?** The frontend renders pages that embed `PUBLIC_API_URL` and serve React hydration scripts — it must run a Node.js process both locally and in Docker.
 
@@ -115,4 +115,4 @@ npm run build    # Static build into docs/dist/
 npm run preview  # Preview the static build
 ```
 
-> Local dev URL: `http://localhost:8001/docs/` (port 8001 matches Docker — no conflict with the frontend on 4321).
+> Local dev URL: `http://localhost:8001/docs/` (port 8001 matches Docker — no conflict with the frontend on 6543).

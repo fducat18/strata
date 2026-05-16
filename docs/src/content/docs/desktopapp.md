@@ -13,7 +13,7 @@ that start/stop automatically with the app.
 ┌─────────────────────────────────────┐
 │         Tauri WebView (macOS)       │
 │  ┌───────────────────────────────┐  │
-│  │   Astro SSR (localhost:4321)  │  │
+│  │   Astro SSR (localhost:6543)  │  │
 │  └──────────────┬────────────────┘  │
 │                 │ HTTP              │
 │  ┌──────────────▼────────────────┐  │
@@ -35,7 +35,7 @@ On launch, the Tauri app:
    - **Production `.app` build** uses `strata.db` — shared with `npm run docker:prod`
 2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database
 3. Starts the NestJS backend on port 3456
-4. Starts the Astro frontend on port 4321
+4. Starts the Astro frontend on port 6543
 5. Shows a loading screen, then redirects to the frontend once healthy
 6. On quit, kills both child processes
 
@@ -147,7 +147,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 3. Confirm backend health by opening `http://localhost:3456/api/v1/health` while app is running.
 4. Create an asset and add a snapshot; restart app; verify data persists.
 5. Trigger **Settings → Backup → Export**, then import into a fresh dev DB.
-6. Quit app and confirm sidecar ports 3456/4321 are released.
+6. Quit app and confirm sidecar ports 3456/6543 are released.
 
 ## Menu Items
 
@@ -163,7 +163,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 | Service | Port | Notes |
 |---------|------|-------|
 | NestJS backend | 3456 | API at `http://localhost:3456/api/v1` |
-| Astro frontend | 4321 | Web UI at `http://localhost:4321` |
+| Astro frontend | 6543 | Web UI at `http://localhost:6543` |
 
 ## Troubleshooting
 
@@ -176,7 +176,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 ### Frontend fails to start
 
 - Check that `front/dist/server/entry.mjs` exists (`cd front && npm run build`)
-- Ensure port 4321 is free: `lsof -i :4321`
+- Ensure port 6543 is free: `lsof -i :6543`
 
 ### API URL mismatch
 
@@ -190,7 +190,7 @@ cd front && PUBLIC_API_URL="http://localhost:3456/api/v1" npm run build
 
 ```bash
 lsof -i :3456 -t | xargs kill -9
-lsof -i :4321 -t | xargs kill -9
+lsof -i :6543 -t | xargs kill -9
 ```
 
 ## Source checkout recommendation

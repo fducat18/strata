@@ -44,15 +44,15 @@
     const { listen } = window.__TAURI__?.event ?? {};
     if (listen) {
       listen('backend-ready', () => {
-        window.location.href = 'http://localhost:4321';
+        window.location.href = 'http://localhost:6543';
       });
     }
     // Fallback: poll the frontend server directly
     const poll = setInterval(async () => {
       try {
-        const r = await fetch('http://localhost:4321', { mode: 'no-cors' });
+        const r = await fetch('http://localhost:6543', { mode: 'no-cors' });
         clearInterval(poll);
-        window.location.href = 'http://localhost:4321';
+        window.location.href = 'http://localhost:6543';
       } catch (_) {}
     }, 1000);
   </script>

@@ -9,6 +9,7 @@ All Strata implementation plans, newest first. Each plan records the intent, dec
 
 | Plan | Description |
 |---|---|
+| [2026-05-16: Migrate frontend port 4321 to 6543](./2026-05-16-migrate-frontend-port-4321-to-6543) | Apply frontend port migration across web, Docker, Tauri sidecar, tests, scripts, and documentation; then validate with full quality gates. |
 | [2026-05-14: Desktop install to /Applications + doc site fixes](./2026-05-14-desktop-install-and-doc-fixes) | Add tauri:install script, fix architecture diagram port/mode confusion, fix strataapp.md duplicated intro, verify sidebar ordering. |
 | [2026-05-14: Doc site consistency fixes](./2026-05-14-doc-site-consistency-fixes) | Standardize release note titles, fix sidebar ordering (remove manual order overrides), delete badly named plan file, add plans index table, fix dev-setup Node 24 refs. |
 | [2026-05-14: Doc site ordering, Node 24 fixes, architecture diagram](./2026-05-14-doc-site-ordering-node24-fixes) | Fix Plans/Releases sidebar to show newest first, update 7 stale Node 22 references to Node 24, and correct the architecture diagram to show docs available in dev mode. |

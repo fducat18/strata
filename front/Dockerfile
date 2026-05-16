@@ -31,8 +31,8 @@ COPY --from=build --chown=strata:strata /app/node_modules ./node_modules
 COPY --from=build --chown=strata:strata /app/package.json ./
 USER strata
 ENV HOST=0.0.0.0
-ENV PORT=4321
-EXPOSE 4321
+ENV PORT=6543
+EXPOSE 6543
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:4321/ >/dev/null 2>&1 || exit 1
+  CMD wget -qO- http://127.0.0.1:6543/ >/dev/null 2>&1 || exit 1
 CMD ["node", "dist/server/entry.mjs"]

@@ -48,7 +48,7 @@ For the full script reference (docker/tauri/release), see the [Quickstart docs](
 |---|---|
 | Backend API | <http://localhost:3000/api/v1> |
 | Swagger UI | <http://localhost:3000/swagger> |
-| Frontend | <http://localhost:4321> |
+| Frontend | <http://localhost:6543> |
 | Docs | <http://localhost:8001> |
 
 The SQLite database persists in `backend/.data/strata-dev.db`. To start fresh: `npm run docker:reset`.

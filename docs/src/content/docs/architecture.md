@@ -17,7 +17,7 @@ Strata is composed of three services that work together. Each service has its ow
 flowchart TD
     You["👤 You"]
     Browser["🌐 Browser or Tauri App"]
-    Front["🖥️ Astro + React — Frontend\nport 4321"]
+    Front["🖥️ Astro + React — Frontend\nport 6543"]
     Back["⚙️ NestJS — Backend\nport 3000"]
 
     subgraph dockerdev["  🧪 Docker Dev  —  npm run docker:dev  "]
@@ -25,7 +25,7 @@ flowchart TD
     end
 
     subgraph docsdev["  📖 Docs Dev  —  cd docs && npm run dev  "]
-        DevDocs["📖 Docs Site\nport 4321\n⚠️ cannot run alongside docker:dev\n(same port)"]
+        DevDocs["📖 Docs Site\nport 8001"]
     end
 
     subgraph prod["  🚀 Prod  —  npm run docker:prod  "]
@@ -41,7 +41,7 @@ flowchart TD
     Nginx -->|serves| prod
 ```
 
-> **Docker Dev** (`docker:dev`): backend at port 3000, frontend at port 4321, using `strata-dev.db`. The docs site is **not started** — run it separately with `cd docs && npm run dev`, but note it also uses port 4321, so you can't run both at the same time.
+> **Docker Dev** (`docker:dev`): backend at port 3000, frontend at port 6543, using `strata-dev.db`. The docs site is **not started** — run it separately with `cd docs && npm run dev` on port 8001.
 >
 > **Docker Prod** (`docker:prod`): backend at port 3000, nginx at port 8001 serves both the frontend and the pre-built static docs site.
 
@@ -50,8 +50,8 @@ flowchart TD
 | Service | Technology | Dev Port | Prod Port | Notes |
 |---------|-----------|----------|-----------|-------|
 | Backend | NestJS + Prisma + SQLite | `3000` | `3000` | Always port 3000 |
-| Frontend | Astro 6 + React 19 | `4321` (docker:dev) | `8001` via nginx | nginx proxies prod frontend |
-| Docs | Astro Starlight | `4321` (manual, `cd docs && npm run dev`) | `8001` via nginx | ⚠️ port 4321 conflicts with docker:dev frontend |
+| Frontend | Astro 6 + React 19 | `6543` (docker:dev) | `8001` via nginx | nginx proxies prod frontend |
+| Docs | Astro Starlight | `8001` (manual, `cd docs && npm run dev`) | `8001` via nginx | Same port in local docs dev and docker prod docs endpoint |
 
 ## Dev vs Production
 
@@ -112,4 +112,3 @@ When you mark an asset as disposed (via `PATCH /api/v1/assets/:id/dispose`):
 ## Roadmap
 
 In v2, bank API / MCP integrations will create `ADJUST` transactions that flow into the existing `assetSnapshotService` pipeline. No breaking changes — just a new entry point into the existing cascade chain.
-

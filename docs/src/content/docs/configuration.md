@@ -25,7 +25,7 @@ In **development mode** (`npm run docker:dev`), you can access the app in two wa
 
 | Access method | Where | When to use |
 |---|---|---|
-| Web browser | `http://localhost:4321` | Day-to-day dev — fast reload, browser devtools, React hot update |
+| Web browser | `http://localhost:6543` | Day-to-day dev — fast reload, browser devtools, React hot update |
 | Tauri Desktop App | `./scripts/tauri-dev.sh` | Test native macOS window/menu bar while sharing dev DB |
 
 Web browser mode uses backend on `http://localhost:3000/api/v1` (Docker).

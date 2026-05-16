@@ -18,7 +18,7 @@ npm install
 PUBLIC_API_URL=http://localhost:3000/api/v1 npm run dev
 ```
 
-UI: <http://localhost:4321>
+UI: <http://localhost:6543>
 
 ## Commands
 

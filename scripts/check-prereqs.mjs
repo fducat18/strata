@@ -61,7 +61,7 @@ check(
 // ── Ports ────────────────────────────────────────────────────────────────────────────
 const ports = [
   { port: 3000, label: 'Backend API   port 3000' },
-  { port: 4321, label: 'Frontend      port 4321' },
+  { port: 6543, label: 'Frontend      port 6543' },
   { port: 8001, label: 'Docs site     port 8001' },
 ];
 

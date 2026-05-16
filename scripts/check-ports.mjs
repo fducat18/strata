@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // scripts/check-ports.mjs
-// Detects non-Docker processes occupying Docker-required ports (3000, 4321, 8001).
+// Detects non-Docker processes occupying Docker-required ports (3000, 6543, 8001).
 // Exits with code 1 and prints termination instructions if stale local servers are found.
 // Skips Docker Desktop (docker/vpnkit/com.docker) and Colima/Lima port-forwarding SSH processes.
 // Called automatically by docker:dev and docker:reset.
@@ -9,7 +9,7 @@ import { execSync } from 'node:child_process';
 
 const PORTS = [
   { port: 3000, service: 'NestJS API' },
-  { port: 4321, service: 'Astro frontend' },
+  { port: 6543, service: 'Astro frontend' },
   { port: 8001, service: 'Docs (nginx)' },
 ];
 
@@ -73,4 +73,4 @@ if (blocked) {
   process.exit(1);
 }
 
-console.log('✅  Ports 3000, 4321, 8001 are clear for Docker.');
+console.log('✅  Ports 3000, 6543, 8001 are clear for Docker.');

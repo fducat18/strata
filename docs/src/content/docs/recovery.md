@@ -50,7 +50,7 @@ curl -s http://localhost:3000/api/v1/portfolio-snapshots | jq length
 curl -s http://localhost:3000/api/v1/version
 ```
 
-Then open http://localhost:4321 and check the dashboard renders your assets and net worth chart.
+Then open http://localhost:6543 and check the dashboard renders your assets and net worth chart.
 
 ---
 
@@ -81,7 +81,7 @@ Then launch the app. The current data folder is shown in **About → Strata**
 If all you have is the JSON export from **Settings → Export Backup**:
 
 1. Start the backend (Docker or local — see [Quick Start](/docs/quickstart/)).
-2. Open http://localhost:4321/settings.
+2. Open http://localhost:6543/settings.
 3. Click **Import Backup**, pick the JSON file, confirm in the dialog.
 
 The import endpoint (`POST /api/v1/admin/restore`) is idempotent and wraps

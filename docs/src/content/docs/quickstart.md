@@ -67,7 +67,7 @@ See `backend/certs/README.md` for other platforms and CA names.
 |---------|-----|
 | Backend API | http://localhost:3000/api/v1 |
 | Swagger UI | http://localhost:3000/swagger |
-| Frontend | http://localhost:4321 |
+| Frontend | http://localhost:6543 |
 | Docs | http://localhost:8001/docs/ |
 
 ## Option 2: Desktop App (Tauri)
@@ -93,7 +93,7 @@ npm run tauri:dev
 ```bash
 npm run tauri:prod
 ```
-The .app auto-spawns the NestJS backend (port `3456`) and Astro frontend (port `4321`) as sidecars. In `tauri:dev`, SQLite lives at `backend/.data/strata-dev.db` (shared with Docker dev). In production `.app` builds, SQLite lives at `~/Library/Application Support/Strata/strata.db`.
+The .app auto-spawns the NestJS backend (port `3456`) and Astro frontend (port `6543`) as sidecars. In `tauri:dev`, SQLite lives at `backend/.data/strata-dev.db` (shared with Docker dev). In production `.app` builds, SQLite lives at `~/Library/Application Support/Strata/strata.db`.
 
 **Reset dev data** — fresh DB with seeded demo data, keep Astro build cache:
 ```bash
@@ -123,8 +123,8 @@ lsof -i :3000
 # PID shown in the second column — replace 12345 with the actual PID
 kill 12345
 
-# Same for the frontend (4321) and docs (8001) if needed
-lsof -i :4321
+# Same for the frontend (6543) and docs (8001) if needed
+lsof -i :6543
 lsof -i :8001
 ```
 
@@ -177,7 +177,7 @@ npm run test:e2e      # E2E tests (Playwright)
 ```
 strata/
 ├── backend/           ← NestJS API (port 3000)
-├── front/             ← Astro + React UI (port 4321)
+├── front/             ← Astro + React UI (port 6543)
 ├── docs/              ← Astro Starlight documentation
 ├── .bruno/            ← Bruno API collection (all endpoints)
 └── docker-compose.yml

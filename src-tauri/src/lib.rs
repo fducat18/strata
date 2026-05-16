@@ -2,7 +2,7 @@
 //
 // Responsibilities:
 // 1. Start the NestJS backend as a child process (port 3456)
-// 2. Start the Astro frontend server as a child process (port 4321)
+// 2. Start the Astro frontend server as a child process (port 6543)
 // 3. Wait until both servers are healthy before navigating to the frontend
 // 4. Stop both servers when the app quits (incl. Cmd-Q, panic, abort)
 // 5. Provide IPC commands for revealing the data folder + reading version
@@ -16,7 +16,7 @@ use tauri::{Emitter, Manager, RunEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 const BACKEND_PORT: u16 = 3456;
-const FRONTEND_PORT: u16 = 4321;
+const FRONTEND_PORT: u16 = 6543;
 
 /// Build-time version metadata (injected by build.rs from scripts/version.mjs).
 const APP_VERSION: &str = env!("STRATA_VERSION");
@@ -175,7 +175,7 @@ fn spawn_backend(
         .env("PORT", BACKEND_PORT.to_string())
         .env("NODE_ENV", "production")
         .env("ENABLE_SWAGGER", "false")
-        .env("ALLOWED_ORIGINS", "tauri://localhost,http://localhost:4321")
+        .env("ALLOWED_ORIGINS", "tauri://localhost,http://localhost:6543")
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()

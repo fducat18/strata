@@ -33,6 +33,7 @@ test.describe('Theme', () => {
     await page.goto('/settings');
     const darkBtn = page.getByRole('button', { name: /Use Dark theme/i });
     await expect(darkBtn).toBeVisible();
+    await page.waitForLoadState('networkidle');
     await darkBtn.click();
     await expect(darkBtn).toHaveAttribute('aria-pressed', 'true');
 

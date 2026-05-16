@@ -261,7 +261,7 @@ curl -fsS -X POST http://localhost:3000/api/v1/admin/restore \
 # 4. Verify.
 curl -fsS http://localhost:3000/api/v1/assets | jq 'length'
 curl -fsS http://localhost:3000/api/v1/portfolio-snapshots | jq 'length'
-open http://localhost:4321
+open http://localhost:6543
 ```
 
 If you also kept the raw `strata.db`, you can skip step 3 entirely:

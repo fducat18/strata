@@ -43,7 +43,7 @@ services:
     container_name: strata-front
     restart: ${RESTART_POLICY:-unless-stopped}
     ports:
-      - "4321:4321"
+      - "6543:6543"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
     depends_on:

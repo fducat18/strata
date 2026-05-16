@@ -6,7 +6,7 @@ import { execFileSync } from 'child_process';
 import * as path from 'path';
 import { AppModule } from './app.module.js';
 
-const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:4321', 'tauri://localhost'];
+const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:6543', 'tauri://localhost'];
 
 function parseAllowedOrigins(): string[] {
   const raw = process.env.ALLOWED_ORIGINS;
