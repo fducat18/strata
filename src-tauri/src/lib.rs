@@ -223,6 +223,39 @@ fn cleanup_stale_backend(pid_file: &PathBuf) {
     let _ = fs::remove_file(pid_file);
 }
 
+fn cleanup_stale_legacy_frontend() {
+    let pids = Command::new("lsof")
+        .args(["-nP", "-iTCP:4321", "-sTCP:LISTEN", "-t"])
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .unwrap_or_default();
+
+    for raw_pid in pids.lines() {
+        let pid = raw_pid.trim();
+        if pid.is_empty() {
+            continue;
+        }
+        let cmd = Command::new("ps")
+            .args(["-p", pid, "-o", "command="])
+            .output()
+            .ok()
+            .and_then(|o| String::from_utf8(o.stdout).ok())
+            .unwrap_or_default();
+        if !cmd.contains("/front/dist/server/entry.mjs") {
+            continue;
+        }
+        log::warn!(
+            "Found stale legacy frontend sidecar pid={} ({}) — terminating",
+            pid,
+            cmd.trim()
+        );
+        let _ = Command::new("kill").args(["-TERM", pid]).status();
+        thread::sleep(Duration::from_millis(250));
+        let _ = Command::new("kill").args(["-KILL", pid]).status();
+    }
+}
+
 fn wait_for_backend(url: &str, desktop_token: &str, max_attempts: u32) -> bool {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(2))
@@ -373,6 +406,7 @@ pub fn run() {
             let desktop_token = random_hex_token();
             let backend_pid_file = backend_pid_file_path();
             cleanup_stale_backend(&backend_pid_file);
+            cleanup_stale_legacy_frontend();
 
             let root = repo_root(app);
             let backend_path = root.join("backend");
@@ -423,10 +457,20 @@ pub fn run() {
 
                 if backend_ok {
                     log::info!("Backend ready — navigating to bundled frontend");
+                    if let Some(window) = handle.get_webview_window("main") {
+                        let navigation_script = format!(
+                            "sessionStorage.setItem('STRATA_DESKTOP_BACKEND_URL', {api:?}); \
+                             sessionStorage.setItem('STRATA_DESKTOP_TOKEN', {token:?}); \
+                             window.location.href = '/app/';",
+                            api = backend_api_url,
+                            token = desktop_token
+                        );
+                        let _ = window.eval(&navigation_script);
+                    }
                     let _ = handle.emit("backend-ready", BackendReadyPayload {
                         ready: true,
-                        backend_api_url,
-                        desktop_token,
+                        backend_api_url: backend_api_url.clone(),
+                        desktop_token: desktop_token.clone(),
                     });
                 } else {
                     log::error!("Backend failed to start");
