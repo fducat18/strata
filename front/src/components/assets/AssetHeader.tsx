@@ -1,6 +1,7 @@
 import { Badge, Button } from '@/components/ui';
 import { ArrowLeft, Edit, Trash2, Ban, Camera } from 'lucide-react';
 import { formatDate, formatQuantity, getAssetTypeIcon } from '@/lib/format';
+import { appHref } from '@/lib/appPath';
 import { useLocale } from '@/stores/settingsStore';
 import type { Asset } from '@/lib/types';
 
@@ -16,7 +17,7 @@ export function AssetHeader({ asset, onSnapshot, onEdit, onDispose, onDelete }: 
   const locale = useLocale();
   return (
     <div className="flex items-center gap-4">
-      <a href="/assets" className="text-muted-foreground hover:text-foreground" aria-label="Back to assets">
+      <a href={appHref('/assets')} className="text-muted-foreground hover:text-foreground" aria-label="Back to assets">
         <ArrowLeft className="h-5 w-5" />
       </a>
       <div className="flex-1">

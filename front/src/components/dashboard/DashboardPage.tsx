@@ -4,6 +4,7 @@ import { TrendingUp, AlertCircle, TrendingDown, Package } from 'lucide-react';
 import { NetWorthChart } from './NetWorthChart';
 import { AllocationChart } from './AllocationChart';
 import { formatMoney, toDecimal } from '@/lib/format';
+import { appHref } from '@/lib/appPath';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
 
 export function DashboardPage() {
@@ -81,7 +82,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <a href="/assets" className="block">
+        <a href={appHref('/assets')} className="block">
           <Card className="hover:bg-accent transition-colors cursor-pointer h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -96,7 +97,7 @@ export function DashboardPage() {
           </Card>
         </a>
 
-        <a href="/asset-types" className="block">
+        <a href={appHref('/asset-types')} className="block">
           <Card className={`hover:bg-accent transition-colors cursor-pointer h-full${totalLiabilitiesValue > 0 ? '' : ''}`}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>

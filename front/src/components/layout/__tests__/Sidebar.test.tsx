@@ -46,6 +46,12 @@ describe('Sidebar', () => {
     expect(assetsLink).toHaveClass('bg-sidebar-accent');
   });
 
+  it('marks active links when currentPath includes desktop /app prefix', () => {
+    render(<Sidebar currentPath="/app/assets" />);
+    const assetsLink = screen.getByRole('link', { name: /Assets/i });
+    expect(assetsLink).toHaveClass('bg-sidebar-accent');
+  });
+
   it('does not mark Dashboard as active on /assets', () => {
     render(<Sidebar currentPath="/assets" />);
     const dashboardLink = screen.getByRole('link', { name: /Dashboard/i });

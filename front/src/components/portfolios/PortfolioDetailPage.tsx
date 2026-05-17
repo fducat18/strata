@@ -11,6 +11,7 @@ import {
 } from '@/components/ui';
 import { Camera, Edit, Trash2, ArrowLeft, Package } from 'lucide-react';
 import { formatCurrency, formatDate, formatDateTime, getAssetTypeIcon } from '@/lib/utils';
+import { appHref } from '@/lib/appPath';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface Props {
@@ -50,7 +51,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const handleDelete = async () => {
     if (confirm('Delete this portfolio and all its assets?')) {
       await deleteMutation.mutateAsync(portfolioId);
-      window.location.href = '/portfolios';
+      window.location.href = appHref('/portfolios');
     }
   };
 
@@ -61,7 +62,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/portfolios" className="text-muted-foreground hover:text-foreground" aria-label="Back to portfolios">
+        <a href={appHref('/portfolios')} className="text-muted-foreground hover:text-foreground" aria-label="Back to portfolios">
           <ArrowLeft className="h-5 w-5" />
         </a>
         <div className="flex-1">
@@ -114,7 +115,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Assets ({activeAssets.length})</CardTitle>
-          <a href="/assets">
+          <a href={appHref('/assets')}>
             <Button variant="outline" size="sm"><Package className="h-4 w-4" /> Manage Assets</Button>
           </a>
         </CardHeader>
@@ -133,7 +134,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                 {activeAssets.map(asset => (
                   <TableRow key={asset.id}>
                     <TableCell>
-                      <a href={`/assets/detail?id=${asset.id}`} className="font-medium hover:text-primary">{asset.name}</a>
+                      <a href={appHref(`/assets/detail?id=${asset.id}`)} className="font-medium hover:text-primary">{asset.name}</a>
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">

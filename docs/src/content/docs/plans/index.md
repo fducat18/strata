@@ -9,6 +9,7 @@ All Strata implementation plans, newest first. Each plan records the intent, dec
 
 | Plan | Description |
 |---|---|
+| [2026-05-17: Fix Tauri prod tab navigation regression](./2026-05-17-fix-tauri-prod-tab-navigation) | Fix desktop app navigation links that escape /app/ and bounce users back to the startup loader. |
 | [2026-05-16: Desktop no-localhost frontend + clean shutdown](./2026-05-16-desktop-no-localhost-and-clean-shutdown) | Harden desktop mode so frontend pages are not served on localhost, backend localhost API is desktop-auth protected, and sidecars always stop on app close. |
 | [2026-05-16: Migrate frontend port 4321 to 6543](./2026-05-16-migrate-frontend-port-4321-to-6543) | Apply frontend port migration across web, Docker, Tauri sidecar, tests, scripts, and documentation; then validate with full quality gates. |
 | [2026-05-14: Desktop install to /Applications + doc site fixes](./2026-05-14-desktop-install-and-doc-fixes) | Add tauri:install script, fix architecture diagram port/mode confusion, fix strataapp.md duplicated intro, verify sidebar ordering. |

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VERSION } from '@/lib/version';
+import { appHref, normalizeAppPath } from '@/lib/appPath';
 
 const navItems = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const normalizedCurrentPath = normalizeAppPath(currentPath);
 
   return (
     <aside
@@ -48,11 +50,13 @@ export function Sidebar({ currentPath }: SidebarProps) {
 
       <nav className="flex-1 space-y-1 p-2">
         {navItems.map((item) => {
-          const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+          const isActive =
+            normalizedCurrentPath === item.href ||
+            (item.href !== '/' && normalizedCurrentPath.startsWith(item.href));
           return (
             <a
               key={item.href}
-              href={item.href}
+              href={appHref(item.href)}
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
