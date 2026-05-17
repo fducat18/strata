@@ -1,6 +1,6 @@
 {
   "name": "strata",
-  "version": "1.2.10",
+  "version": "1.2.11",
   "private": true,
   "description": "Strata — universal asset-tracking & net-worth dashboard",
   "scripts": {
