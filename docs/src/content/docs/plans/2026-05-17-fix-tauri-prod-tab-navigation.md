@@ -52,7 +52,7 @@ In installed desktop app mode (`npm run tauri:install`), Strata opens Dashboard 
 
 ## Execution Summary
 
-**Commit**: Not committed yet
+**Commit**: `15e6684`, `c33b21f`
 
 ### Actual changes
 
