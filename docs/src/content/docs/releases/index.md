@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.2.12](./v1-2-12) | Fix tauri-install loader marker false failure with deterministic log-window polling and regression script coverage |
 | [v1.2.11](./v1-2-11) | Fix desktop tab navigation bounce to loader by making frontend links base-aware for `/app/` static mode |
 | [v1.2.10](./v1-2-10) | Fix desktop install regression: strict post-install checks, stale legacy `:4321` cleanup, robust bundled-frontend navigation fallback |
 | [v1.2.9](./v1-2-9) | Desktop quit-path hotfix: backend sidecar now reliably stops on app close; no lingering localhost listener |

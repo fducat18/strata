@@ -51,7 +51,7 @@ Post-install validation in `scripts/tauri-install.sh` had race-prone marker logi
 
 ## Execution Summary
 
-**Commit**: `TBD`
+**Commit**: `d2a62fb`, `a2e68e6`
 
 ### Actual changes
 
