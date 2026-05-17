@@ -18,6 +18,8 @@ APP_NAME="Strata.app"
 BUILD_PATH="$REPO_ROOT/src-tauri/target/release/bundle/macos/$APP_NAME"
 INSTALL_PATH="/Applications/$APP_NAME"
 LOG_PATH="$HOME/Library/Logs/net.ducatillon.strata/Strata.log"
+# shellcheck source=/dev/null
+source "$REPO_ROOT/scripts/lib/tauri-install-checks.sh"
 
 find_matching_port_pid() {
   local port="$1"
@@ -105,14 +107,12 @@ if [[ -z "$backend_pid" ]]; then
   exit 1
 fi
 
-new_logs=""
-if [[ -f "$LOG_PATH" ]]; then
-  new_logs="$(tail -n +$((log_lines_before + 1)) "$LOG_PATH" 2>/dev/null || true)"
-fi
-if [[ "$new_logs" != *"Backend ready — navigating to bundled frontend"* ]]; then
+if ! wait_for_log_marker "$LOG_PATH" 30 "Backend ready — navigating to bundled frontend" "$log_lines_before"; then
   osascript -e 'tell application "Strata" to quit' >/dev/null 2>&1 || true
   echo "❌ Post-install check failed: loader readiness marker missing in desktop log."
   echo "   Expected: Backend ready — navigating to bundled frontend"
+  echo "   Last desktop log lines:"
+  tail -n 20 "$LOG_PATH" 2>/dev/null || true
   exit 1
 fi
 
