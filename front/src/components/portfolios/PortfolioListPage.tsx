@@ -48,7 +48,7 @@ export function PortfolioListPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {portfolios.map(p => (
             <Card key={p.id} className="group relative">
-              <a href={`/portfolios/${p.id}`} className="block">
+              <a href={`${import.meta.env.BASE_URL}portfolios/${p.id}`} className="block">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4" />

@@ -185,6 +185,15 @@ fn spawn_backend(
 
     log::info!("Starting backend: {} {}", node, main_js.display());
 
+    let allowed_origins = if is_dev_build() {
+        // Dev: allow any 127.0.0.1 port (Tauri dev server port is dynamic) + production Tauri
+        // The backend middleware treats http://127.0.0.1:1430 as a sentinel to enable prefix matching
+        "http://localhost:6543,http://127.0.0.1:6543,http://127.0.0.1:1430,tauri://localhost"
+    } else {
+        // Prod: only allow production Tauri
+        "tauri://localhost"
+    };
+
     Command::new(&node)
         .arg(&main_js)
         .current_dir(backend_path)
@@ -192,7 +201,7 @@ fn spawn_backend(
         .env("PORT", BACKEND_PORT.to_string())
         .env("NODE_ENV", "production")
         .env("ENABLE_SWAGGER", "false")
-        .env("ALLOWED_ORIGINS", "tauri://localhost")
+        .env("ALLOWED_ORIGINS", allowed_origins)
         .env(DESKTOP_TOKEN_ENV, desktop_token)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
