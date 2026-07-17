@@ -136,7 +136,7 @@ export function AssetDetailPage({ assetId }: Props) {
         onDelete={handleDelete}
       />
 
-      <AssetValueChart snapshots={snapshots} />
+      <AssetValueChart assetId={resolvedAssetId} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <AssetTagsCard
