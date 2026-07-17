@@ -1,12 +1,10 @@
 import { useMemo } from 'react';
 import { useAssets } from './assets';
+import { TIME_RANGES, type TimeRange } from '../utils/timeRange.js';
 import type { Asset, AssetSnapshot } from '../types';
 
 export const FILTER_MODES = ['total', 'by-group', 'by-type', 'by-category'] as const;
 export type FilterMode = (typeof FILTER_MODES)[number];
-
-export const TIME_RANGES = ['1D', '7D', '1M', '3M', 'YTD', '1Y', 'ALL'] as const;
-export type TimeRange = (typeof TIME_RANGES)[number];
 
 export const GROUP_COLORS: Record<string, string> = {
   FINANCIAL: '#3b82f6',

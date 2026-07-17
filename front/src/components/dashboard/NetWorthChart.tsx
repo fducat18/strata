@@ -11,8 +11,10 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { formatMoney, formatDate } from '@/lib/format';
+import { TimeRangeToggle } from '@/components/shared/TimeRangeToggle.js';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
-import { FILTER_MODES, TIME_RANGES, type FilterMode, type TimeRange, useNetWorthBreakdown } from '@/lib/hooks';
+import { getSinceDate, type TimeRange } from '@/lib/utils/timeRange.js';
+import { FILTER_MODES, type FilterMode, useNetWorthBreakdown } from '@/lib/hooks';
 
 const MODE_LABELS: Record<FilterMode, string> = {
   total: 'Net Worth',
@@ -20,19 +22,6 @@ const MODE_LABELS: Record<FilterMode, string> = {
   'by-type': 'By Type',
   'by-category': 'By Category',
 };
-
-function getSinceDate(range: TimeRange): Date | undefined {
-  const now = new Date();
-  switch (range) {
-    case '1D': { const d = new Date(now); d.setDate(d.getDate() - 1); return d; }
-    case '7D': { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
-    case '1M': { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
-    case '3M': { const d = new Date(now); d.setMonth(d.getMonth() - 3); return d; }
-    case 'YTD': return new Date(now.getFullYear(), 0, 1);
-    case '1Y': { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return d; }
-    case 'ALL': return undefined;
-  }
-}
 
 export function NetWorthChart() {
   const [mode, setMode] = useState<FilterMode>('total');
@@ -106,32 +95,6 @@ export function NetWorthChart() {
   );
 }
 
-function TimeRangeToggle({
-  range,
-  onRangeChange,
-}: {
-  range: TimeRange;
-  onRangeChange: (r: TimeRange) => void;
-}) {
-  return (
-    <div className="flex gap-1 flex-wrap">
-      {TIME_RANGES.map((r) => (
-        <button
-          key={r}
-          onClick={() => onRangeChange(r)}
-          className={`px-2.5 py-0.5 text-xs rounded border transition-colors ${
-            range === r
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-transparent text-muted-foreground border-border hover:bg-muted'
-          }`}
-        >
-          {r}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function FilterToggle({
   mode,
   onModeChange,
@@ -157,4 +120,3 @@ function FilterToggle({
     </div>
   );
 }
-
