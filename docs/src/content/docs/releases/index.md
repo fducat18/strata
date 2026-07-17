@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.3.0](./v1-3-0) | 2026-07-17 | Asset history time range filtering, dashboard refactor (DRY) |
 | [v1.2.13](./v1-2-13) | Fix endless "Starting services…" in desktop app: CORS middleware overhaul + base-aware asset navigation links |
 | [v1.2.12](./v1-2-12) | Fix tauri-install loader marker false failure with deterministic log-window polling and regression script coverage |
 | [v1.2.11](./v1-2-11) | Fix desktop tab navigation bounce to loader by making frontend links base-aware for `/app/` static mode |
