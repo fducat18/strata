@@ -63,6 +63,7 @@ export default defineConfig({
           items: [
             { label: 'Overview', slug: 'strataapp' },
             { label: 'Features', slug: 'features' },
+            { label: 'Asset Management', slug: 'features/asset-management' },
             { label: 'Use Cases', slug: 'usecases' },
             { label: 'Mental Model', slug: 'mentalmodel' },
           ],
