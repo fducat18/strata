@@ -1,30 +1,58 @@
+import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatMoney, formatDate, toDecimal } from '@/lib/format';
 import { useLocale, useCurrency } from '@/stores/settingsStore';
-import type { AssetSnapshot } from '@/lib/types';
+import { TimeRangeToggle } from '@/components/shared/TimeRangeToggle.js';
+import { getSinceDate, type TimeRange } from '@/lib/utils/timeRange.js';
+import { useAssetValueHistory } from '@/lib/hooks/useAssetValueHistory.js';
 
 interface Props {
-  snapshots: AssetSnapshot[];
+  assetId: string;
 }
 
-export function AssetValueChart({ snapshots }: Props) {
+export function AssetValueChart({ assetId }: Props) {
+  const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
   const locale = useLocale();
   const currency = useCurrency();
+  
+  const since = useMemo(() => getSinceDate(timeRange), [timeRange]);
+  const { data: snapshots, isLoading, isError } = useAssetValueHistory(assetId, since);
 
-  if (snapshots.length === 0) return null;
+  if (isLoading) return null;
+  if (isError) return null;
+  
+  if (snapshots.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Value History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TimeRangeToggle range={timeRange} onRangeChange={setTimeRange} />
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No snapshots in this time range. Add snapshots to track value over time.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const chartData = [...snapshots]
-    .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
-    .map((s) => ({
-      date: formatDate(s.observedAt, { locale }),
-      value: toDecimal(s.value)?.toNumber() ?? 0,
-    }));
+  const chartData = useMemo(() => 
+    [...snapshots]
+      .sort((a, b) => new Date(a.observedAt).getTime() - new Date(b.observedAt).getTime())
+      .map((s) => ({
+        date: formatDate(s.observedAt, { locale }),
+        value: toDecimal(s.value)?.toNumber() ?? 0,
+      })),
+    [snapshots, locale]
+  );
 
   return (
     <Card>
       <CardHeader><CardTitle>Value History</CardTitle></CardHeader>
       <CardContent>
+        <TimeRangeToggle range={timeRange} onRangeChange={setTimeRange} />
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart data={chartData}>
             <defs>
