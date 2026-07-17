@@ -6,6 +6,11 @@ export type TimeRange = (typeof TIME_RANGES)[number];
 /**
  * Convert a TimeRange to a Date cutoff for filtering.
  * Returns undefined for 'ALL' (no filtering).
+ * 
+ * Note: Uses JavaScript's native Date arithmetic, which has edge case behavior
+ * for month/year boundaries. For example, Mar 31 minus 1 month becomes Mar 3
+ * (not Feb 28), and Feb 29 (leap year) minus 1 year overflows to Mar 1.
+ * This is acceptable for time range filtering where precision to the day is not critical.
  */
 export function getSinceDate(range: TimeRange): Date | undefined {
   const now = new Date();
