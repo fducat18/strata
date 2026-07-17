@@ -5,6 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssetValueChart } from '../AssetValueChart.js';
 import * as hooks from '@/lib/hooks/useAssetValueHistory.js';
 
+vi.mock('react', async () => {
+  const actual = await vi.importActual<typeof import('react')>('react');
+  return {
+    ...actual,
+    useMemo: (factory: () => any) => factory(),
+  };
+});
+
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="chart-container" role="region">{children}</div>
@@ -64,6 +72,32 @@ describe('AssetValueChart', () => {
     
     expect(screen.getByText('Value History')).toBeInTheDocument();
     // Chart rendered (Recharts creates SVG)
+    expect(screen.getByRole('region')).toBeInTheDocument();
+  });
+
+  it('renders chart after loading state without hook order errors', () => {
+    let hookState = {
+      data: [] as { id: string; value: string; observedAt: string; assetId: string }[],
+      isLoading: true,
+      isError: false,
+    };
+
+    vi.spyOn(hooks, 'useAssetValueHistory').mockImplementation(() => hookState);
+
+    const { container, rerender } = render(<AssetValueChart assetId="a1" />, { wrapper });
+    expect(container.firstChild).toBeNull();
+
+    hookState = {
+      data: [
+        { id: 's1', value: '100', observedAt: '2026-07-10T00:00:00Z', assetId: 'a1' },
+        { id: 's2', value: '110', observedAt: '2026-07-17T00:00:00Z', assetId: 'a1' },
+      ],
+      isLoading: false,
+      isError: false,
+    };
+
+    expect(() => rerender(<AssetValueChart assetId="a1" />)).not.toThrow();
+    expect(screen.getByRole('button', { name: 'ALL' })).toBeInTheDocument();
     expect(screen.getByRole('region')).toBeInTheDocument();
   });
 

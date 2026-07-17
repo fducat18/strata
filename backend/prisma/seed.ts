@@ -239,22 +239,83 @@ const DEMO_ASSET_HISTORY: Record<string, { startValue: number; monthlyDelta: num
   'Renault Kangoo 2019':   { startValue: 2560,   monthlyDelta: -40   },
 };
 
-/** Returns an array of {observedAt, value} covering 14 months ago → today (15 points). */
+function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return startOfDay(next);
+}
+
+function interpolateValue(
+  observedAt: Date,
+  monthlyPoints: { observedAt: Date; value: number }[],
+): number {
+  const targetTime = observedAt.getTime();
+
+  for (let index = 0; index < monthlyPoints.length - 1; index += 1) {
+    const current = monthlyPoints[index];
+    const next = monthlyPoints[index + 1];
+    const currentTime = current.observedAt.getTime();
+    const nextTime = next.observedAt.getTime();
+
+    if (targetTime < currentTime || targetTime > nextTime) continue;
+    if (targetTime === currentTime) return current.value;
+    if (targetTime === nextTime) return next.value;
+
+    const ratio = (targetTime - currentTime) / (nextTime - currentTime);
+    return current.value + (next.value - current.value) * ratio;
+  }
+
+  return monthlyPoints.at(-1)?.value ?? 0;
+}
+
+/** Returns 11 older monthly points plus weekly points for the last 3 months. */
 function buildSnapshotHistory(assetName: string): { observedAt: Date; value: number }[] {
   const hist = DEMO_ASSET_HISTORY[assetName];
   if (!hist) return [];
-  const now = new Date();
-  const points: { observedAt: Date; value: number }[] = [];
-  for (let i = 14; i >= 0; i--) {
+
+  const now = startOfDay(new Date());
+  const monthlyPoints: { observedAt: Date; value: number }[] = [];
+
+  for (let i = 14; i >= 0; i -= 1) {
     const d = new Date(now);
     d.setMonth(d.getMonth() - i);
-    // Zero out time to midnight UTC for clean dates
-    d.setHours(0, 0, 0, 0);
     const monthIndex = 14 - i;
     const value = Math.max(0, hist.startValue + monthIndex * hist.monthlyDelta);
-    points.push({ observedAt: d, value: Math.round(value * 100) / 100 });
+    monthlyPoints.push({ observedAt: startOfDay(d), value: Math.round(value * 100) / 100 });
   }
-  return points;
+
+  const olderMonthlyPoints = monthlyPoints.slice(0, 11);
+  const weeklyStart = new Date(now);
+  weeklyStart.setMonth(weeklyStart.getMonth() - 3);
+
+  const weeklyPoints: { observedAt: Date; value: number }[] = [];
+  for (let observedAt = startOfDay(weeklyStart); observedAt < now; observedAt = addDays(observedAt, 7)) {
+    const value = Math.max(0, interpolateValue(observedAt, monthlyPoints));
+    weeklyPoints.push({ observedAt, value: Math.round(value * 100) / 100 });
+  }
+
+  const yesterday = addDays(now, -1);
+  if (!weeklyPoints.some((point) => point.observedAt.getTime() === yesterday.getTime())) {
+    weeklyPoints.push({
+      observedAt: yesterday,
+      value: Math.round(Math.max(0, interpolateValue(yesterday, monthlyPoints)) * 100) / 100,
+    });
+  }
+
+  if (weeklyPoints.at(-1)?.observedAt.getTime() !== now.getTime()) {
+    weeklyPoints.push({
+      observedAt: now,
+      value: monthlyPoints.at(-1)?.value ?? 0,
+    });
+  }
+
+  return [...olderMonthlyPoints, ...weeklyPoints];
 }
 
 async function seedPortfolioSnapshot(): Promise<void> {

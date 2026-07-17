@@ -22,7 +22,7 @@ export function AssetValueChart({ assetId }: Props) {
   if (isLoading) return null;
   if (isError) return null;
   
-  if (snapshots.length === 0) {
+  if (!snapshots || snapshots.length === 0) {
     return (
       <Card>
         <CardHeader>
