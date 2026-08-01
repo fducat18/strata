@@ -106,7 +106,7 @@ showed **"Cannot Load Services…"**.
 
 ## Execution Summary
 
-**Commit**: _<fix commit SHA — filled at commit time>_
+**Commit**: `6a42a2a815389954a6f09d1d02dbe4ac1347c88a` (release commit `chore: release v1.3.1` follows)
 
 ### Actual changes
 
