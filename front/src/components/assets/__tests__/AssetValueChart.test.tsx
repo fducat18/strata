@@ -5,14 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssetValueChart } from '../AssetValueChart.js';
 import * as hooks from '@/lib/hooks/useAssetValueHistory.js';
 
-vi.mock('react', async () => {
-  const actual = await vi.importActual<typeof import('react')>('react');
-  return {
-    ...actual,
-    useMemo: (factory: () => any) => factory(),
-  };
-});
-
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="chart-container" role="region">{children}</div>

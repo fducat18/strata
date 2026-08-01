@@ -22,18 +22,19 @@ const DESKTOP_BACKEND_URL_KEY = 'STRATA_DESKTOP_BACKEND_URL';
 const DESKTOP_TOKEN_KEY = 'STRATA_DESKTOP_TOKEN';
 const DESKTOP_TOKEN_HEADER = 'X-Strata-Desktop-Token';
 
-function getDesktopSessionValue(key: string): string | undefined {
+function getDesktopValue(key: string): string | undefined {
   if (typeof window === 'undefined') return undefined;
-  const value = window.sessionStorage.getItem(key);
+  // Check localStorage first (desktop persists there), then sessionStorage (legacy)
+  const value = window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
   return value && value.length > 0 ? value : undefined;
 }
 
 function getDesktopBackendUrl(): string | undefined {
-  return getDesktopSessionValue(DESKTOP_BACKEND_URL_KEY);
+  return getDesktopValue(DESKTOP_BACKEND_URL_KEY);
 }
 
 function getDesktopToken(): string | undefined {
-  return getDesktopSessionValue(DESKTOP_TOKEN_KEY);
+  return getDesktopValue(DESKTOP_TOKEN_KEY);
 }
 
 function normalizeError(err: AxiosError<{ message?: string; code?: string; requestId?: string }>): ApiError {

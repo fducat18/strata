@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, afterEach } from 'vitest';
 import { createApiClient } from '../client';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
@@ -79,5 +79,35 @@ describe('createApiClient', () => {
       code: 'ECONNREFUSED',
       message: 'Network Error',
     });
+  });
+});
+
+describe('createApiClient — desktop storage', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  it('uses the desktop backend URL from localStorage', () => {
+    window.localStorage.setItem('STRATA_DESKTOP_BACKEND_URL', 'http://127.0.0.1:3456/api/v1');
+    expect(createApiClient().defaults.baseURL).toBe('http://127.0.0.1:3456/api/v1');
+  });
+
+  it('prefers localStorage over sessionStorage for the backend URL', () => {
+    window.localStorage.setItem('STRATA_DESKTOP_BACKEND_URL', 'http://local:3456/api/v1');
+    window.sessionStorage.setItem('STRATA_DESKTOP_BACKEND_URL', 'http://session:3456/api/v1');
+    expect(createApiClient().defaults.baseURL).toBe('http://local:3456/api/v1');
+  });
+
+  it('falls back to sessionStorage for the backend URL (legacy desktop sessions)', () => {
+    window.sessionStorage.setItem('STRATA_DESKTOP_BACKEND_URL', 'http://session:3456/api/v1');
+    expect(createApiClient().defaults.baseURL).toBe('http://session:3456/api/v1');
+  });
+
+  it('attaches the desktop token header from localStorage', async () => {
+    window.localStorage.setItem('STRATA_DESKTOP_TOKEN', 'desktop-secret');
+    const handler = (createApiClient().interceptors.request as any).handlers[0];
+    const result = await handler.fulfilled({ headers: {} });
+    expect(result.headers['X-Strata-Desktop-Token']).toBe('desktop-secret');
   });
 });

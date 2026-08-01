@@ -467,14 +467,15 @@ pub fn run() {
                 if backend_ok {
                     log::info!("Backend ready — navigating to bundled frontend");
                     if let Some(window) = handle.get_webview_window("main") {
-                        let navigation_script = format!(
-                            "sessionStorage.setItem('STRATA_DESKTOP_BACKEND_URL', {api:?}); \
-                             sessionStorage.setItem('STRATA_DESKTOP_TOKEN', {token:?}); \
+                        // Use localStorage (persists across navigation) instead of sessionStorage
+                        let inject_script = format!(
+                            "localStorage.setItem('STRATA_DESKTOP_BACKEND_URL', {api:?}); \
+                             localStorage.setItem('STRATA_DESKTOP_TOKEN', {token:?}); \
                              window.location.href = '/app/';",
                             api = backend_api_url,
                             token = desktop_token
                         );
-                        let _ = window.eval(&navigation_script);
+                        let _ = window.eval(&inject_script);
                     }
                     let _ = handle.emit("backend-ready", BackendReadyPayload {
                         ready: true,

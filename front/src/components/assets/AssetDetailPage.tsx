@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  useResolvedAssetId,
   useAsset, useAssetSnapshots, useTags, useCategories, useAssetTypes,
   useUpdateAsset, useDeleteAsset, useDisposeAsset,
   useCreateAssetSnapshot, useAddTagToAsset, useRemoveTagFromAsset,
@@ -22,15 +23,9 @@ interface Props {
   assetId?: string;
 }
 
-function resolveAssetId(explicitId?: string): string | null {
-  if (explicitId) return explicitId;
-  if (typeof window === 'undefined') return null;
-  const id = new URLSearchParams(window.location.search).get('id');
-  return id && id.length > 0 ? id : null;
-}
-
 export function AssetDetailPage({ assetId }: Props) {
-  const resolvedAssetId = resolveAssetId(assetId);
+  const { resolvedAssetId, isResolving } = useResolvedAssetId(assetId);
+
   const { data: asset, isLoading, isError } = useAsset(resolvedAssetId ?? '');
   const { data: snapshots = [] } = useAssetSnapshots(resolvedAssetId ?? '');
   const { data: allTags = [] } = useTags();
@@ -50,7 +45,14 @@ export function AssetDetailPage({ assetId }: Props) {
   const [showDispose, setShowDispose] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  if (!resolvedAssetId) return <EmptyState title="Asset not found" />;
+  if (isResolving) {
+    return <Loading />;
+  }
+
+  if (!resolvedAssetId) {
+    return <EmptyState title="Asset not found" />;
+  }
+
   if (isLoading) return <Loading />;
 
   if (!asset) {
