@@ -31,3 +31,36 @@ Add one-click, bidirectional sorting to the Assets table for Name, Type, Current
 - Run the release only from a clean, updated `main` because `scripts/release.mjs` rejects dirty trees, bumps six version files, commits the release, pushes the current branch, and creates/pushes the tag.
 - Check the latest tag immediately before choosing the next semver version. This feature is expected to receive a minor release.
 - Add the release note document and releases index entry after the release script succeeds, as required by the script and project conventions.
+
+## Execution Summary
+
+### Actual changes
+
+- Added client-side sorting to the Assets table for Name, Type, Current Value, Categories, Tags, and Status.
+- Added accessible direction indicators and sort labels, with Name ascending as the default and empty values kept last.
+- Added frontend unit coverage, a mocked Playwright e2e scenario, frontend documentation, and the plan index entry.
+- No backend or API changes were needed.
+
+### Deviations
+
+- The frontend e2e test could not complete locally because the Playwright Chromium binary is unavailable and its managed-browser installation stalled during extraction. No machine-specific executable path or repository configuration was added.
+- Existing unrelated frontend TypeScript/Vite issues remain in legacy portfolio components, e2e smoke typings, and older test fixtures.
+- The release was intentionally not run on `feat/sort-assets`; it must run from clean `main` after merge.
+
+### Test results
+
+- Backend unit tests with coverage: ✅ 323 tests; 97.53% statements, 97.89% lines, 96.57% functions, 80.44% branches.
+- Backend e2e tests: ✅ 70 tests across 8 suites.
+- Frontend unit tests with coverage: ✅ 443 tests across 69 files; 95.65% statements/lines, 91.84% functions, 88.05% branches.
+- Frontend e2e: ⚠️ blocked by the local Playwright browser installation and existing Vite dependency-scan errors; the new test was added but not locally executed to completion.
+- Documentation build: ✅ 101 pages generated successfully.
+- `git diff --check`: ✅ clean.
+
+### Commit SHA(s)
+
+- `3bd5836` — `feat(front): sort asset list columns`
+
+### Key discoveries
+
+- The existing `GET /api/v1/assets` response already contains every field required for sorting, so no controller, service, repository, Bruno, or Swagger work was necessary.
+- `scripts/release.mjs` requires a clean tree and publishes the current branch before tagging; release remains a post-merge `main` operation.
