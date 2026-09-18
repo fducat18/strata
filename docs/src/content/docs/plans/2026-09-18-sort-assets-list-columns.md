@@ -43,7 +43,7 @@ Add one-click, bidirectional sorting to the Assets table for Name, Type, Current
 
 ### Deviations
 
-- The frontend e2e test could not complete locally because the Playwright Chromium binary is unavailable and its managed-browser installation stalled during extraction. No machine-specific executable path or repository configuration was added.
+- The standard Playwright-managed browser was unavailable locally, so the suite was run with system Chrome through a temporary configuration outside the repository. No machine-specific executable path or repository configuration was added.
 - Existing unrelated frontend TypeScript/Vite issues remain in legacy portfolio components, e2e smoke typings, and older test fixtures.
 - The release was intentionally not run on `feat/sort-assets`; it must run from clean `main` after merge.
 
@@ -52,7 +52,7 @@ Add one-click, bidirectional sorting to the Assets table for Name, Type, Current
 - Backend unit tests with coverage: ✅ 323 tests; 97.53% statements, 97.89% lines, 96.57% functions, 80.44% branches.
 - Backend e2e tests: ✅ 70 tests across 8 suites.
 - Frontend unit tests with coverage: ✅ 443 tests across 69 files; 95.65% statements/lines, 91.84% functions, 88.05% branches.
-- Frontend e2e: ⚠️ blocked by the local Playwright browser installation and existing Vite dependency-scan errors; the new test was added but not locally executed to completion.
+- Frontend e2e: ✅ 10 tests passed, including the new asset-sort flow; 22 existing backend-dependent scenarios were skipped because no backend was running.
 - Documentation build: ✅ 101 pages generated successfully.
 - `git diff --check`: ✅ clean.
 
