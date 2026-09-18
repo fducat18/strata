@@ -44,11 +44,15 @@ front/src/
 | Route | Description |
 |-------|------------|
 | `/` | Dashboard — net worth chart, allocation chart, recent snapshots |
-| `/assets` | Asset list with search, filters, create |
+| `/assets` | Asset list with search, filters, create, and sortable columns |
 | `/assets/:id` | Asset detail — snapshots, transactions, tags, categories |
 | `/categories` | Category tree with CRUD |
 | `/tags` | Tag list with CRUD |
 | `/settings` | Theme toggle, backup export/import |
+
+### Asset list sorting
+
+The Assets page supports client-side sorting from the arrow in each sortable column header: **Name**, **Type**, **Current Value**, **Categories**, **Tags**, and **Status**. Name is sorted A–Z by default; clicking the active header reverses the direction. Text columns sort alphabetically, Current Value sorts numerically, and empty category/tag values or missing current values remain last.
 
 ## Portfolio Snapshots
 

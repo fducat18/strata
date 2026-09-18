@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Decimal from 'decimal.js';
 import {
   useAssets, useAssetTypes, useCategories, useTags, useCreateAsset, useUpdateAsset,
 } from '@/lib/hooks';
@@ -8,11 +9,86 @@ import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
   Loading, EmptyState,
 } from '@/components/ui';
-import { Plus, Package, Search, Pencil } from 'lucide-react';
+import { Plus, Package, Search, Pencil, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { formatQuantity, getAssetTypeIcon, formatMoney } from '@/lib/format';
 import { useUIStore } from '@/stores/uiStore';
 import { AssetEditDialog } from './AssetEditDialog';
 import type { Asset } from '@/lib/types';
+
+type SortColumn = 'name' | 'type' | 'currentValue' | 'categories' | 'tags' | 'status';
+type SortDirection = 'asc' | 'desc';
+
+interface SortableHeaderProps {
+  column: SortColumn;
+  label: string;
+  sortColumn: SortColumn;
+  sortDirection: SortDirection;
+  onSort: (column: SortColumn) => void;
+}
+
+function compareText(a: string, b: string, direction: SortDirection): number {
+  const aEmpty = a.trim().length === 0;
+  const bEmpty = b.trim().length === 0;
+  if (aEmpty && bEmpty) return 0;
+  if (aEmpty) return 1;
+  if (bEmpty) return -1;
+  return a.localeCompare(b, undefined, { sensitivity: 'base' }) * (direction === 'asc' ? 1 : -1);
+}
+
+function compareCurrentValue(a: string | null, b: string | null, direction: SortDirection): number {
+  const aEmpty = a == null || a === '';
+  const bEmpty = b == null || b === '';
+  if (aEmpty && bEmpty) return 0;
+  if (aEmpty) return 1;
+  if (bEmpty) return -1;
+
+  return new Decimal(a).comparedTo(new Decimal(b)) * (direction === 'asc' ? 1 : -1);
+}
+
+function joinedNames(items: Array<{ name: string }> | undefined): string {
+  return (items ?? [])
+    .map(item => item.name)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    .join(', ');
+}
+
+function compareAssets(a: Asset, b: Asset, column: SortColumn, direction: SortDirection): number {
+  switch (column) {
+    case 'name':
+      return compareText(a.name, b.name, direction);
+    case 'type':
+      return compareText(a.assetType?.label ?? '', b.assetType?.label ?? '', direction);
+    case 'currentValue':
+      return compareCurrentValue(a.currentValue, b.currentValue, direction);
+    case 'categories':
+      return compareText(joinedNames(a.categories), joinedNames(b.categories), direction);
+    case 'tags':
+      return compareText(joinedNames(a.tags), joinedNames(b.tags), direction);
+    case 'status':
+      return compareText(a.disposed ? 'Disposed' : 'Active', b.disposed ? 'Disposed' : 'Active', direction);
+  }
+}
+
+function SortableHeader({ column, label, sortColumn, sortDirection, onSort }: SortableHeaderProps) {
+  const active = column === sortColumn;
+  const Icon = active
+    ? sortDirection === 'asc' ? ChevronUp : ChevronDown
+    : ChevronsUpDown;
+  const nextDirection = active && sortDirection === 'asc' ? 'descending' : 'ascending';
+
+  return (
+    <TableHead aria-sort={active ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}>
+      <button
+        onClick={() => onSort(column)}
+        className="flex items-center gap-1 font-medium hover:text-primary transition-colors cursor-pointer"
+        aria-label={`Sort by ${label} ${nextDirection}`}
+      >
+        {label}
+        <Icon className="h-3.5 w-3.5" />
+      </button>
+    </TableHead>
+  );
+}
 
 export function AssetListPage() {
   const { data: assets, isLoading, isError, refetch } = useAssets();
@@ -27,6 +103,8 @@ export function AssetListPage() {
   const [filterType, setFilterType] = useState('');
   const [showDisposed, setShowDisposed] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Create form state
   const [newName, setNewName] = useState('');
@@ -52,6 +130,17 @@ export function AssetListPage() {
   if (!showDisposed) filtered = filtered.filter(a => !a.disposed);
   if (search) filtered = filtered.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
   if (filterType) filtered = filtered.filter(a => a.assetType?.code === filterType);
+
+  const sorted = [...filtered].sort((a, b) => compareAssets(a, b, sortColumn, sortDirection));
+
+  const handleSort = (column: SortColumn) => {
+    if (column === sortColumn) {
+      setSortDirection(direction => direction === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortColumn(column);
+    setSortDirection('asc');
+  };
 
   const handleCreate = async () => {
     if (!newName.trim() || !newAssetTypeId || !newAcquisitionPrice) return;
@@ -146,17 +235,17 @@ export function AssetListPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Current Value</TableHead>
-                  <TableHead>Categories</TableHead>
-                  <TableHead>Tags</TableHead>
-                  <TableHead>Status</TableHead>
+                  <SortableHeader column="name" label="Name" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableHeader column="type" label="Type" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableHeader column="currentValue" label="Current Value" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableHeader column="categories" label="Categories" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableHeader column="tags" label="Tags" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
+                  <SortableHeader column="status" label="Status" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(asset => (
+                {sorted.map(asset => (
                   <TableRow key={asset.id}>
                     <TableCell>
                       <div>
