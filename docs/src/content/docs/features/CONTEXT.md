@@ -1,3 +1,9 @@
+---
+title: "Personal Finance Planning Context"
+description: "Defines the language for evaluating major purchases and their financing without changing the user's recorded portfolio."
+date: 2026-09-22
+---
+
 # Personal Finance Planning Context
 
 This context defines the language for evaluating major purchases and their financing without changing the user's recorded portfolio. It complements Strata's existing asset-tracking language.
