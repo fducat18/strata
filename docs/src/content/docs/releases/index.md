@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.5.1](./v1-5-1) | Seed profiles split (dev/prod), manual dev e2e-data cleanup command, 10-year demo snapshots, frontend dependency refresh |
 | [v1.5.0](./v1-5-0) | Financing scenario insurance-fee modeling, improved defaults, comparison matrix, and glossary clarifications |
 | [v1.4.0](./v1-4-0) | One-click sorting for asset list Name, Type, Current Value, Categories, Tags, and Status columns |
 | [v1.3.1](./v1-3-1) | Fix asset detail blank page (hook-order regression in AssetValueChart) + desktop session persistence |
