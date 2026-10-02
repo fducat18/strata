@@ -45,3 +45,36 @@ description: "Add insurance fee assumptions, update financing defaults, replace 
 - Frontend: `npx vitest run --coverage` and `npm run test:e2e`
 - Docs: `npm run build`
 
+## Execution Summary
+
+**Commits**: `5d14eee`, `9e68a35`
+
+### Actual changes
+
+- Implemented insurance-fee assumptions end-to-end across backend contracts, calculator logic, and frontend request/response types.
+- Added loan-option insurance-fee contribution to financing cost, plus per-option `insuranceFee` output.
+- Updated financing form defaults (6% rate, 0.5% insurance fee, 5 years duration) for new scenarios.
+- Replaced repeated option metric cards with a scenario comparison table (metrics rows, option columns) including reserve-warning row.
+- Added glossary section on financing page with definitions for Monthly Available Amount and Funding Shortfall.
+- Updated backend/frontend tests, Bruno financing samples, financing docs, plan index, and release docs.
+- Included and pushed pre-existing modified/untracked workspace updates as requested.
+
+### Deviations from plan
+
+- `npm run test:e2e` (frontend default Playwright config) could not run with bundled Chromium in this environment because browser installation repeatedly stalled and left incomplete extraction.
+- To preserve e2e validation, full frontend e2e was executed with a temporary Playwright config targeting installed system Chrome (`channel: "chrome"`), then temporary config was removed.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend unit (coverage) | ✅ `npm run test:cov` passed (350 tests, thresholds met) |
+| Backend e2e | ✅ `npm run test:e2e` passed (73 tests) |
+| Frontend unit (coverage) | ✅ `npx vitest run --coverage` passed |
+| Frontend e2e | ✅ Full Playwright suite passed with system Chrome config (35 tests: 13 passed, 22 skipped) |
+| Docs build | ✅ `npm run build` passed (111 pages) |
+
+### Key discoveries
+
+- Legacy saved financing snapshots need compatibility normalization for new fields; defaulting missing `insuranceFeePercent` to `0` preserves historical behavior.
+- New default loan duration (5 years) changed financing e2e expectations from 12-month to 60-month timeline details.
