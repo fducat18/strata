@@ -50,7 +50,7 @@ After adding this, open a new terminal and `cd` into the repo — nvm will autom
 cd backend
 nvm use 24            # Recommended; any Node >=22 works
 npm install
-npx prisma db seed          # Load demo data (first run only)
+STRATA_SEED_PROFILE=development npx prisma db seed  # Load dev demo data (first run only)
 npm run start:dev           # Starts on http://localhost:3000
 ```
 
@@ -60,6 +60,23 @@ NestJS runs `prisma migrate deploy` automatically on startup, before the server 
 
 :::note[Docker seeds only on first start]
 When starting with Docker, the seed step is skipped automatically if the database already exists. This preserves user data and deliberate demo-asset deletions across restarts.
+
+For fresh databases, Strata now uses profile-specific seed content:
+- **Development DB (`strata-dev.db`)**: asset types + categories + tags + demo assets + 10-year seeded snapshots (3 points/year, loan strictly declining)
+- **Production DB (`strata.db`)**: asset types + categories only (no demo assets)
+
+If you see leftover e2e/test artifacts in dev data, run a one-shot cleanup from repo root:
+
+```bash
+npm run devdb:clean-e2e
+```
+
+If your existing dev DB was created before this 10-year history change, backfill demo snapshots with:
+
+```bash
+cd backend
+STRATA_SEED_PROFILE=development npx prisma db seed
+```
 :::
 
 :::note[Prisma client is generated automatically]
@@ -113,6 +130,15 @@ This script automatically:
 2. Builds the frontend with the Tauri API URL (`http://localhost:3456/api/v1`)
 3. Generates the Prisma client and builds the backend
 4. Launches `tauri dev`
+
+**Install as a regular macOS app (`/Applications`)**
+
+```bash
+npm run tauri:install
+```
+
+`tauri:install` builds `Strata.app`, installs it to `/Applications`, and runs post-install runtime checks.  
+On first launch with a fresh production DB (`strata.db`), only **asset types and categories** are preloaded (no demo assets).
 
 :::caution[Rust required]
 If you see `cargo metadata: No such file or directory`, Rust is not installed. Run `npm run setup` — it will show a ❌ for Rust with install instructions.

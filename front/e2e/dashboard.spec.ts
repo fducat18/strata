@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Dashboard tests — verifies the main KPI view, snapshot button,
- * and net worth chart.
+ * Dashboard tests — verifies KPI cards, history controls, and basic interactions.
  */
 
 let backendOk = false;
@@ -26,21 +25,23 @@ test('dashboard loads without error', async ({ page }) => {
   await expect(page.getByText(/Could not load/i)).not.toBeVisible();
 });
 
-test('dashboard shows Take Snapshot button', async ({ page }) => {
+test('dashboard shows net worth history controls', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
-  await expect(page.getByRole('button', { name: /Take Snapshot/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'ALL' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '1M' })).toBeVisible();
 });
 
-test('dashboard Take Snapshot button is clickable and re-enables', async ({ page }) => {
+test('dashboard time range controls are clickable', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
 
-  const snapshotBtn = page.getByRole('button', { name: /Take Snapshot/i });
-  await expect(snapshotBtn).toBeEnabled();
-  await snapshotBtn.click();
-  // Button should re-enable after the mutation resolves (success or error)
-  await expect(snapshotBtn).toBeEnabled({ timeout: 15_000 });
+  const oneMonth = page.getByRole('button', { name: '1M' });
+  const all = page.getByRole('button', { name: 'ALL' });
+  await expect(all).toHaveClass(/bg-primary/);
+  await oneMonth.click();
+  await expect(oneMonth).toHaveClass(/bg-primary/);
+  await expect(all).not.toHaveClass(/bg-primary/);
 });
 
 test('dashboard shows asset count summary cards', async ({ page }) => {

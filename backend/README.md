@@ -17,7 +17,7 @@ npm install
 cp .env.example .env 2>/dev/null || echo 'DATABASE_URL="file:./.data/strata.db"' > .env
 mkdir -p .data
 npx prisma migrate deploy
-npx prisma db seed
+STRATA_SEED_PROFILE=development npx prisma db seed
 npm run start:dev
 ```
 
@@ -40,7 +40,8 @@ API: <http://localhost:3000/api/v1> · Swagger UI: <http://localhost:3000/swagge
 | `npx prisma migrate deploy` | Apply pending migrations (CI / prod / containers) |
 | `npx prisma migrate reset` | Drop, re-create and re-seed the DB |
 | `npx prisma generate` | Regenerate the typed Prisma client |
-| `npx prisma db seed` | Run `prisma/seed.ts` (asset types, categories, tags, demo portfolio) |
+| `npx prisma db seed` | Run `prisma/seed.ts` profile dispatcher (dev: full demo dataset + 10-year snapshots at 3 points/year, prod: asset types + categories only) |
+| `npm run cleanup:test-data` | Remove known e2e/test residue (Test Asset / E2E Category / test-tag prefixes) from dev DB |
 | `npx prisma studio` | Visual DB editor at <http://localhost:5555> |
 
 ## Configuration

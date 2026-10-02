@@ -11,6 +11,7 @@
     "tauri:build": "bash scripts/tauri-build.sh",
     "tauri:prod": "bash scripts/tauri-build.sh && open src-tauri/target/release/bundle/macos/Strata.app",
     "tauri:install": "bash scripts/tauri-install.sh",
+    "devdb:clean-e2e": "cd backend && npm run cleanup:test-data",
     "docker:dev": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --parallel && DB_FILE=strata-dev.db docker-compose up",
     "docker:reset": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && DB_FILE=strata-dev.db docker-compose down && rm -f backend/.data/strata-dev.db && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --parallel && DB_FILE=strata-dev.db docker-compose up",
     "docker:nuke": "DB_FILE=strata-dev.db node scripts/check-ports.mjs && DB_FILE=strata-dev.db docker-compose down && rm -f backend/.data/strata-dev.db && docker image prune -a -f && STRATA_ENV=development node scripts/gen-version.mjs all && DB_FILE=strata-dev.db docker-compose build --no-cache --parallel && DB_FILE=strata-dev.db docker-compose up",

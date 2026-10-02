@@ -47,12 +47,23 @@ npx prisma studio
 
 ## Seed Data
 
-The seed script at `backend/prisma/seed.ts` populates:
+The seed entrypoint is `backend/prisma/seed.ts`, which dispatches by profile:
 
-- **13 asset types** (Checking Account, Savings, Stocks, Crypto, Real Estate, Loan, etc.)
-- **20+ categories** organized hierarchically (Banking, Investments, Real Estate, etc.)
-- **13 tags** (high-yield, tax-advantaged, retirement, etc.)
-- **6 demo assets** — checking account, savings account, apartment, home loan, and two vehicles
-- **4 portfolio snapshots** — monthly snapshots for January–April 2025
+- **Development profile** (`STRATA_SEED_PROFILE=development`, default fallback):
+  - 13 asset types
+  - hierarchical categories
+  - tags
+  - demo assets
+  - seeded snapshot history
+- **Production profile** (`STRATA_SEED_PROFILE=production`):
+  - 13 asset types
+  - hierarchical categories
+  - no demo assets/tags/snapshots
 
-Run with: `npx prisma db seed`
+Run with:
+
+```bash
+npx prisma db seed
+# Optional explicit override:
+STRATA_SEED_PROFILE=production npx prisma db seed
+```

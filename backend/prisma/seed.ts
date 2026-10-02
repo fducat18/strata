@@ -1,69 +1,73 @@
-import { AssetTypeGroup, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { seedAssetTypes, seedBaseCategories } from './seed.shared.js';
+import { runProductionSeed } from './seed.prod.js';
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || 'file:./dev.db',
 });
 const prisma = new PrismaClient({ adapter });
 
-const ASSET_TYPES = [
-  { code: 'CHECKING_ACCOUNT', label: 'Checking Account', group: 'FINANCIAL' },
-  { code: 'SAVINGS_ACCOUNT', label: 'Savings Account', group: 'SAVINGS' },
-  { code: 'CASH', label: 'Cash', group: 'FINANCIAL' },
-  { code: 'REAL_ESTATE', label: 'Real Estate', group: 'REAL_ESTATE' },
-  { code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' },
-  { code: 'CRYPTO', label: 'Crypto', group: 'FINANCIAL' },
-  { code: 'BONDS', label: 'Bonds', group: 'FINANCIAL' },
-  { code: 'PERSONAL_PROPERTY', label: 'Personal Property', group: 'PERSONAL_PROPERTY' },
-  { code: 'VEHICLE', label: 'Vehicle', group: 'PERSONAL_PROPERTY' },
-  { code: 'LOAN', label: 'Loan', group: 'LIABILITIES' },
-  { code: 'COLLECTIBLES', label: 'Collectibles', group: 'PHYSICAL_COLLECTIONS' },
-  { code: 'BUSINESS', label: 'Business', group: 'OTHER' },
-  { code: 'OTHER', label: 'Other', group: 'OTHER' },
-];
+type SeedProfile = 'development' | 'production';
 
-const DEMO_CATEGORIES = [
-  { name: 'Real Estate', children: ['Residential', 'Commercial', 'Land'] },
-  { name: 'Financial', children: ['Banking', 'Investments', 'Retirement'] },
-  { name: 'Personal', children: ['Vehicles', 'Electronics', 'Furniture'] },
-  { name: 'Collections', children: ['Art', 'Wine', 'LEGO', 'Books'] },
-  { name: 'Liabilities', children: ['Mortgages', 'Student Loans', 'Credit Cards'] },
-];
+const PROFILE_ALIASES: Record<string, SeedProfile> = {
+  dev: 'development',
+  development: 'development',
+  prod: 'production',
+  production: 'production',
+};
+
+function resolveSeedProfile(): SeedProfile {
+  const explicitRaw = process.env.STRATA_SEED_PROFILE?.trim().toLowerCase();
+  if (explicitRaw) {
+    const explicit = PROFILE_ALIASES[explicitRaw];
+    if (explicit) {
+      console.log(`🌱 Seed profile: ${explicit} (from STRATA_SEED_PROFILE=${explicitRaw})`);
+      return explicit;
+    }
+    console.warn(
+      `⚠️ Unknown STRATA_SEED_PROFILE="${explicitRaw}". Falling back to auto-detection.`,
+    );
+  }
+
+  const databaseUrl = (process.env.DATABASE_URL ?? '').toLowerCase();
+  if (/(^|[\\/])strata-dev\.db($|[?#])/u.test(databaseUrl)) {
+    console.log('🌱 Seed profile: development (from DATABASE_URL=strata-dev.db)');
+    return 'development';
+  }
+  if (/(^|[\\/])strata\.db($|[?#])/u.test(databaseUrl)) {
+    console.log('🌱 Seed profile: production (from DATABASE_URL=strata.db)');
+    return 'production';
+  }
+  if (/(^|[\\/])(test|dev)\.db($|[?#])/u.test(databaseUrl)) {
+    console.log('🌱 Seed profile: development (from DATABASE_URL=test/dev db)');
+    return 'development';
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🌱 Seed profile: production (from NODE_ENV=production)');
+    return 'production';
+  }
+
+  console.log('🌱 Seed profile: development (default fallback)');
+  return 'development';
+}
 
 const DEMO_TAGS = [
-  'primary-residence', 'rental', 'paris', 'lyon', 'vintage',
-  'high-value', 'income-generating', 'depreciating', 'appreciating',
-  'insured', 'tax-deductible', 'liquid', 'illiquid',
+  'primary-residence',
+  'rental',
+  'paris',
+  'lyon',
+  'vintage',
+  'high-value',
+  'income-generating',
+  'depreciating',
+  'appreciating',
+  'insured',
+  'tax-deductible',
+  'liquid',
+  'illiquid',
 ];
-
-async function seedAssetTypes(): Promise<void> {
-  for (const at of ASSET_TYPES) {
-    await prisma.assetType.upsert({
-      where: { code: at.code },
-      update: { group: at.group as AssetTypeGroup },
-      create: at as { code: string; label: string; group: AssetTypeGroup },
-    });
-  }
-  console.log(`  ✅ ${ASSET_TYPES.length} asset types seeded`);
-}
-
-async function seedDemoCategories(): Promise<void> {
-  for (const cat of DEMO_CATEGORIES) {
-    const parent = await prisma.category.upsert({
-      where: { name: cat.name },
-      update: {},
-      create: { name: cat.name },
-    });
-    for (const childName of cat.children) {
-      await prisma.category.upsert({
-        where: { name: childName },
-        update: {},
-        create: { name: childName, parentId: parent.id },
-      });
-    }
-  }
-  console.log(`  ✅ Demo categories seeded`);
-}
 
 async function seedDemoTags(): Promise<void> {
   for (const tagName of DEMO_TAGS) {
@@ -152,53 +156,45 @@ async function seedDemoAssets(): Promise<void> {
   const atByCode = Object.fromEntries(assetTypes.map((at) => [at.code, at.id]));
 
   for (const demo of DEMO_ASSETS) {
-    const existing = await prisma.asset.findFirst({
+    let asset = await prisma.asset.findFirst({
       where: { name: demo.name },
     });
-    if (existing) {
-      console.log(`  ⏭️  Asset "${demo.name}" already exists, skipping`);
-      continue;
+
+    if (!asset) {
+      asset = await prisma.asset.create({
+        data: {
+          name: demo.name,
+          quantity: demo.quantity,
+          assetTypeId: atByCode[demo.typeCode],
+        },
+      });
     }
 
-    const asset = await prisma.asset.create({
-      data: {
-        name: demo.name,
-        quantity: demo.quantity,
-        assetTypeId: atByCode[demo.typeCode],
-      },
-    });
-
-    await prisma.transaction.create({
-      data: {
+    const acquireTransaction = await prisma.transaction.findFirst({
+      where: {
         assetId: asset.id,
         type: 'ACQUIRE',
-        unitPrice: demo.unitPrice,
-        quantity: demo.quantity,
-        currency: demo.currency,
-        occurredAt: new Date('2025-01-15'),
       },
+      select: { id: true },
     });
+    if (!acquireTransaction) {
+      await prisma.transaction.create({
+        data: {
+          assetId: asset.id,
+          type: 'ACQUIRE',
+          unitPrice: demo.unitPrice,
+          quantity: demo.quantity,
+          currency: demo.currency,
+          occurredAt: new Date('2025-01-15'),
+        },
+      });
+    }
 
-    const snapshots = buildSnapshotHistory(demo.name);
-    for (const snap of snapshots) {
-      await prisma.assetSnapshot.create({
-        data: {
-          assetId: asset.id,
-          value: snap.value,
-          observedAt: snap.observedAt,
-        },
-      });
-    }
-    if (snapshots.length === 0) {
-      // Fallback: single snapshot at acquisition date
-      await prisma.assetSnapshot.create({
-        data: {
-          assetId: asset.id,
-          value: demo.snapshotValue ?? demo.unitPrice * demo.quantity,
-          observedAt: new Date('2025-01-15'),
-        },
-      });
-    }
+    await ensureDemoAssetSnapshotHistory(
+      asset.id,
+      demo.name,
+      demo.snapshotValue ?? demo.unitPrice * demo.quantity,
+    );
 
     for (const tagName of demo.tags) {
       const tag = await prisma.tag.findUnique({ where: { name: tagName } });
@@ -222,21 +218,33 @@ async function seedDemoAssets(): Promise<void> {
       }
     }
 
-    console.log(`  ✅ Demo asset seeded: ${demo.name}`);
+    console.log(`  ✅ Demo asset seeded/backfilled: ${demo.name}`);
   }
 }
 
-// Historical monthly deltas for each demo asset (per month, 14 months back to today).
-// index 0 = 14 months ago, index 14 = today (runtime date).
-const DEMO_ASSET_HISTORY: Record<string, { startValue: number; monthlyDelta: number }> = {
-  'BNP Checking Account':  { startValue: 3830,   monthlyDelta: +30   },
-  'Livret A Savings':      { startValue: 21900,  monthlyDelta: +75   },
-  'Apartment Paris 11e':   { startValue: 368200, monthlyDelta: +1200 },
-  // startValue computed so that at index 14 (today) = 180000 exactly
-  // 186020 - 14 * 430 = 186020 - 6020 = 180000
-  'Home Loan — BNP':       { startValue: 186020, monthlyDelta: -430  },
-  'Toyota Yaris 2022':     { startValue: 6400,   monthlyDelta: -100  },
-  'Renault Kangoo 2019':   { startValue: 2560,   monthlyDelta: -40   },
+type DemoAssetHistoryMode = 'mixed' | 'declining';
+
+type DemoAssetHistoryConfig = {
+  mode: DemoAssetHistoryMode;
+  oldestValue: number;
+  stepDelta: number;
+  variationPattern?: number[];
+};
+
+const HISTORY_YEARS = 10;
+const HISTORY_POINTS_PER_YEAR = 3;
+const HISTORY_STEP_MONTHS = 12 / HISTORY_POINTS_PER_YEAR;
+const HISTORY_TOTAL_STEPS = HISTORY_YEARS * HISTORY_POINTS_PER_YEAR;
+
+const MIXED_VARIATION_PATTERN = [-0.015, 0.025, -0.01, 0.03, -0.02, 0.015];
+
+const DEMO_ASSET_HISTORY: Record<string, DemoAssetHistoryConfig> = {
+  'BNP Checking Account': { mode: 'mixed', oldestValue: 3650, stepDelta: 22 },
+  'Livret A Savings': { mode: 'mixed', oldestValue: 18000, stepDelta: 180 },
+  'Apartment Paris 11e': { mode: 'mixed', oldestValue: 240000, stepDelta: 5000 },
+  'Home Loan — BNP': { mode: 'declining', oldestValue: 250000, stepDelta: -2333.33 },
+  'Toyota Yaris 2022': { mode: 'declining', oldestValue: 13000, stepDelta: -270 },
+  'Renault Kangoo 2019': { mode: 'declining', oldestValue: 9000, stepDelta: -230 },
 };
 
 function startOfDay(date: Date): Date {
@@ -245,77 +253,85 @@ function startOfDay(date: Date): Date {
   return normalized;
 }
 
-function addDays(date: Date, days: number): Date {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return startOfDay(next);
+function toDateKey(date: Date): string {
+  return startOfDay(date).toISOString().slice(0, 10);
 }
 
-function interpolateValue(
-  observedAt: Date,
-  monthlyPoints: { observedAt: Date; value: number }[],
-): number {
-  const targetTime = observedAt.getTime();
-
-  for (let index = 0; index < monthlyPoints.length - 1; index += 1) {
-    const current = monthlyPoints[index];
-    const next = monthlyPoints[index + 1];
-    const currentTime = current.observedAt.getTime();
-    const nextTime = next.observedAt.getTime();
-
-    if (targetTime < currentTime || targetTime > nextTime) continue;
-    if (targetTime === currentTime) return current.value;
-    if (targetTime === nextTime) return next.value;
-
-    const ratio = (targetTime - currentTime) / (nextTime - currentTime);
-    return current.value + (next.value - current.value) * ratio;
-  }
-
-  return monthlyPoints.at(-1)?.value ?? 0;
+function roundTo2(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
-/** Returns 11 older monthly points plus weekly points for the last 3 months. */
 function buildSnapshotHistory(assetName: string): { observedAt: Date; value: number }[] {
   const hist = DEMO_ASSET_HISTORY[assetName];
   if (!hist) return [];
 
   const now = startOfDay(new Date());
-  const monthlyPoints: { observedAt: Date; value: number }[] = [];
+  const pattern = hist.variationPattern ?? MIXED_VARIATION_PATTERN;
+  const points: { observedAt: Date; value: number }[] = [];
 
-  for (let i = 14; i >= 0; i -= 1) {
+  for (let i = HISTORY_TOTAL_STEPS; i >= 0; i -= 1) {
     const d = new Date(now);
-    d.setMonth(d.getMonth() - i);
-    const monthIndex = 14 - i;
-    const value = Math.max(0, hist.startValue + monthIndex * hist.monthlyDelta);
-    monthlyPoints.push({ observedAt: startOfDay(d), value: Math.round(value * 100) / 100 });
+    d.setMonth(d.getMonth() - i * HISTORY_STEP_MONTHS);
+    const stepIndex = HISTORY_TOTAL_STEPS - i;
+    const baseline = hist.oldestValue + stepIndex * hist.stepDelta;
+    const value =
+      hist.mode === 'declining'
+        ? Math.max(0, baseline)
+        : Math.max(0, baseline * (1 + pattern[stepIndex % pattern.length]));
+    points.push({ observedAt: startOfDay(d), value: roundTo2(value) });
   }
 
-  const olderMonthlyPoints = monthlyPoints.slice(0, 11);
-  const weeklyStart = new Date(now);
-  weeklyStart.setMonth(weeklyStart.getMonth() - 3);
+  return points;
+}
 
-  const weeklyPoints: { observedAt: Date; value: number }[] = [];
-  for (let observedAt = startOfDay(weeklyStart); observedAt < now; observedAt = addDays(observedAt, 7)) {
-    const value = Math.max(0, interpolateValue(observedAt, monthlyPoints));
-    weeklyPoints.push({ observedAt, value: Math.round(value * 100) / 100 });
-  }
-
-  const yesterday = addDays(now, -1);
-  if (!weeklyPoints.some((point) => point.observedAt.getTime() === yesterday.getTime())) {
-    weeklyPoints.push({
-      observedAt: yesterday,
-      value: Math.round(Math.max(0, interpolateValue(yesterday, monthlyPoints)) * 100) / 100,
+async function ensureDemoAssetSnapshotHistory(
+  assetId: string,
+  assetName: string,
+  fallbackValue: number,
+): Promise<void> {
+  const generated = buildSnapshotHistory(assetName);
+  if (generated.length === 0) {
+    generated.push({
+      observedAt: new Date('2025-01-15'),
+      value: roundTo2(fallbackValue),
     });
   }
 
-  if (weeklyPoints.at(-1)?.observedAt.getTime() !== now.getTime()) {
-    weeklyPoints.push({
-      observedAt: now,
-      value: monthlyPoints.at(-1)?.value ?? 0,
+  const existingSnapshots = await prisma.assetSnapshot.findMany({
+    where: { assetId },
+    select: { id: true, observedAt: true },
+  });
+  const generatedDateKeys = new Set(generated.map((snapshot) => toDateKey(snapshot.observedAt)));
+
+  const staleSnapshotIds = existingSnapshots
+    .filter((snapshot) => !generatedDateKeys.has(toDateKey(snapshot.observedAt)))
+    .map((snapshot) => snapshot.id);
+
+  if (staleSnapshotIds.length > 0) {
+    await prisma.assetSnapshot.deleteMany({
+      where: { id: { in: staleSnapshotIds } },
     });
   }
 
-  return [...olderMonthlyPoints, ...weeklyPoints];
+  const existingByDate = new Map(
+    existingSnapshots.map((snapshot) => [toDateKey(snapshot.observedAt), snapshot.id]),
+  );
+
+  for (const snapshot of generated) {
+    const snapshotDateKey = toDateKey(snapshot.observedAt);
+    const existingId = existingByDate.get(snapshotDateKey);
+    if (existingId) {
+      await prisma.assetSnapshot.update({
+        where: { id: existingId },
+        data: { observedAt: snapshot.observedAt, value: snapshot.value },
+      });
+      continue;
+    }
+
+    await prisma.assetSnapshot.create({
+      data: { assetId, observedAt: snapshot.observedAt, value: snapshot.value },
+    });
+  }
 }
 
 async function seedPortfolioSnapshot(): Promise<void> {
@@ -332,17 +348,26 @@ async function seedPortfolioSnapshot(): Promise<void> {
       },
     });
   }
-  console.log(`  ✅ Portfolio snapshot seeded`);
+  console.log('  ✅ Portfolio snapshot seeded');
 }
 
-async function main(): Promise<void> {
-  console.log('🌱 Seeding database...');
-  await seedAssetTypes();
-  await seedDemoCategories();
+async function runDevelopmentSeed(): Promise<void> {
+  console.log('🌱 Running development seed profile...');
+  await seedAssetTypes(prisma);
+  await seedBaseCategories(prisma);
   await seedDemoTags();
   await seedDemoAssets();
   await seedPortfolioSnapshot();
-  console.log('🌱 Seeding complete!');
+  console.log('🌱 Development seed complete!');
+}
+
+async function main(): Promise<void> {
+  const profile = resolveSeedProfile();
+  if (profile === 'production') {
+    await runProductionSeed(prisma);
+    return;
+  }
+  await runDevelopmentSeed();
 }
 
 main()

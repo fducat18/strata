@@ -94,12 +94,18 @@ flowchart TD
 cd backend
 npm install
 npx prisma migrate deploy
-npx prisma db seed   # Only needed on first run — loads demo data
+STRATA_SEED_PROFILE=development npx prisma db seed   # Only needed on first run
 npm run start:dev    # http://localhost:3000
 ```
 
 :::note[Docker seeds only on first start]
 When running via Docker, `docker-start.sh` checks whether the database file exists before starting. If fresh (first run), it seeds automatically. If the database already exists, the seed step is skipped so user data and deliberate demo-asset deletions are preserved.
+
+Seed content is profile-based:
+- **Dev (`strata-dev.db`)**: full demo dataset, including 10-year snapshots at 3 points/year (loan history strictly declining)
+- **Prod (`strata.db`)**: asset types + categories only
+
+If you need to remove e2e residue from an existing dev DB, run `npm run devdb:clean-e2e` from repo root.
 :::
 
 - API: `http://localhost:3000/api/v1`

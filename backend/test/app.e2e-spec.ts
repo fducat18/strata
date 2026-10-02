@@ -39,6 +39,10 @@ describe('Strata API (e2e)', () => {
     });
 
     it('POST /api/v1/portfolio-snapshots → creates a snapshot (auto-compute)', async () => {
+      const currentValueRes = await request(app.getHttpServer())
+        .get('/api/v1/portfolio-snapshots/current-value')
+        .expect(200);
+
       const res = await request(app.getHttpServer())
         .post('/api/v1/portfolio-snapshots')
         .send({})
@@ -46,8 +50,8 @@ describe('Strata API (e2e)', () => {
       expect(res.body).toHaveProperty('id');
       expect(res.body).toHaveProperty('value');
       expect(res.body).toHaveProperty('currency');
-      expect(parseFloat(res.body.value)).toBeCloseTo(239200, 0);
       createdSnapshotId = res.body.id;
+      expect(parseFloat(res.body.value)).toBeCloseTo(parseFloat(currentValueRes.body.value), 0);
     });
 
     it('POST /api/v1/portfolio-snapshots → creates a snapshot with explicit value', async () => {
@@ -365,4 +369,3 @@ describe('Strata API (e2e)', () => {
     });
   });
 });
-

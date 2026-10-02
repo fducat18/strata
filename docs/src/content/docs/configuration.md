@@ -13,7 +13,7 @@ Strata runs on the same machine in two distinct modes. This page documents the d
 | DB file | `backend/.data/strata-dev.db` | `backend/.data/strata.db` |
 | NODE_ENV | `development` | `production` |
 | Swagger UI | ✅ `http://localhost:3000/swagger` | ✅ `http://localhost:3000/swagger` |
-| Seed data | Demo assets seeded on first start | Real personal data — never auto-seeded |
+| Seed data | Full demo dataset seeded on first start | Reference data (asset types + categories) seeded on first start |
 | Version badge | Shows `DEV` badge | Shows clean version number |
 | Docker restart policy | none | `always` |
 | Reset DB | `npm run docker:reset` | ⚠️ Manual only — backup first! |
@@ -62,13 +62,31 @@ See [ADR-003: Database Strategy](/docs/adr/adr-003-database-strategy/) for the f
 
 ## Seed Data
 
-When you run `docker:reset` or start with an empty dev DB, the seed script creates:
+Seed content now depends on the database profile:
 
-- 6 demo assets (checking account, savings account, apartment, home loan, two vehicles)
-- Categories and tags reflecting a realistic European personal balance sheet
-- 4 historical portfolio snapshots (January–April 2025) so the net worth chart has data immediately
+- **Development (`strata-dev.db`)** creates:
+  - 13 asset types
+  - hierarchical categories
+  - tags
+  - 6 demo assets
+  - seeded portfolio/snapshot history for immediate chart usage (10 years, 3 snapshots/year, deterministic values)
+  - loan demo asset snapshot history is strictly declining (outstanding balance payoff)
+- **Production (`strata.db`)** creates:
+  - 13 asset types
+  - hierarchical categories
+  - no demo assets, no seeded snapshots
 
-Seed data is **idempotent** — running it twice does not duplicate records.
+All seed paths are **idempotent** — running twice does not duplicate records.
+
+For existing dev databases:
+
+- Cleanup known e2e/test leftovers manually with `npm run devdb:clean-e2e` (repo root).
+- Backfill the current demo snapshot model with:
+
+```bash
+cd backend
+STRATA_SEED_PROFILE=development npx prisma db seed
+```
 
 ## Resetting the Dev Environment
 

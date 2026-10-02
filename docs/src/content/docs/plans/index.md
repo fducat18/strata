@@ -9,6 +9,8 @@ All Strata implementation plans, newest first. Each plan records the intent, dec
 
 | Plan | Description |
 |---|---|
+| [2026-10-02: Clean dev e2e residue and extend demo snapshots](./2026-10-02-clean-dev-e2e-residue-and-extend-demo-snapshots) | Add one-shot cleanup for leaked e2e dev data and extend dev demo asset snapshot history to 10 years with deterministic points. |
+| [2026-10-02: Seed profiles, dev setup docs, and frontend dependency upgrades](./2026-10-02-seed-profiles-doc-setup-and-frontend-upgrades) | Split Prisma seed behavior by runtime profile, document tauri:install and seed behavior accurately, and upgrade frontend dependencies to latest stable versions. |
 | [2026-10-02: Financing scenario improvement](./2026-10-02-financing-scenario-improvement) | Add insurance fee assumptions, improve defaults, switch to scenario comparison table, and add financing glossary clarifications. |
 | [2026-09-29: Stack financing timelines](./2026-09-29-financing-timelines-stacked) | Show each financing timeline as a full-width card stacked vertically, replacing horizontal carousel navigation. |
 | [2026-09-28: Financing savings asset eligibility](./2026-09-28-financing-savings-asset-eligibility) | Add a dedicated savings asset-type group and restrict financing sources to that group. |

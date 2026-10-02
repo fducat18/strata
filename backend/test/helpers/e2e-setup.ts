@@ -26,6 +26,7 @@ export interface E2ETestContext {
  */
 export async function createIsolatedE2EApp(opts?: {
   seed?: boolean;
+  seedProfile?: 'development' | 'production';
 }): Promise<E2ETestContext> {
   const tempDir = mkdtempSync(join(tmpdir(), 'strata-e2e-'));
   const dbPath = join(tempDir, 'test.db');
@@ -40,11 +41,13 @@ export async function createIsolatedE2EApp(opts?: {
   });
 
   if (opts?.seed) {
+    const seedProfile = opts.seedProfile ?? 'development';
     execSync('npx prisma db seed', {
       cwd: join(__dirname, '..', '..'),
       env: {
         ...process.env,
         DATABASE_URL: dbUrl,
+        STRATA_SEED_PROFILE: seedProfile,
       },
       stdio: 'pipe',
     });

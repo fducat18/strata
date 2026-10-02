@@ -83,6 +83,7 @@ For the "real" Strata experience — a native macOS window and menu bar.
 | `npm run tauri:nuke` | Rebuild app + fresh DB, Astro cache cleared |
 | `npm run tauri:build` | Build distributable .app bundle, does not launch |
 | `npm run tauri:prod` | Build .app bundle + launch in production mode, keep DB |
+| `npm run tauri:install` | Build + install `/Applications/Strata.app` with post-install checks |
 
 **Development** — rebuild and launch with devtools:
 ```bash
@@ -94,6 +95,12 @@ npm run tauri:dev
 npm run tauri:prod
 ```
 The .app serves bundled frontend assets and auto-spawns only the NestJS backend sidecar (port `3456`). In `tauri:dev`, SQLite lives at `backend/.data/strata-dev.db` (shared with Docker dev). In production `.app` builds, SQLite lives at `backend/.data/strata.db` (shared with Docker prod).
+
+**Install for daily use** — build and install in `/Applications`:
+```bash
+npm run tauri:install
+```
+On first launch with a fresh production DB, only reference data (asset types + categories) is seeded.
 
 **Reset dev data** — fresh DB with seeded demo data, keep Astro build cache:
 ```bash
@@ -139,6 +146,23 @@ npm run docker:reset
 ```
 
 This wipes `strata-dev.db`, rebuilds images, runs migrations, and re-seeds the demo assets.
+
+### Leftover e2e/test records in dev DB
+
+If you still see records such as `E2E Category ...`, `test-tag-...`, or `Test Asset ...` in local development:
+
+```bash
+npm run devdb:clean-e2e
+```
+
+This command removes known e2e/test artifacts from `backend/.data/strata-dev.db` only.
+
+If your dev DB predates the 10-year snapshot seed model, backfill demo history with:
+
+```bash
+cd backend
+STRATA_SEED_PROFILE=development npx prisma db seed
+```
 
 ### Database is stale after backup import
 

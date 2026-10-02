@@ -145,18 +145,19 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Res
     }
 }
 
-fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str) {
+fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str, seed_profile: &str) {
     let node = find_node();
     let prisma_js = backend_path
         .join("node_modules")
         .join("prisma")
         .join("build")
         .join("index.js");
-    log::info!("Running prisma db seed …");
+    log::info!("Running prisma db seed with {} profile …", seed_profile);
     let status = Command::new(&node)
         .args([prisma_js.to_str().unwrap(), "db", "seed"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
+        .env("STRATA_SEED_PROFILE", seed_profile)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .status();
@@ -432,8 +433,12 @@ pub fn run() {
                 std::process::exit(1);
             }
             if is_fresh_db {
-                log::info!("Fresh database detected — running seed.");
-                run_prisma_seed(&backend_path, &database_url);
+                let seed_profile = if is_dev_build() { "development" } else { "production" };
+                log::info!(
+                    "Fresh database detected — running {} seed profile.",
+                    seed_profile
+                );
+                run_prisma_seed(&backend_path, &database_url, seed_profile);
             } else {
                 log::info!("Existing database detected — skipping seed.");
             }

@@ -33,7 +33,9 @@ On launch, the Tauri app:
 1. Creates the data directory if needed: `<repo>/backend/.data/`
    - **`npm run tauri:dev`** uses `strata-dev.db` — shared with `npm run docker:dev` and `npm run start:dev`
    - **Production `.app` build** uses `strata.db` — shared with `npm run docker:prod`
-2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database
+2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database:
+   - **Dev build (`tauri:dev`)**: full dev seed (asset types, categories, tags, demo assets, snapshots)
+   - **Release/installed build**: reference-only seed (asset types + categories)
 3. Starts the NestJS backend sidecar on port 3456 (desktop-auth protected)
 5. Shows a loading screen, then redirects to bundled frontend once backend is healthy
 6. On quit, kills child processes and removes stale pid tracking

@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Portfolio snapshot tests via the Dashboard page.
- * The "Take Snapshot" button on the dashboard computes net worth
- * across all non-disposed assets and records a PortfolioSnapshot.
+ * Dashboard snapshot visualization tests.
+ * Snapshot creation now lives outside this page, so this suite validates
+ * dashboard behavior around existing snapshot history.
  */
 
 let backendOk = false;
@@ -20,19 +20,16 @@ test.beforeEach(async () => {
   test.skip(!backendOk, 'Backend not reachable at localhost:3000 — skipping');
 });
 
-test('take a portfolio snapshot from the dashboard', async ({ page }) => {
+test('dashboard shows net worth KPI and history section', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');
 
-  // The Take Snapshot button should be visible on the dashboard
-  const snapshotBtn = page.getByRole('button', { name: /Take Snapshot/i });
-  await expect(snapshotBtn).toBeVisible({ timeout: 10_000 });
-
-  await snapshotBtn.click();
-
-  // After a successful snapshot, a toast or confirmation appears
-  // The button re-enables after the mutation resolves
-  await expect(snapshotBtn).toBeEnabled({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: 'Net Worth', exact: true })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByRole('heading', { name: 'Net Worth History' })).toBeVisible({
+    timeout: 10_000,
+  });
 });
 
 test('dashboard shows net worth chart when snapshots exist', async ({ page }) => {
