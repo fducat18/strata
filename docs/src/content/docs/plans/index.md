@@ -9,6 +9,7 @@ All Strata implementation plans, newest first. Each plan records the intent, dec
 
 | Plan | Description |
 |---|---|
+| [2026-10-02: Fix desktop seed reliability, Prisma CLI resolution, and dev seed assets](./2026-10-02-fix-desktop-seed-prisma-cli-and-dev-assets) | Fix desktop startup seed failures and Prisma CLI path resolution, add stock+crypto dev seed assets, and harden install verification. |
 | [2026-10-02: Fix tauri:install startup error from Node resolution](./2026-10-02-fix-tauri-install-node-resolution) | Harden desktop Node binary resolution so Prisma migrate can run when GUI PATH is restricted, and add regression tests plus docs updates. |
 | [2026-10-02: Clean dev e2e residue and extend demo snapshots](./2026-10-02-clean-dev-e2e-residue-and-extend-demo-snapshots) | Add one-shot cleanup for leaked e2e dev data and extend dev demo asset snapshot history to 10 years with deterministic points. |
 | [2026-10-02: Seed profiles, dev setup docs, and frontend dependency upgrades](./2026-10-02-seed-profiles-doc-setup-and-frontend-upgrades) | Split Prisma seed behavior by runtime profile, document tauri:install and seed behavior accurately, and upgrade frontend dependencies to latest stable versions. |

@@ -68,7 +68,7 @@ Seed content now depends on the database profile:
   - 13 asset types
   - hierarchical categories
   - tags
-  - 6 demo assets
+  - 8 demo assets (banking, real estate, loan, vehicles, stocks, crypto)
   - seeded portfolio/snapshot history for immediate chart usage (10 years, 3 snapshots/year, deterministic values)
   - loan demo asset snapshot history is strictly declining (outstanding balance payoff)
 - **Production (`strata.db`)** creates:

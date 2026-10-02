@@ -152,24 +152,66 @@ fn find_node() -> String {
     )
 }
 
-fn prisma_cli_js_path(backend_path: &Path) -> PathBuf {
-    backend_path
-        .join("node_modules")
-        .join("prisma")
-        .join("build")
-        .join("index.js")
+fn prisma_package_dir(backend_path: &Path) -> PathBuf {
+    backend_path.join("node_modules").join("prisma")
+}
+
+fn prisma_package_json_path(backend_path: &Path) -> PathBuf {
+    prisma_package_dir(backend_path).join("package.json")
+}
+
+fn add_candidate(candidates: &mut Vec<PathBuf>, candidate: PathBuf) {
+    if !candidates.iter().any(|existing| existing == &candidate) {
+        candidates.push(candidate);
+    }
+}
+
+fn prisma_cli_js_candidates(backend_path: &Path) -> Vec<PathBuf> {
+    let prisma_dir = prisma_package_dir(backend_path);
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    let package_json_path = prisma_package_json_path(backend_path);
+    if let Ok(package_json_raw) = fs::read_to_string(&package_json_path) {
+        if let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&package_json_raw) {
+            let bin_rel = match package_json.get("bin") {
+                Some(serde_json::Value::String(single_bin)) => Some(single_bin.clone()),
+                Some(serde_json::Value::Object(bin_obj)) => bin_obj
+                    .get("prisma")
+                    .or_else(|| bin_obj.values().next())
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string),
+                _ => None,
+            };
+            if let Some(bin_rel) = bin_rel {
+                let rel = bin_rel.trim_start_matches("./");
+                add_candidate(&mut candidates, prisma_dir.join(rel));
+            }
+        }
+    }
+
+    for fallback in ["build/index.js", "dist/cli/src/bin.js", "dist/index.js"] {
+        add_candidate(&mut candidates, prisma_dir.join(fallback));
+    }
+
+    candidates
 }
 
 fn ensure_prisma_cli_js(backend_path: &Path) -> Result<PathBuf, String> {
-    let prisma_js = prisma_cli_js_path(backend_path);
-    if prisma_js.exists() {
-        Ok(prisma_js)
-    } else {
-        Err(format!(
-            "prisma CLI not found at {} — run `npm run tauri:install` from repo root (or `cd backend && npm ci`)",
-            prisma_js.display()
-        ))
+    let candidates = prisma_cli_js_candidates(backend_path);
+    if let Some(found) = candidates.into_iter().find(|candidate| candidate.exists()) {
+        return Ok(found);
     }
+
+    let checked_paths = prisma_cli_js_candidates(backend_path)
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    Err(format!(
+        "prisma CLI not found. Checked: [{}] — run `npm run tauri:install` from repo root (or `cd backend && npm ci`)",
+        checked_paths
+    ))
 }
 
 /// Resolve the repo root directory.
@@ -208,31 +250,101 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Res
     }
 }
 
-fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str, seed_profile: &str) {
+fn run_prisma_seed(
+    backend_path: &std::path::Path,
+    database_url: &str,
+    seed_profile: &str,
+) -> Result<(), String> {
     let node = find_node();
-    let prisma_js = match ensure_prisma_cli_js(backend_path) {
-        Ok(path) => path,
-        Err(message) => {
-            log::error!("{}", message);
-            return;
-        }
-    };
+    let prisma_js = ensure_prisma_cli_js(backend_path)?;
     let prisma_js_arg = prisma_js.to_string_lossy().into_owned();
     log::info!("Running prisma db seed with {} profile …", seed_profile);
-    let status = Command::new(&node)
+    let output = Command::new(&node)
         .args([prisma_js_arg.as_str(), "db", "seed"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .env("STRATA_SEED_PROFILE", seed_profile)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .status();
+        .output()
+        .map_err(|e| format!("could not run prisma seed with node '{}': {}", node, e))?;
 
-    match status {
-        Ok(s) if s.success() => log::info!("Prisma seed succeeded"),
-        Ok(s) => log::warn!("Prisma seed exited with {}", s),
-        Err(e) => log::error!("Failed to run prisma seed with node '{}': {}", node, e),
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+
+    if output.status.success() {
+        if !stdout.is_empty() {
+            log::info!("Prisma seed output:\n{}", stdout);
+        }
+        if !stderr.is_empty() {
+            log::warn!("Prisma seed warnings:\n{}", stderr);
+        }
+        log::info!("Prisma seed succeeded");
+        return Ok(());
     }
+
+    Err(format!(
+        "prisma db seed exited with {}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        if stdout.is_empty() { "<empty>" } else { &stdout },
+        if stderr.is_empty() { "<empty>" } else { &stderr }
+    ))
+}
+
+fn read_asset_type_count(backend_path: &std::path::Path, database_url: &str) -> Result<u64, String> {
+    let node = find_node();
+    let script = r#"
+const { fileURLToPath } = require('node:url');
+const Database = require('better-sqlite3');
+
+const databaseUrl = process.env.DATABASE_URL || '';
+if (!databaseUrl.startsWith('file:')) {
+  console.error(`Unsupported DATABASE_URL for desktop sqlite probe: ${databaseUrl}`);
+  process.exit(1);
+}
+
+const dbPath = fileURLToPath(new URL(databaseUrl));
+const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+const row = db.prepare('SELECT COUNT(*) AS count FROM asset_types').get();
+db.close();
+process.stdout.write(String(Number(row?.count ?? 0)));
+"#;
+
+    let output = Command::new(&node)
+        .args(["-e", script])
+        .current_dir(backend_path)
+        .env("DATABASE_URL", database_url)
+        .output()
+        .map_err(|e| format!("could not inspect asset_types with node '{}': {}", node, e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        return Err(format!(
+            "asset_types probe exited with {}{}",
+            output.status,
+            if stderr.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", stderr)
+            }
+        ));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    stdout.parse::<u64>().map_err(|e| {
+        format!(
+            "failed to parse asset_types probe output '{}' as integer: {}",
+            stdout, e
+        )
+    })
+}
+
+fn should_seed_reference_data(is_dev_build: bool, is_fresh_db: bool, asset_type_count: Option<u64>) -> bool {
+    if is_fresh_db {
+        return true;
+    }
+    if is_dev_build {
+        return false;
+    }
+    matches!(asset_type_count, Some(0))
 }
 
 fn spawn_backend(
@@ -410,7 +522,7 @@ fn window_title() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_prisma_cli_js, resolve_node_binary_with};
+    use super::{ensure_prisma_cli_js, resolve_node_binary_with, should_seed_reference_data};
     use std::collections::HashSet;
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -481,6 +593,43 @@ mod tests {
         assert_eq!(resolved, prisma_js);
 
         fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
+    }
+
+    #[test]
+    fn ensure_prisma_cli_js_prefers_package_json_bin() {
+        let backend_path = temp_test_dir("prisma-package-json-bin");
+        let prisma_dir = backend_path.join("node_modules").join("prisma");
+        let bin_path = prisma_dir.join("dist").join("cli").join("src");
+        fs::create_dir_all(&bin_path).expect("create prisma dist dir");
+        let prisma_js = bin_path.join("bin.js");
+        fs::write(&prisma_js, "module.exports = {};\n").expect("write prisma bin stub");
+        fs::write(
+            prisma_dir.join("package.json"),
+            r#"{"name":"prisma","bin":{"prisma":"dist/cli/src/bin.js"}}"#,
+        )
+        .expect("write prisma package json");
+
+        let resolved = ensure_prisma_cli_js(&backend_path).expect("prisma path should resolve");
+        assert_eq!(resolved, prisma_js);
+
+        fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
+    }
+
+    #[test]
+    fn should_seed_reference_data_for_fresh_dev_or_prod() {
+        assert!(should_seed_reference_data(true, true, None));
+        assert!(should_seed_reference_data(false, true, None));
+    }
+
+    #[test]
+    fn should_seed_reference_data_for_existing_prod_when_empty_only() {
+        assert!(should_seed_reference_data(false, false, Some(0)));
+        assert!(!should_seed_reference_data(false, false, Some(1)));
+    }
+
+    #[test]
+    fn should_not_seed_existing_dev_db() {
+        assert!(!should_seed_reference_data(true, false, Some(0)));
     }
 }
 
@@ -580,13 +729,52 @@ pub fn run() {
                     .blocking_show();
                 std::process::exit(1);
             }
-            if is_fresh_db {
-                let seed_profile = if is_dev_build() { "development" } else { "production" };
-                log::info!(
-                    "Fresh database detected — running {} seed profile.",
-                    seed_profile
-                );
-                run_prisma_seed(&backend_path, &database_url, seed_profile);
+            let is_dev_runtime = is_dev_build();
+            let asset_type_count = if !is_fresh_db && !is_dev_runtime {
+                match read_asset_type_count(&backend_path, &database_url) {
+                    Ok(count) => {
+                        log::info!("Existing production DB detected — asset_types count={}.", count);
+                        Some(count)
+                    }
+                    Err(e) => {
+                        let msg = format!("Could not verify production reference data:\n{}", e);
+                        log::error!("{}", msg);
+                        app.dialog()
+                            .message(&msg)
+                            .title("Strata — startup error")
+                            .kind(MessageDialogKind::Error)
+                            .blocking_show();
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                None
+            };
+
+            let should_seed = should_seed_reference_data(is_dev_runtime, is_fresh_db, asset_type_count);
+            if should_seed {
+                let seed_profile = if is_dev_runtime { "development" } else { "production" };
+                if is_fresh_db {
+                    log::info!(
+                        "Fresh database detected — running {} seed profile.",
+                        seed_profile
+                    );
+                } else {
+                    log::warn!(
+                        "Production database has zero asset types — running {} seed profile.",
+                        seed_profile
+                    );
+                }
+                if let Err(e) = run_prisma_seed(&backend_path, &database_url, seed_profile) {
+                    let msg = format!("Database seed failed:\n{}", e);
+                    log::error!("{}", msg);
+                    app.dialog()
+                        .message(&msg)
+                        .title("Strata — startup error")
+                        .kind(MessageDialogKind::Error)
+                        .blocking_show();
+                    std::process::exit(1);
+                }
             } else {
                 log::info!("Existing database detected — skipping seed.");
             }

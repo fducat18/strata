@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { execFileSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import { AppModule } from './app.module.js';
 
@@ -51,26 +52,58 @@ function createCorsMiddleware(allowedOrigins: string[], allowedPrefixes: string[
   };
 }
 
+function resolvePrismaCliPath(baseDir: string): string {
+  const prismaDir = path.join(baseDir, 'node_modules', 'prisma');
+  const packageJsonPath = path.join(prismaDir, 'package.json');
+  const candidates: string[] = [];
+
+  if (existsSync(packageJsonPath)) {
+    try {
+      const parsed = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+        bin?: string | { prisma?: string } | Record<string, string>;
+      };
+      const bin =
+        typeof parsed.bin === 'string'
+          ? parsed.bin
+          : parsed.bin?.prisma ?? Object.values(parsed.bin ?? {})[0];
+      if (typeof bin === 'string' && bin.trim().length > 0) {
+        candidates.push(path.join(prismaDir, bin.replace(/^\.?\//u, '')));
+      }
+    } catch {
+      // Fall through to static candidates below.
+    }
+  }
+
+  for (const rel of ['build/index.js', 'dist/cli/src/bin.js', 'dist/index.js']) {
+    const candidate = path.join(prismaDir, rel);
+    if (!candidates.includes(candidate)) {
+      candidates.push(candidate);
+    }
+  }
+
+  const resolved = candidates.find((candidate) => existsSync(candidate));
+  if (!resolved) {
+    throw new Error(`prisma CLI not found. Checked: ${candidates.join(', ')}`);
+  }
+  return resolved;
+}
+
 async function bootstrap() {
   console.log('⚙️  Running database migrations...');
   try {
     // Use process.execPath (absolute node binary path) + the local prisma
     // script so this works when PATH is stripped — e.g. when spawned as a
     // child process by the Tauri desktop app launched from /Applications.
-    const prismaJs = path.join(
-      __dirname,
-      '..',
-      'node_modules',
-      'prisma',
-      'build',
-      'index.js',
-    );
+    const prismaJs = resolvePrismaCliPath(path.join(__dirname, '..'));
     execFileSync(process.execPath, [prismaJs, 'migrate', 'deploy'], {
       stdio: 'inherit',
       env: { ...process.env },
     });
-  } catch {
+  } catch (error) {
     console.error('❌ Database migration failed. Exiting.');
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
     process.exit(1);
   }
 

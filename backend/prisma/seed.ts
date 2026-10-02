@@ -80,7 +80,8 @@ async function seedDemoTags(): Promise<void> {
   console.log(`  ✅ ${DEMO_TAGS.length} demo tags seeded`);
 }
 
-// Seed values validated: 4250 + 22950 + 385000 - 180000 + 5000 + 2000 = 239200
+// Seed values validated:
+// 4250 + 22950 + 385000 - 180000 + 5000 + 2000 + 3000 + 3600 = 245800
 // LIABILITIES (Home Loan) are stored as positive values; PortfolioSnapshotService subtracts them.
 const DEMO_ASSETS: {
   name: string;
@@ -148,6 +149,24 @@ const DEMO_ASSETS: {
     currency: 'EUR',
     tags: ['depreciating'],
     categories: ['Vehicles'],
+  },
+  {
+    name: 'MSCI World ETF',
+    typeCode: 'STOCKS',
+    quantity: 20,
+    unitPrice: 150.0,
+    currency: 'EUR',
+    tags: ['appreciating', 'liquid'],
+    categories: ['Investments'],
+  },
+  {
+    name: 'Bitcoin Wallet',
+    typeCode: 'CRYPTO',
+    quantity: 0.12,
+    unitPrice: 30000.0,
+    currency: 'EUR',
+    tags: ['appreciating', 'liquid'],
+    categories: ['Investments'],
   },
 ];
 
@@ -245,6 +264,8 @@ const DEMO_ASSET_HISTORY: Record<string, DemoAssetHistoryConfig> = {
   'Home Loan — BNP': { mode: 'declining', oldestValue: 250000, stepDelta: -2333.33 },
   'Toyota Yaris 2022': { mode: 'declining', oldestValue: 13000, stepDelta: -270 },
   'Renault Kangoo 2019': { mode: 'declining', oldestValue: 9000, stepDelta: -230 },
+  'MSCI World ETF': { mode: 'mixed', oldestValue: 1600, stepDelta: 55 },
+  'Bitcoin Wallet': { mode: 'mixed', oldestValue: 900, stepDelta: 95 },
 };
 
 function startOfDay(date: Date): Date {
@@ -341,7 +362,7 @@ async function seedPortfolioSnapshot(): Promise<void> {
   if (!existing) {
     await prisma.portfolioSnapshot.create({
       data: {
-        value: 239200.0,
+        value: 245800.0,
         currency: 'EUR',
         notes: 'Historical seed — initial',
         observedAt: new Date('2025-04-01'),

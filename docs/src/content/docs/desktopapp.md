@@ -33,9 +33,9 @@ On launch, the Tauri app:
 1. Creates the data directory if needed: `<repo>/backend/.data/`
    - **`npm run tauri:dev`** uses `strata-dev.db` — shared with `npm run docker:dev` and `npm run start:dev`
    - **Production `.app` build** uses `strata.db` — shared with `npm run docker:prod`
-2. Runs `prisma migrate deploy`, then runs seed only for a freshly created database:
+2. Runs `prisma migrate deploy`, then seed handling:
    - **Dev build (`tauri:dev`)**: full dev seed (asset types, categories, tags, demo assets, snapshots)
-   - **Release/installed build**: reference-only seed (asset types + categories)
+   - **Release/installed build**: reference-only seed (asset types + categories) on fresh DB, and auto-heal only if `asset_types` is empty
 3. Starts the NestJS backend sidecar on port 3456 (desktop-auth protected)
 5. Shows a loading screen, then redirects to bundled frontend once backend is healthy
 6. On quit, kills child processes and removes stale pid tracking
@@ -174,6 +174,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 - Check logs in `~/Library/Logs/net.ducatillon.strata/Strata.log`
 - Ensure port 3456 is free: `lsof -i :3456`
 - If startup dialog shows `could not run prisma migrate`, verify Node is installed (`command -v node`) and re-run `npm run tauri:install` from repo root.
+- If startup dialog shows `prisma CLI not found`, reinstall backend dependencies (`cd backend && npm ci`) then run `npm run tauri:install` again.
 
 ### Frontend fails to load
 

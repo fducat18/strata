@@ -28,7 +28,7 @@ Strata is a personal asset tracker. It stores real financial data (account balan
 
 | File | Used when | Contains |
 |------|-----------|----------|
-| `backend/.data/strata-dev.db` | `docker:dev`, `docker:reset`, automated tests | Seeded demo data (BNP Checking, Livret A, Paris Apt, BNP Loan, Toyota, Kangoo) |
+| `backend/.data/strata-dev.db` | `docker:dev`, `docker:reset`, automated tests | Seeded demo data (BNP Checking, Livret A, Paris Apt, BNP Loan, Toyota, Kangoo, MSCI World ETF, Bitcoin Wallet) |
 | `backend/.data/strata.db` | `docker:prod`, Tauri desktop app | Real user data — never touched by scripts |
 
 The active database is selected by the `DB_FILE` environment variable (default: `strata-dev.db` in development, `strata.db` in production). The docker-compose file reads this variable, and the NestJS `DATABASE_URL` is constructed at runtime from `DB_FILE`.
@@ -40,11 +40,11 @@ The active database is selected by the `DB_FILE` environment variable (default: 
 Demo seed data (`prisma/seed.ts`) is designed to be:
 
 - **Realistic** — asset names and values reflect a plausible European personal balance sheet
-- **Complete** — covers all supported asset types (checking, savings, real estate, loan, vehicles)
+- **Complete** — covers all supported asset types (checking, savings, real estate, loan, vehicles, stocks, crypto)
 - **Positive and negative** — includes a loan (liability) to demonstrate net worth = assets − liabilities
 - **Idempotent** — seeding twice does not duplicate data (upsert by unique fields)
 
-Current demo assets (total net worth ≈ €239,200):
+Current demo assets (total net worth ≈ €245,800):
 
 | Asset | Type | Value |
 |-------|------|-------|
@@ -54,6 +54,8 @@ Current demo assets (total net worth ≈ €239,200):
 | Crédit Immo BNP | LOAN | −€180,000 |
 | Toyota Yaris | VEHICLE | €5,000 |
 | Renault Kangoo | VEHICLE | €2,000 |
+| MSCI World ETF | STOCKS | €3,000 |
+| Bitcoin Wallet | CRYPTO | €3,600 |
 
 ---
 

@@ -10,6 +10,8 @@ async function seedWithProfile(profile: 'development' | 'production'): Promise<{
   categories: number;
   tags: number;
   assets: number;
+  stockAssets: number;
+  cryptoAssets: number;
   portfolioSnapshots: number;
 }> {
   const tempDir = mkdtempSync(join(tmpdir(), 'strata-seed-profile-'));
@@ -41,16 +43,18 @@ async function seedWithProfile(profile: 'development' | 'production'): Promise<{
       adapter: new PrismaBetterSqlite3({ url: dbUrl }),
     });
     await prisma.$connect();
-    const [assetTypes, categories, tags, assets, portfolioSnapshots] = await Promise.all([
+    const [assetTypes, categories, tags, assets, stockAssets, cryptoAssets, portfolioSnapshots] = await Promise.all([
       prisma.assetType.count(),
       prisma.category.count(),
       prisma.tag.count(),
       prisma.asset.count(),
+      prisma.asset.count({ where: { assetType: { code: 'STOCKS' } } }),
+      prisma.asset.count({ where: { assetType: { code: 'CRYPTO' } } }),
       prisma.portfolioSnapshot.count(),
     ]);
     await prisma.$disconnect();
 
-    return { assetTypes, categories, tags, assets, portfolioSnapshots };
+    return { assetTypes, categories, tags, assets, stockAssets, cryptoAssets, portfolioSnapshots };
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
@@ -64,6 +68,8 @@ describe('Prisma seed profiles (e2e)', () => {
     expect(counts.categories).toBeGreaterThan(0);
     expect(counts.tags).toBe(0);
     expect(counts.assets).toBe(0);
+    expect(counts.stockAssets).toBe(0);
+    expect(counts.cryptoAssets).toBe(0);
     expect(counts.portfolioSnapshots).toBe(0);
   }, 60_000);
 
@@ -74,6 +80,8 @@ describe('Prisma seed profiles (e2e)', () => {
     expect(counts.categories).toBeGreaterThan(0);
     expect(counts.tags).toBeGreaterThan(0);
     expect(counts.assets).toBeGreaterThan(0);
+    expect(counts.stockAssets).toBeGreaterThan(0);
+    expect(counts.cryptoAssets).toBeGreaterThan(0);
     expect(counts.portfolioSnapshots).toBeGreaterThan(0);
   }, 60_000);
 });

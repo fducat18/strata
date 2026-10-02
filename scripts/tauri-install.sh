@@ -43,6 +43,26 @@ kill_pid_safely() {
   kill -KILL "$pid" 2>/dev/null || true
 }
 
+count_asset_types() {
+  local db_path="$1"
+  (
+    cd "$REPO_ROOT/backend"
+    DB_PATH="$db_path" node <<'NODE'
+const Database = require('better-sqlite3');
+
+const dbPath = process.env.DB_PATH;
+if (!dbPath) {
+  throw new Error('DB_PATH is required');
+}
+
+const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+const row = db.prepare('SELECT COUNT(*) AS count FROM asset_types').get();
+db.close();
+process.stdout.write(String(Number(row?.count ?? 0)));
+NODE
+  )
+}
+
 echo ""
 echo "╔══════════════════════════════════════════════╗"
 echo "║   Strata — Install to /Applications          ║"
@@ -125,6 +145,27 @@ if [[ -n "$legacy_4321_pid" || -n "$legacy_6543_pid" ]]; then
   [[ -n "$legacy_6543_pid" ]] && echo "   :6543 pid=$legacy_6543_pid"
   exit 1
 fi
+
+asset_types_db="$REPO_ROOT/backend/.data/strata.db"
+if [[ ! -f "$asset_types_db" ]]; then
+  osascript -e 'tell application "Strata" to quit' >/dev/null 2>&1 || true
+  echo "❌ Post-install check failed: production database not found at:"
+  echo "   $asset_types_db"
+  exit 1
+fi
+
+if ! asset_type_count="$(count_asset_types "$asset_types_db")"; then
+  osascript -e 'tell application "Strata" to quit' >/dev/null 2>&1 || true
+  echo "❌ Post-install check failed: unable to read seeded asset types from database."
+  exit 1
+fi
+
+if [[ "$asset_type_count" -lt 1 ]]; then
+  osascript -e 'tell application "Strata" to quit' >/dev/null 2>&1 || true
+  echo "❌ Post-install check failed: expected seeded asset types, found none."
+  exit 1
+fi
+echo "   Reference seed check: $asset_type_count asset types found."
 
 osascript -e 'tell application "Strata" to quit' >/dev/null 2>&1 || true
 sleep 5
