@@ -89,7 +89,7 @@ After that, **double-click Strata in Finder or Spotlight** — no terminal neede
 > | Limitation | Details |
 > |---|---|
 > | Repo must stay at this path | Paths to `backend/dist/` and `front/dist/` are baked in at compile time |
-> | Node.js must be installed | The app spawns `node` from `/opt/homebrew/bin/node` or `/usr/local/bin/node` |
+> | Node.js must be installed | The app resolves Node from build-time detected absolute path, then common system/user locations, then bare `node` |
 > | Data lives in the repo | `backend/.data/strata.db` — shared with `docker:prod` |
 > | App is unsigned | `tauri:install` clears the quarantine flag automatically |
 >
@@ -173,6 +173,7 @@ All local modes (Tauri dev, Tauri prod, Docker dev, Docker prod, `npm run start:
 - Check that `backend/dist/main.js` exists (`cd backend && npm run build`)
 - Check logs in `~/Library/Logs/net.ducatillon.strata/Strata.log`
 - Ensure port 3456 is free: `lsof -i :3456`
+- If startup dialog shows `could not run prisma migrate`, verify Node is installed (`command -v node`) and re-run `npm run tauri:install` from repo root.
 
 ### Frontend fails to load
 

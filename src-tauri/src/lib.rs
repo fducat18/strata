@@ -8,13 +8,13 @@
 // 5. Provide IPC commands for revealing the data folder + reading version
 
 use rand::RngCore;
+use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use serde::Serialize;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{Emitter, Manager, RunEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
@@ -81,7 +81,11 @@ fn data_dir() -> std::path::PathBuf {
 fn ensure_data_dir() -> String {
     let dir = data_dir();
     std::fs::create_dir_all(&dir).expect("could not create data directory");
-    let db_file = if is_dev_build() { "strata-dev.db" } else { "strata.db" };
+    let db_file = if is_dev_build() {
+        "strata-dev.db"
+    } else {
+        "strata.db"
+    };
     format!("file:{}", dir.join(db_file).display())
 }
 
@@ -95,19 +99,78 @@ fn random_hex_token() -> String {
     bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
-fn find_node() -> String {
-    for candidate in &[
+fn resolve_node_binary_with<F>(
+    path_exists: F,
+    build_time_node: Option<&str>,
+    home_dir: Option<&Path>,
+) -> String
+where
+    F: Fn(&str) -> bool,
+{
+    let mut candidates: Vec<String> = Vec::new();
+
+    if let Some(path) = build_time_node
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    {
+        candidates.push(path.to_string());
+    }
+
+    for candidate in [
         "/opt/homebrew/bin/node",
         "/usr/local/bin/node",
         "/usr/bin/node",
     ] {
-        if std::path::Path::new(candidate).exists() {
-            return candidate.to_string();
+        candidates.push(candidate.to_string());
+    }
+
+    if let Some(home) = home_dir {
+        candidates.push(
+            home.join(".local")
+                .join("bin")
+                .join("node")
+                .to_string_lossy()
+                .to_string(),
+        );
+    }
+
+    for candidate in candidates {
+        if path_exists(&candidate) {
+            return candidate;
         }
     }
+
     "node".to_string()
 }
 
+fn find_node() -> String {
+    let home_dir = std::env::var_os("HOME").map(PathBuf::from);
+    resolve_node_binary_with(
+        |candidate| Path::new(candidate).exists(),
+        option_env!("STRATA_NODE_PATH"),
+        home_dir.as_deref(),
+    )
+}
+
+fn prisma_cli_js_path(backend_path: &Path) -> PathBuf {
+    backend_path
+        .join("node_modules")
+        .join("prisma")
+        .join("build")
+        .join("index.js")
+}
+
+fn ensure_prisma_cli_js(backend_path: &Path) -> Result<PathBuf, String> {
+    let prisma_js = prisma_cli_js_path(backend_path);
+    if prisma_js.exists() {
+        Ok(prisma_js)
+    } else {
+        Err(format!(
+            "prisma CLI not found at {} — run `npm run tauri:install` from repo root (or `cd backend && npm ci`)",
+            prisma_js.display()
+        ))
+    }
+}
 
 /// Resolve the repo root directory.
 /// Bundling Node + sources into the .app is tracked in
@@ -121,14 +184,11 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Res
     let node = find_node();
     // Use the local prisma binary directly via node so this works when PATH is
     // stripped (e.g. GUI app launched from /Applications — no /opt/homebrew/bin).
-    let prisma_js = backend_path
-        .join("node_modules")
-        .join("prisma")
-        .join("build")
-        .join("index.js");
+    let prisma_js = ensure_prisma_cli_js(backend_path)?;
+    let prisma_js_arg = prisma_js.to_string_lossy().into_owned();
     log::info!("Running prisma migrate deploy …");
     let status = Command::new(&node)
-        .args([prisma_js.to_str().unwrap(), "migrate", "deploy"])
+        .args([prisma_js_arg.as_str(), "migrate", "deploy"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .stdout(std::process::Stdio::piped())
@@ -141,20 +201,26 @@ fn run_prisma_migrate(backend_path: &std::path::Path, database_url: &str) -> Res
             Ok(())
         }
         Ok(s) => Err(format!("prisma migrate deploy exited with {}", s)),
-        Err(e) => Err(format!("could not run prisma migrate: {}", e)),
+        Err(e) => Err(format!(
+            "could not run prisma migrate with node '{}': {}",
+            node, e
+        )),
     }
 }
 
 fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str, seed_profile: &str) {
     let node = find_node();
-    let prisma_js = backend_path
-        .join("node_modules")
-        .join("prisma")
-        .join("build")
-        .join("index.js");
+    let prisma_js = match ensure_prisma_cli_js(backend_path) {
+        Ok(path) => path,
+        Err(message) => {
+            log::error!("{}", message);
+            return;
+        }
+    };
+    let prisma_js_arg = prisma_js.to_string_lossy().into_owned();
     log::info!("Running prisma db seed with {} profile …", seed_profile);
     let status = Command::new(&node)
-        .args([prisma_js.to_str().unwrap(), "db", "seed"])
+        .args([prisma_js_arg.as_str(), "db", "seed"])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .env("STRATA_SEED_PROFILE", seed_profile)
@@ -165,7 +231,7 @@ fn run_prisma_seed(backend_path: &std::path::Path, database_url: &str, seed_prof
     match status {
         Ok(s) if s.success() => log::info!("Prisma seed succeeded"),
         Ok(s) => log::warn!("Prisma seed exited with {}", s),
-        Err(e) => log::error!("Failed to run prisma seed: {}", e),
+        Err(e) => log::error!("Failed to run prisma seed with node '{}': {}", node, e),
     }
 }
 
@@ -207,7 +273,10 @@ fn spawn_backend(
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
-        .map_err(|e| format!("failed to start NestJS backend: {} (is Node.js installed?)", e))
+        .map_err(|e| format!(
+            "failed to start NestJS backend with node '{}': {} (is Node.js installed and executable?)",
+            node, e
+        ))
 }
 
 fn cleanup_stale_backend(pid_file: &PathBuf) {
@@ -288,7 +357,10 @@ fn wait_for_backend(url: &str, desktop_token: &str, max_attempts: u32) -> bool {
             }
         }
     }
-    log::error!("Backend did not become healthy after {} attempts", max_attempts);
+    log::error!(
+        "Backend did not become healthy after {} attempts",
+        max_attempts
+    );
     false
 }
 
@@ -333,6 +405,82 @@ fn window_title() -> String {
         format!("Strata {} (DEV)", APP_VERSION)
     } else {
         format!("Strata {}", APP_VERSION)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ensure_prisma_cli_js, resolve_node_binary_with};
+    use std::collections::HashSet;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_test_dir(name: &str) -> PathBuf {
+        let mut dir = std::env::temp_dir();
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time moved backwards")
+            .as_nanos();
+        dir.push(format!("strata-tauri-{name}-{nanos}"));
+        dir
+    }
+
+    #[test]
+    fn resolve_node_prefers_build_time_path() {
+        let build_node = "/tmp/custom-node";
+        let resolved = resolve_node_binary_with(
+            |candidate| candidate == build_node,
+            Some(build_node),
+            Some(Path::new("/Users/alice")),
+        );
+        assert_eq!(resolved, build_node);
+    }
+
+    #[test]
+    fn resolve_node_uses_home_local_bin_when_system_paths_missing() {
+        let home = Path::new("/Users/alice");
+        let home_node = home
+            .join(".local")
+            .join("bin")
+            .join("node")
+            .to_string_lossy()
+            .to_string();
+        let existing: HashSet<String> = HashSet::from([home_node.clone()]);
+
+        let resolved =
+            resolve_node_binary_with(|candidate| existing.contains(candidate), None, Some(home));
+        assert_eq!(resolved, home_node);
+    }
+
+    #[test]
+    fn resolve_node_falls_back_to_bare_node_when_no_candidate_exists() {
+        let resolved = resolve_node_binary_with(|_| false, None, None);
+        assert_eq!(resolved, "node");
+    }
+
+    #[test]
+    fn ensure_prisma_cli_js_returns_error_when_missing() {
+        let backend_path = temp_test_dir("missing-prisma");
+        let err = ensure_prisma_cli_js(&backend_path).expect_err("missing prisma path should fail");
+        assert!(err.contains("prisma CLI not found"));
+    }
+
+    #[test]
+    fn ensure_prisma_cli_js_returns_path_when_present() {
+        let backend_path = temp_test_dir("present-prisma");
+        let prisma_dir = backend_path
+            .join("node_modules")
+            .join("prisma")
+            .join("build");
+        fs::create_dir_all(&prisma_dir).expect("create prisma dir");
+        let prisma_js = prisma_dir.join("index.js");
+        fs::write(&prisma_js, "module.exports = {};\n").expect("write prisma stub");
+
+        let resolved = ensure_prisma_cli_js(&backend_path).expect("prisma path should resolve");
+        assert_eq!(resolved, prisma_js);
+
+        fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
     }
 }
 
