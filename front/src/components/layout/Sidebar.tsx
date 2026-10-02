@@ -5,6 +5,7 @@ import {
   FolderTree,
   Tags,
   Layers,
+  Calculator,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Categories', href: '/categories', icon: FolderTree },
   { label: 'Tags', href: '/tags', icon: Tags },
   { label: 'Asset Types', href: '/asset-types', icon: Layers },
+  { label: 'Financing', href: '/financing', icon: Calculator },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 

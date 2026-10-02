@@ -10,3 +10,13 @@ export { TagResponseDto } from './tag.response.js';
 export { AssetTypeFullResponseDto } from './asset-type.response.js';
 export { AssetSnapshotResponseDto } from './asset-snapshot.response.js';
 export { PortfolioSnapshotResponseDto } from './portfolio-snapshot.response.js';
+export {
+  FinancingScenarioResponseDto,
+  FinancingScenarioInputsResponseDto,
+  FinancingScenarioAssetInputResponseDto,
+  FinancingCalculationResponseDto,
+  FinancingOptionResponseDto,
+  FinancingScenarioMonthResponseDto,
+  FinancingScenarioAssetMonthResponseDto,
+  FinancingYearCheckpointResponseDto,
+} from './financing-scenario.response.js';

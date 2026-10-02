@@ -12,3 +12,5 @@ export { IPortfolioSnapshotRepository } from './portfolio-snapshot.repository.po
 export type { CreatePortfolioSnapshotData } from './portfolio-snapshot.repository.port';
 export { ITransactionRepository } from './transaction.repository.port';
 export type { CreateTransactionData } from './transaction.repository.port';
+export { IFinancingScenarioRepository } from './financing-scenario.repository.port.js';
+export type { CreateFinancingScenarioData } from './financing-scenario.repository.port.js';

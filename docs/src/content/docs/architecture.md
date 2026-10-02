@@ -67,11 +67,12 @@ See [Configuration](/docs/configuration/) for the full comparison table.
 
 See the [Portfolio Snapshot Recalculation](/docs/technical/portfolio-snapshot-recalculation/) technical guide for details on the algorithm.
 
-Asset types use a two-level hierarchy: **13 type codes** grouped into **6 groups**.
+Asset types use a two-level hierarchy: **13 type codes** grouped into **7 groups**.
 
 | Group | Types |
 |-------|-------|
-| `FINANCIAL` | CHECKING_ACCOUNT, SAVINGS_ACCOUNT, CASH, STOCKS, CRYPTO, BONDS |
+| `FINANCIAL` | CHECKING_ACCOUNT, CASH, STOCKS, CRYPTO, BONDS |
+| `SAVINGS` | SAVINGS_ACCOUNT, user-defined savings products |
 | `REAL_ESTATE` | REAL_ESTATE |
 | `PERSONAL_PROPERTY` | PERSONAL_PROPERTY, VEHICLE |
 | `PHYSICAL_COLLECTIONS` | COLLECTIBLES |
@@ -81,7 +82,7 @@ Asset types use a two-level hierarchy: **13 type codes** grouped into **6 groups
 The `group` field is used to:
 - Color-code the net worth history chart (LIABILITIES = red, below axis)
 - Provide filter modes in the net worth chart ("By group" toggle)
-- Drive the asset types management page (`/asset-types`)
+- Drive the asset types management page (`/asset-types`) and financing candidate selection
 
 ## Transaction Wiring
 

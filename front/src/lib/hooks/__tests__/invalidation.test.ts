@@ -4,6 +4,7 @@ import {
   invalidateAssetQueries,
   invalidateCategoryQueries,
   invalidateTagQueries,
+  invalidateFinancingScenarioQueries,
 } from '../invalidation';
 
 describe('invalidateAssetQueries', () => {
@@ -38,5 +39,14 @@ describe('invalidateTagQueries', () => {
     const spy = vi.spyOn(qc, 'invalidateQueries');
     invalidateTagQueries(qc);
     expect(spy).toHaveBeenCalledWith({ queryKey: ['tags'] });
+  });
+});
+
+describe('invalidateFinancingScenarioQueries', () => {
+  it('invalidates the saved scenario list and comparison cache', () => {
+    const qc = new QueryClient();
+    const spy = vi.spyOn(qc, 'invalidateQueries');
+    invalidateFinancingScenarioQueries(qc);
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['financing-scenarios'] });
   });
 });

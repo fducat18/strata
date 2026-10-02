@@ -1,0 +1,15 @@
+meta {
+  name: DeleteFinancingScenario
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:3000/api/v1/financing-scenarios/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{financing_scenario_id}}
+}

@@ -62,6 +62,7 @@ describe('FILTER_MODES and GROUP_COLORS exports', () => {
 
   it('exports GROUP_COLORS for all groups', () => {
     expect(GROUP_COLORS).toHaveProperty('FINANCIAL');
+    expect(GROUP_COLORS).toHaveProperty('SAVINGS');
     expect(GROUP_COLORS).toHaveProperty('LIABILITIES');
     expect(GROUP_COLORS).toHaveProperty('REAL_ESTATE');
   });

@@ -27,6 +27,7 @@ import type { AssetType } from '@/lib/types';
 
 const GROUP_COLORS: Record<string, string> = {
   FINANCIAL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  SAVINGS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   REAL_ESTATE: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   PERSONAL_PROPERTY: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   PHYSICAL_COLLECTIONS: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
@@ -36,7 +37,7 @@ const GROUP_COLORS: Record<string, string> = {
 
 const GROUPS = Object.keys(GROUP_COLORS) as Array<keyof typeof GROUP_COLORS>;
 
-const groupEnum = z.enum(['FINANCIAL', 'REAL_ESTATE', 'PERSONAL_PROPERTY', 'PHYSICAL_COLLECTIONS', 'LIABILITIES', 'OTHER']);
+const groupEnum = z.enum(['FINANCIAL', 'SAVINGS', 'REAL_ESTATE', 'PERSONAL_PROPERTY', 'PHYSICAL_COLLECTIONS', 'LIABILITIES', 'OTHER']);
 
 const createSchema = z.object({
   code: z.string().min(1, 'Code is required').max(50).regex(/^[A-Z0-9_]+$/, 'Use uppercase letters, digits, underscores only'),

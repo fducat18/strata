@@ -7,3 +7,4 @@ export { RestoreBackupDto } from './admin/index.js';
 export type { RestoreMode } from './admin/index.js';
 export { IsDecimalString } from './validators/is-decimal-string.validator.js';
 export { CreateAssetTypeDto, UpdateAssetTypeDto } from './asset-type/index.js';
+export { CreateFinancingScenarioDto, FinancingScenarioAssetDto } from './financing-scenario/index.js';

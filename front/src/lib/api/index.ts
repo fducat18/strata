@@ -1,5 +1,6 @@
 export { api, createApiClient, type ApiError } from './client';
 export { assetApi } from './assets';
+export { financingScenarioApi } from './financing-scenarios';
 export { categoryApi } from './categories';
 export { tagApi } from './tags';
 export { assetTypeApi } from './assetTypes';

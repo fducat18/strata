@@ -16,18 +16,18 @@ The Strata backend follows **Hexagonal Architecture** (Ports & Adapters) with fo
 | Database | SQLite via better-sqlite3 | Embedded, zero-server, portable DB file |
 | Validation | class-validator + class-transformer | DTO validation at the HTTP boundary |
 | API Docs | @nestjs/swagger | Auto-generated OpenAPI / Swagger UI |
-| Testing | Jest + Supertest | Unit (224) + E2E (44) tests |
+| Testing | Jest + Supertest | Unit and end-to-end coverage |
 
 ## Directory Structure
 
 ```
 backend/src/
 ├── domain/              ← Pure TypeScript — no framework imports
-│   ├── entities/        ← Business entities (Asset, AssetSnapshot, PortfolioSnapshot, Category, Tag, AssetType)
+│   ├── entities/        ← Business entities, including detached FinancingScenario inputs
 │   ├── ports/           ← Repository interfaces (abstract classes)
 │   └── exceptions/      ← Domain-specific exceptions
 ├── application/         ← Use cases as @Injectable() services
-│   └── services/        ← AssetService, AssetSnapshotService, PortfolioSnapshotService, CategoryService, TagService, AssetTypeService
+│   └── services/        ← Accounting use cases plus FinancingScenarioService and decimal calculation engine
 ├── infrastructure/      ← Framework & persistence implementations
 │   ├── prisma/          ← PrismaService, PrismaModule
 │   └── repositories/    ← Prisma repository implementations
@@ -37,6 +37,11 @@ backend/src/
     │   └── responses/   ← Response DTOs (@ApiProperty)
     └── filters/         ← Domain exception → HTTP error mapping
 ```
+
+Financing scenarios use `FinancingScenarioService` to capture current asset
+balances as detached input snapshots and recalculate projections on demand. The
+calculation engine does not call accounting write ports; saved scenarios use a
+separate repository and table.
 
 ## Layer Rules
 

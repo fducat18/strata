@@ -9,9 +9,9 @@ Strata uses **Prisma Migrate** for database schema management.
 
 The Prisma schema is at `backend/prisma/schema.prisma`. It defines all models, relations, and indexes.
 
-## Current State: Single Init Migration
+## Current Migration History
 
-The migration history was cleaned up for a fresh start. There is a single `init` migration that creates the complete schema from scratch. There is **no `portfolio` table** — the schema never had one. The `PortfolioSnapshot` table is standalone (no foreign keys).
+The `init` migration creates the original accounting schema. Later migrations add schema changes, including `20260928120000_financing_scenarios`, which adds the standalone `financing_scenarios` table. There is **no `portfolio` table** — the schema never had one. Both `PortfolioSnapshot` and `FinancingScenario` are standalone records without accounting foreign keys.
 
 ## Common Commands
 

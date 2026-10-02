@@ -20,4 +20,5 @@ export const queryKeys = {
   tag: (id: string) => ['tags', id] as const,
 
   assetTypes: ['asset-types'] as const,
+  financingScenarios: ['financing-scenarios'] as const,
 };

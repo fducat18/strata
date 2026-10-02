@@ -25,3 +25,7 @@ export function invalidateTagQueries(qc: QueryClient): void {
 export function invalidateAssetTypeQueries(qc: QueryClient): void {
   qc.invalidateQueries({ queryKey: queryKeys.assetTypes });
 }
+
+export function invalidateFinancingScenarioQueries(qc: QueryClient): void {
+  qc.invalidateQueries({ queryKey: queryKeys.financingScenarios });
+}

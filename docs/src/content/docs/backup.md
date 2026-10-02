@@ -30,6 +30,7 @@ A JSON backup contains **every row of every domain table** managed by Strata:
 | Portfolio snapshots (`portfolioSnapshots`)             | OS-level backups, Docker volumes other than `.data` |
 | Transactions (`transactions`)                          | Generated/derived data (it's recomputed on read)   |
 | Join rows (`categoriesOnAssets`, `tagsOnAssets`)       |                                                    |
+| Saved scenario inputs (`financingScenarios`)           |                                                    |
 
 If you store attachments, screenshots, or notes outside the database, **back
 those up separately** — Strata won't see them.
@@ -53,7 +54,8 @@ The export endpoint returns a single JSON document with three top-level keys:
     "portfolioSnapshots": [ /* ... */ ],
     "transactions":       [ /* ... */ ],
     "categoriesOnAssets": [ /* ... */ ],
-    "tagsOnAssets":       [ /* ... */ ]
+    "tagsOnAssets":       [ /* ... */ ],
+    "financingScenarios": [ /* ... */ ]
   }
 }
 ```
@@ -79,7 +81,8 @@ Minimal example:
     ],
     "categories": [], "tags": [],
     "transactions": [],
-    "categoriesOnAssets": [], "tagsOnAssets": []
+    "categoriesOnAssets": [], "tagsOnAssets": [],
+    "financingScenarios": []
   }
 }
 ```
@@ -91,6 +94,9 @@ Minimal example:
   floating-point loss.
 - **Timestamps** (any field ending in `At`) are ISO 8601 strings; they are
   parsed back to `Date` on import.
+- Saved financing scenarios are exported with their `inputsJson` snapshots and
+  timestamps. Projections are derived from those assumptions, not accounting
+  records.
 
 ### `schemaVersion` strategy
 
@@ -100,6 +106,8 @@ Minimal example:
   reshapes, semantic changes that the importer can't auto-handle.
 - **Don't bump for additive changes** — new optional fields, new entity tables.
   Older backups stay restorable; new fields simply default.
+- The optional `financingScenarios` field was added without changing version 1;
+  a version-1 backup created earlier restores with no saved scenarios.
 - When bumped, Strata ships a **migration note** in the release notes
   describing how to upgrade an older JSON to the new version (and, where
   feasible, a one-shot conversion script).
@@ -172,7 +180,8 @@ Response:
     "portfolioSnapshots": 8,
     "transactions": 0,
     "categoriesOnAssets": 9,
-    "tagsOnAssets": 4
+    "tagsOnAssets": 4,
+    "financingScenarios": 2
   }
 }
 ```

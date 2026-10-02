@@ -1,0 +1,15 @@
+meta {
+  name: RecalculateFinancingScenario
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3000/api/v1/financing-scenarios/:id/recalculate
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{financing_scenario_id}}
+}

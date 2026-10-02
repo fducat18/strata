@@ -9,6 +9,10 @@ All Strata implementation plans, newest first. Each plan records the intent, dec
 
 | Plan | Description |
 |---|---|
+| [2026-10-02: Financing scenario improvement](./2026-10-02-financing-scenario-improvement) | Add insurance fee assumptions, improve defaults, switch to scenario comparison table, and add financing glossary clarifications. |
+| [2026-09-29: Stack financing timelines](./2026-09-29-financing-timelines-stacked) | Show each financing timeline as a full-width card stacked vertically, replacing horizontal carousel navigation. |
+| [2026-09-28: Financing savings asset eligibility](./2026-09-28-financing-savings-asset-eligibility) | Add a dedicated savings asset-type group and restrict financing sources to that group. |
+| [2026-09-28: Financing Scenarios](./2026-09-28-financing-scenarios) | Implement saved, non-mutating financing comparisons with per-asset savings projections, loan amortisation, and reserve warnings. |
 | [2026-09-18: Sort asset list columns](./2026-09-18-sort-assets-list-columns) | Add one-click ascending and descending sorting to the asset list Name, Type, Current Value, Categories, Tags, and Status columns. |
 | [2026-05-17: Fix tauri-install loader marker race](./2026-05-17-fix-tauri-install-marker-race) | Fix false failure in desktop post-install checks by waiting for readiness marker with bounded timeout and deterministic log window. |
 | [2026-05-17: Fix Tauri prod tab navigation regression](./2026-05-17-fix-tauri-prod-tab-navigation) | Fix desktop app navigation links that escape /app/ and bounce users back to the startup loader. |

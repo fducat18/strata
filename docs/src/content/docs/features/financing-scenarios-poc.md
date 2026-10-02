@@ -1,191 +1,93 @@
 ---
-title: "Financing Scenarios POC Scope"
-description: "The smallest non-mutating financing comparison that accounts for savings returns and reserve warnings."
+title: "Financing Scenarios"
+description: "Save hypothetical purchase plans and compare cash, partial down payment, and full loan financing without changing portfolio records."
 ---
 
-**Status:** Working POC scope  
-**Date:** 2026-09-22
+# Financing Scenarios
 
-## POC promise
+Open **Financing** in the app sidebar before committing to a major purchase. A Saved Financing Scenario compares Cash Financing, Custom Down Payment Financing, and Full Financing while keeping actual assets, liabilities, transactions, and PortfolioSnapshots unchanged.
 
-Before making a major purchase, the user can compare financing options using their
-current liquid savings and see the financial consequences without changing Strata's
-recorded assets, liabilities, or transactions.
+## What the comparison shows
 
-The POC answers three different questions:
+Each option keeps four results separate:
 
-1. **Which option is the cheapest financing?** The option with the lowest Financing
-   Cost: loan interest plus Loan Setup Fee. The Purchase Price is not a financing
-   cost.
-2. **What is the trade-off between borrowing and using savings?** Show the total
-   loan cost alongside the savings return retained by each option and the return
-   difference created by using savings for the purchase.
-3. **What safety impact does each option have?** Show the Final Scenario Savings
-   Balance and any Reserve Breach warning.
+1. **Financing Cost** — loan interest plus Loan Setup Fee and loan-option Insurance Fee. Purchase Price and Down Payment are not financing costs.
+2. **Savings Return retained or lost** — the signed difference in generated Savings Return compared with Cash Financing.
+3. **Final Scenario Savings Balance** — eligible savings after the initial outlay, monthly activity, and returns.
+4. **Reserve Breach** — whether savings fall below Emergency Reserve and the first point at which that happens.
 
-These results must remain separate. A loan can be more expensive financing while
-still producing a higher Final Scenario Savings Balance if the return on the savings
-retained by borrowing is high enough.
+Cheapest Financing means the lowest Financing Cost. It is a cost measure, not a universal recommendation.
 
-Terminal Residual Value and overall Scenario Position are deferred until a later
-iteration; they are not required to ship this POC.
+The page exposes a scenario-comparison table (metrics as rows, options as columns), loan principal and monthly payment, eligible asset assumptions, yearly checkpoints, and every month in the Scenario Timeline. The three option timelines each appear in full-width cards, stacked vertically in financing option order. Monthly detail includes Savings Return, loan interest and principal, contribution or withdrawal by asset, Scenario Savings Balance, remaining loan balance, Funding Shortfall, and reserve status.
 
-## Primary result display
+## Create and save a scenario
 
-The first comparison view must make these four outputs immediately visible for
-Cash Financing, Custom Down Payment Financing, and Full Financing:
+Enter a scenario name, Purchase Price, partial Down Payment, Emergency Reserve, fixed Monthly Available Amount, annual Loan Rate Assumption, Insurance Fee Assumption, Standard Loan duration, and optional Loan Setup Fee. New scenarios default to 6% annual Loan Rate, 0.5% Insurance Fee, and 5 years duration. The first version uses the portfolio's EUR base currency. The duration is entered in whole years; the same duration is the Financing Horizon for every option. The supported range is 1 to 100 years.
 
-1. Total loan cost.
-2. Savings returns retained or lost compared with Cash Financing.
-3. Final Scenario Savings Balance.
-4. Reserve Breach warning, when applicable.
+The asset list shows active assets whose asset type belongs to the `SAVINGS` group, with their current recorded balances. Confirm availability separately for each listed asset and provide its constant annual Savings Return Assumption. Group membership determines candidate eligibility; it does not infer that a particular balance is accessible for this purchase. An unchecked asset is excluded from Starting Savings, all outlays, withdrawals, returns, and results.
 
-The scenario is calculated month by month. The result view should show yearly
-checkpoints for long horizons such as a 60-month loan, with the monthly timeline
-available for detail and for locating the exact month of a Reserve Breach.
+On save, Strata captures each listed asset's ID, name, current balance, availability choice, and return assumption as detached scenario inputs. Recalculation uses this saved snapshot and does not reread or change accounting data. Edit and save the scenario to capture newer portfolio balances.
 
-## In scope
+A draft can be saved without an eligible savings asset. Its calculation status is `NO_ELIGIBLE_ASSETS`; no projection is returned until at least one asset is confirmed available. An asset with no recorded value is captured with a zero balance. Disposed assets cannot be marked available.
 
-- A hypothetical, Saved Financing Scenario that never mutates the real portfolio.
-- Cash Financing, Full Financing, and Custom Down Payment Financing.
-- Purchase amount and, for the mixed option, a user-provided Down Payment.
-- Starting Savings derived from the user's liquid cash-like assets and confirmed
-  as eligible for this scenario.
-- An explicit per-asset confirmation of whether each savings asset is available to
-  fund this purchase. Asset type alone must not decide availability.
-- A user-provided Emergency Reserve, used as a warning threshold.
-- A user-provided fixed Monthly Available Amount. Salary growth and changing
-  monthly availability are outside the POC.
-- A mandatory constant Savings Return Assumption for each eligible savings asset
-  (for example, PEE, Livret A, LEP, or Assurance Vie), applied monthly to that
-  asset's projected balance.
-- One fixed-rate Standard Loan with a duration in years, an annual Loan Rate
-  Assumption, and an optional Loan Setup Fee.
-- Monthly loan amortisation: each payment is split into interest and principal.
-- A month-by-month Scenario Timeline showing savings and remaining loan balance.
-- A yearly summary of the Scenario Timeline for long horizons, with monthly detail
-  available when the user needs to inspect a payment, return, or Reserve Breach.
-- Reserve Breach warnings when a Scenario Savings Balance falls below the
-  Emergency Reserve. A breach does not prevent comparison or selection.
-- A comparison of total loan cost, savings return generated, and savings return
-  difference versus Cash Financing.
+## Financing options
 
-## Savings asset treatment
+| Option | Initial Outlay from savings | Loan Principal | Setup Fee | Insurance Fee |
+|---|---:|---:|---:|---:|
+| Cash Financing | Purchase Price | €0 | €0 | €0 |
+| Custom Down Payment Financing | Down Payment + Loan Setup Fee + Insurance Fee | Purchase Price − Down Payment | Fee | `% of Purchase Price` |
+| Full Financing | Loan Setup Fee + Insurance Fee | Purchase Price | Fee | `% of Purchase Price` |
 
-Starting Savings is the combined current value of eligible savings assets, but the
-projection keeps each asset's own Savings Return Assumption. This avoids treating
-a PEE, Livret A, LEP, and Assurance Vie as if they earned the same return.
+Custom Down Payment must be greater than zero and less than Purchase Price. A zero Down Payment is represented by Full Financing; paying the complete Purchase Price is represented by Cash Financing. All options share Purchase Price and Financing Horizon.
 
-An asset can have a balance without being available to fund the scenario. Blocked
-or unavailable assets are excluded from Starting Savings, are not reduced by Cash
-Financing or a Down Payment, and do not contribute to the financing comparison.
-Their real portfolio balances remain untouched. Availability is a user-confirmed
-scenario assumption; the POC must not hard-code legal, tax, or product rules from
-an asset name alone.
+## Projection rules
 
-Before implementation, the POC must also define how a Cash Financing payment or
-Down Payment is withdrawn across several savings assets. This is a product
-decision, not an implementation detail: the same Starting Savings total can
-produce different Savings Returns depending on which asset is reduced. The POC
-uses proportional withdrawal by current balance and must not silently optimize
-account selection.
+- Initial outlays are withdrawn proportionally across available assets by their current eligible balance. The rule does not optimize account selection by return, product, tax, or legal access.
+- In each month, Strata applies each asset's monthly Savings Return first, then applies the loan payment and resulting positive contribution or savings withdrawal.
+- Loan payments use standard fixed-rate amortisation. Annual percentage assumptions are divided by 12. A zero-rate loan repays principal evenly. The last loan payment is adjusted by any rounding difference so the remaining balance reaches exactly zero.
+- Insurance Fee is a one-time upfront cost applied to loan options only (`CUSTOM_DOWN_PAYMENT`, `FULL`) as a percentage of Purchase Price.
+- Positive Monthly Available Amount after a loan payment is allocated proportionally by post-return balance. If all current balances are zero, Strata uses original eligible starting balances; if those are also zero, it splits the contribution equally.
+- If a loan payment exceeds Monthly Available Amount, the difference is withdrawn proportionally from post-return balances.
+- Monetary inputs and monthly posted amounts use the EUR minor unit and round half-up. Inputs accept at most two fractional digits. Calculations retain extra precision within a month; yearly checkpoints summarize the posted monthly rows.
+- Durations are limited to 1–1200 months (100 years) so monthly detail remains bounded.
 
-### Why the allocation rule matters
+## Reserve Breaches and funding shortfalls
 
-Assume two savings assets and a €10,000 Cash Financing payment:
+Emergency Reserve is a warning threshold. Strata checks the balance immediately after the initial outlay (reported as `initial`, or month 0) and after every monthly activity. A breach never blocks comparison or selection.
 
-| Asset | Starting balance | Annual return |
-|---|---:|---:|
-| Account A | €10,000 | 2% |
-| Account B | €90,000 | 6% |
-
-The total Starting Savings is €100,000 in every case, but the first-year return
-differs depending on the withdrawal rule:
-
-| Withdrawal rule | Savings remaining | First-year return |
-|---|---|---:|
-| Withdraw from Account A | €0 at 2% + €90,000 at 6% | €5,400 |
-| Withdraw from Account B | €10,000 at 2% + €80,000 at 6% | €5,000 |
-| Withdraw proportionally | €9,000 at 2% + €81,000 at 6% | €5,040 |
-
-The €400 difference changes the financing comparison even though the purchase price
-and total Starting Savings are identical. For the quick POC, proportional withdrawal
-is the deterministic rule; user-selected withdrawal order, account
-constraints, and transfers can be added later. This rule must be visible in the
-scenario rather than hidden in the calculation.
+Projected savings cannot become negative. If an initial outlay exceeds eligible Starting Savings, Strata caps withdrawals at the available balance and reports an Initial Funding Shortfall. If a later monthly shortfall exceeds savings, the remaining balance is capped at zero and the uncovered amount is reported as Monthly Funding Shortfall. Projection continues, and Reserve Breach remains visible when applicable.
 
 ## Reference calculation
 
-This is the reference example for the POC's calculation and presentation. For
-readability, it uses one eligible savings pool at a single rate; the production
-calculation applies the same monthly logic per eligible asset using the explicit
-availability and proportional-withdrawal rules above.
-
-### Inputs
-
-| Input | Value |
-|---|---:|
-| Starting Savings | €100,000 |
-| Purchase Price | €10,000 |
-| Monthly Available Amount | €1,000 |
-| Financing Horizon | 1 year |
-| Savings Return Assumption | 5% annually, compounded monthly |
-| Loan Rate Assumption | 8% annually, compounded monthly |
-| Loan Setup Fee | €0 |
-
-### Results
+For the published one-year reference case (Starting Savings €100,000, Purchase Price €10,000, Monthly Available Amount €1,000, savings return 5%, loan rate 8%, no setup fee, no insurance fee), the results are:
 
 | Result | Cash Financing | Custom Down Payment Financing | Full Financing |
 |---|---:|---:|---:|
-| Initial savings after outlay | €90,000 | €95,000 | €100,000 |
-| Down Payment | €10,000 | €5,000 | €0 |
-| Loan Principal | €0 | €5,000 | €10,000 |
-| Monthly loan payment | €0 | €434.94 | €869.88 |
-| Monthly amount added to savings | €1,000 | €565.06 | €130.12 |
-| Financing Cost after 1 year | €0 | €219.31 interest | €438.61 interest |
-| Savings Return generated | €4,883.43 | €5,017.95 | €5,152.47 |
-| Savings Return difference vs Cash | €0 | +€134.52 | +€269.05 |
-| Scenario Savings Balance after 1 year | €106,883.43 | €106,798.64 | €106,713.86 |
-| Reserve warning | depends on Emergency Reserve | depends on Emergency Reserve | depends on Emergency Reserve |
+| Initial savings after outlay | €90,000.00 | €95,000.00 | €100,000.00 |
+| Loan Principal | €0.00 | €5,000.00 | €10,000.00 |
+| Scheduled monthly loan payment | €0.00 | €434.94 | €869.88 |
+| Financing Cost | €0.00 | €219.31 | €438.62 |
+| Savings Return generated | €4,883.44 | €5,017.94 | €5,152.48 |
+| Savings Return difference vs Cash | €0.00 | +€134.50 | +€269.04 |
+| Final Scenario Savings Balance | €106,883.44 | €106,798.63 | €106,713.86 |
 
-In this example, Cash Financing leaves €169.56 more in Scenario Savings Balance and
-has no Financing Cost. The mixed option pays €5,000 from savings and borrows
-€5,000; Full Financing keeps the entire €10,000 purchase amount in savings and
-borrows the full price.
+The final rounded loan payments are €434.97 and €869.94. They clear the remaining principal after the rounded scheduled payments. Cash Financing has zero Financing Cost, while Full Financing retains more savings return; the higher retained return does not produce a higher final balance under these assumptions.
 
-The return comparison is shown explicitly: Full Financing generates €269.05 more
-Savings Return than Cash Financing, but costs €438.61 in interest, so Cash Financing
-still leaves the higher final savings balance. The relevant return comparison is
-the return on the additional retained purchase amount—not the return on all
-€100,000, because Cash Financing also earns a return on its remaining €90,000.
+## API and storage
 
-If the Savings Return Assumption rises to 10% while the other inputs remain the
-same, Full Financing leaves approximately €116.54 more Scenario Savings Balance
-after one year. This is why savings return is a required POC input rather than an
-optional refinement.
+The REST API is prefixed with `/api/v1`; all operations are documented in Swagger at `/swagger` in development and in the Bruno collection under `.bruno/Strata/FinancingScenarios/`.
 
-## POC guardrails
+| Operation | Endpoint |
+|---|---|
+| List and recalculate saved scenarios | `GET /financing-scenarios` |
+| Save a scenario | `POST /financing-scenarios` |
+| Read and recalculate a scenario | `GET /financing-scenarios/:id` |
+| Update assumptions and capture current balances | `PUT /financing-scenarios/:id` |
+| Recalculate the saved input snapshot | `POST /financing-scenarios/:id/recalculate` |
+| Delete a saved scenario | `DELETE /financing-scenarios/:id` |
 
-- A Reserve Breach is a visible warning, never a hard validation error.
-- Reserve Breach warnings identify the first month in which the Scenario Savings
-  Balance falls below the Emergency Reserve.
-- The comparison must show the assumptions that materially affect its result:
-  eligible savings assets, each asset's return, the withdrawal rule, Monthly
-  Available Amount, Emergency Reserve, loan terms, and fees.
-- “Cheapest Financing” is a cost metric, not a universal recommendation. The POC
-  must keep it distinct from Savings Return and Final Scenario Savings Balance.
-- Financing comparisons do not create assets, loans, transactions, or
-  PortfolioSnapshots.
-- The same purchase amount and Financing Horizon are used across options so the
-  financing comparison remains meaningful.
-- Existing savings returns common to all options are not treated as a financing
-  benefit; only the difference created by each option affects the comparison.
+Saved inputs live in the standalone `financing_scenarios` table as JSON. They have no foreign keys to assets, transactions, liabilities, or PortfolioSnapshots. JSON backups include saved scenarios; older version-1 backups without a `financingScenarios` field restore with an empty scenario list.
 
-## Deferred complexity
+## Deferred
 
-The POC does not include variable rates, multiple lender offers, early repayment,
-refinancing, taxes, inflation, investment risk,
-ownership costs such as insurance or maintenance, salary growth, changing monthly
-availability, Terminal Residual Value, overall Scenario Position, automatic
-residual-value estimates, or an “apply scenario” workflow that records a real
-Portfolio Operation.
+Terminal Residual Value, overall Scenario Position, multiple lender offers, variable rates, early repayment, refinancing, taxes, inflation, investment risk, ownership costs, salary growth, changing monthly availability, account-selection optimization, transfers, and applying a scenario as a real Portfolio Operation are outside this first version.

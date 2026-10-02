@@ -20,6 +20,7 @@ import * as path from 'node:path';
  *     transactions:       Transaction[],
  *     categoriesOnAssets: { assetId, categoryId }[],
  *     tagsOnAssets:       { assetId, tagId }[],
+ *     financingScenarios: Saved hypothetical financing inputs[],
  *   }
  * }
  *
@@ -45,6 +46,7 @@ export interface BackupData {
   transactions: any[];
   categoriesOnAssets: any[];
   tagsOnAssets: any[];
+  financingScenarios: any[];
 }
 
 export interface RestoreCounts {
@@ -83,6 +85,7 @@ export class BackupService {
       transactions,
       categoriesOnAssets,
       tagsOnAssets,
+      financingScenarios,
     ] = await Promise.all([
       this.prisma.assetType.findMany(),
       this.prisma.category.findMany(),
@@ -93,6 +96,7 @@ export class BackupService {
       this.prisma.transaction.findMany(),
       this.prisma.categoriesOnAssets.findMany(),
       this.prisma.tagsOnAssets.findMany(),
+      this.prisma.financingScenario.findMany(),
     ]);
     return {
       assetTypes,
@@ -104,6 +108,7 @@ export class BackupService {
       transactions,
       categoriesOnAssets,
       tagsOnAssets,
+      financingScenarios,
     };
   }
 
@@ -165,6 +170,7 @@ export class BackupService {
       transactions: [],
       categoriesOnAssets: [],
       tagsOnAssets: [],
+      financingScenarios: [],
     };
     if (!raw || typeof raw !== 'object') return empty;
     return { ...empty, ...raw };
@@ -175,6 +181,7 @@ export class BackupService {
    * then assets, then top-level reference tables.
    */
   private async wipeAll(tx: any): Promise<void> {
+    if (tx.financingScenario) await tx.financingScenario.deleteMany({});
     await tx.tagsOnAssets.deleteMany({});
     await tx.categoriesOnAssets.deleteMany({});
     await tx.transaction.deleteMany({});
@@ -221,6 +228,9 @@ export class BackupService {
         'assetId',
         'tagId',
       ]),
+      financingScenarios: tx.financingScenario
+        ? await this.upsertAll(tx.financingScenario, data.financingScenarios, 'id')
+        : 0,
     };
     return counts;
   }

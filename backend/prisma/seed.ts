@@ -8,7 +8,7 @@ const prisma = new PrismaClient({ adapter });
 
 const ASSET_TYPES = [
   { code: 'CHECKING_ACCOUNT', label: 'Checking Account', group: 'FINANCIAL' },
-  { code: 'SAVINGS_ACCOUNT', label: 'Savings Account', group: 'FINANCIAL' },
+  { code: 'SAVINGS_ACCOUNT', label: 'Savings Account', group: 'SAVINGS' },
   { code: 'CASH', label: 'Cash', group: 'FINANCIAL' },
   { code: 'REAL_ESTATE', label: 'Real Estate', group: 'REAL_ESTATE' },
   { code: 'STOCKS', label: 'Stocks', group: 'FINANCIAL' },

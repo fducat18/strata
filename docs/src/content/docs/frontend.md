@@ -16,7 +16,7 @@ The Strata frontend is built with **Astro** and **React**, providing a clean, re
 | Charts | Recharts | Data visualization (net worth timeline, allocation pie) |
 | State | TanStack React Query | Server state, caching, background refetch |
 | HTTP | Axios | Typed API client |
-| Testing | Vitest + Playwright | Unit (306) + E2E tests |
+| Testing | Vitest + Playwright | Unit and end-to-end coverage |
 
 ## Directory Structure
 
@@ -27,6 +27,7 @@ front/src/
 │   ├── layout/          ← AppShell, Sidebar, Header, VersionBadge
 │   ├── dashboard/       ← Dashboard widgets (NetWorthChart, AllocationChart, SnapshotTable)
 │   ├── assets/          ← Asset list, detail, create/edit forms
+│   ├── financing/       ← Saved financing scenarios, input form, comparison and timelines
 │   ├── categories/      ← Category tree with CRUD
 │   ├── tags/            ← Tag list with CRUD
 │   └── settings/        ← Theme toggle, backup export/import, About
@@ -48,11 +49,22 @@ front/src/
 | `/assets/:id` | Asset detail — snapshots, transactions, tags, categories |
 | `/categories` | Category tree with CRUD |
 | `/tags` | Tag list with CRUD |
+| `/financing` | Save financing assumptions and compare cash, partial down payment, and full loan options |
 | `/settings` | Theme toggle, backup export/import |
 
 ### Asset list sorting
 
 The Assets page supports client-side sorting from the arrow in each sortable column header: **Name**, **Type**, **Current Value**, **Categories**, **Tags**, and **Status**. Name is sorted A–Z by default; clicking the active header reverses the direction. Text columns sort alphabetically, Current Value sorts numerically, and empty category/tag values or missing current values remain last.
+
+### Financing Scenarios
+
+The Financing page uses saved scenario inputs and React Query to display three
+options. Users explicitly mark assets available and set each eligible asset's
+return assumption. Comparison cards show financing cost, return difference,
+final projected savings, and reserve warnings. Each financing option's timeline
+appears in its own full-width card, stacked vertically; yearly checkpoints and
+monthly asset-level details remain available in the cards. Saving or
+recalculating a scenario does not create an accounting record.
 
 ## Portfolio Snapshots
 

@@ -5,3 +5,4 @@ export { TagController } from './tag.controller.js';
 export { AssetTypeController } from './asset-type.controller.js';
 export { HealthController } from './health.controller.js';
 export { AdminController } from './admin.controller.js';
+export { FinancingScenarioController } from './financing-scenario.controller.js';

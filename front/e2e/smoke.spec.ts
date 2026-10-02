@@ -1,9 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Mock all API calls so pages can render their headings without a running backend
 const API = 'http://localhost:3000/api/v1';
 
-function mockApis(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function mockApis(page: Page) {
   return page.route(`${API}/**`, (route) => {
     const url = route.request().url();
     if (url.includes('/portfolio-snapshots/current-value')) {
@@ -14,7 +14,7 @@ function mockApis(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
   });
 }
 
-async function expectHeading(page: Parameters<Parameters<typeof test>[1]>[0]['page'], text: string) {
+async function expectHeading(page: Page, text: string) {
   await page.waitForLoadState('networkidle');
   await expect(page.locator('h1', { hasText: text }).first()).toBeVisible({
     timeout: 10_000,
@@ -33,6 +33,7 @@ test.describe('Strata Smoke Tests', () => {
     await expect(page.locator('a[href="/assets"]')).toBeVisible();
     await expect(page.locator('a[href="/categories"]')).toBeVisible();
     await expect(page.locator('a[href="/tags"]')).toBeVisible();
+    await expect(page.locator('a[href="/financing"]')).toBeVisible();
     await expect(page.locator('a[href="/settings"]')).toBeVisible();
   });
 
@@ -52,6 +53,12 @@ test.describe('Strata Smoke Tests', () => {
     await mockApis(page);
     await page.goto('/tags');
     await expectHeading(page, 'Tags');
+  });
+
+  test('can navigate to financing scenarios', async ({ page }) => {
+    await mockApis(page);
+    await page.goto('/financing');
+    await expectHeading(page, 'Financing Scenarios');
   });
 
   test('can navigate to settings page', async ({ page }) => {

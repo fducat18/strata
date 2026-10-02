@@ -24,6 +24,7 @@ describe('BackupService', () => {
     transactions: [],
     categoriesOnAssets: [],
     tagsOnAssets: [],
+    financingScenarios: [],
   };
 
   const mockPrismaService = {
@@ -64,6 +65,7 @@ describe('BackupService', () => {
       findFirst: jest.fn(),
       create: jest.fn(),
     },
+    financingScenario: { findMany: jest.fn() },
     $transaction: jest.fn(),
   };
 
@@ -119,10 +121,34 @@ describe('BackupService', () => {
       mockPrismaService.transaction.findMany.mockResolvedValue([]);
       mockPrismaService.categoriesOnAssets.findMany.mockResolvedValue([]);
       mockPrismaService.tagsOnAssets.findMany.mockResolvedValue([]);
+      mockPrismaService.financingScenario.findMany.mockResolvedValue([]);
 
       const result = await service.exportBackup();
       expect(typeof result.data.assets[0].quantity).toBe('string');
       expect(result.data.assets[0].quantity).toBe('10.5');
+    });
+
+    it('exports saved financing scenario input snapshots', async () => {
+      const financingScenario = {
+        id: 'scenario-1',
+        name: 'Car',
+        currency: 'EUR',
+        inputsJson: '{"purchasePrice":"10000.00"}',
+      };
+      mockPrismaService.assetType.findMany.mockResolvedValue([]);
+      mockPrismaService.category.findMany.mockResolvedValue([]);
+      mockPrismaService.tag.findMany.mockResolvedValue([]);
+      mockPrismaService.asset.findMany.mockResolvedValue([]);
+      mockPrismaService.assetSnapshot.findMany.mockResolvedValue([]);
+      mockPrismaService.portfolioSnapshot.findMany.mockResolvedValue([]);
+      mockPrismaService.transaction.findMany.mockResolvedValue([]);
+      mockPrismaService.categoriesOnAssets.findMany.mockResolvedValue([]);
+      mockPrismaService.tagsOnAssets.findMany.mockResolvedValue([]);
+      mockPrismaService.financingScenario.findMany.mockResolvedValue([financingScenario]);
+
+      const result = await service.exportBackup();
+
+      expect(result.data.financingScenarios).toEqual([financingScenario]);
     });
   });
 
@@ -305,6 +331,51 @@ describe('BackupService', () => {
       });
 
       expect(result.counts.assets).toBe(0);
+    });
+
+    it('restores saved financing scenarios in the same transaction as accounting data', async () => {
+      const upsertScenario = jest.fn().mockResolvedValue({});
+      mockPrismaService.$transaction.mockImplementation((fn: any) => {
+        const txMock = {
+          tagsOnAssets: { deleteMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
+          categoriesOnAssets: { deleteMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
+          transaction: { deleteMany: jest.fn(), upsert: jest.fn() },
+          assetSnapshot: { deleteMany: jest.fn(), upsert: jest.fn() },
+          portfolioSnapshot: { deleteMany: jest.fn(), upsert: jest.fn() },
+          financingScenario: { deleteMany: jest.fn(), upsert: upsertScenario },
+          asset: { deleteMany: jest.fn(), upsert: jest.fn() },
+          tag: { deleteMany: jest.fn(), upsert: jest.fn() },
+          category: { deleteMany: jest.fn(), upsert: jest.fn() },
+          assetType: { deleteMany: jest.fn(), upsert: jest.fn() },
+        };
+        return fn(txMock);
+      });
+
+      const result = await service.importBackup({
+        schemaVersion: BACKUP_SCHEMA_VERSION,
+        data: {
+          ...emptyData,
+          financingScenarios: [{
+            id: 'scenario-1',
+            name: 'Car',
+            currency: 'EUR',
+            inputsJson: '{"purchasePrice":"10000.00"}',
+            createdAt: '2026-09-28T00:00:00.000Z',
+            updatedAt: '2026-09-28T00:00:00.000Z',
+          }],
+        },
+      });
+
+      expect(result.counts.financingScenarios).toBe(1);
+      expect(upsertScenario).toHaveBeenCalledWith(expect.objectContaining({
+        where: { id: 'scenario-1' },
+        create: expect.objectContaining({
+          name: 'Car',
+          inputsJson: '{"purchasePrice":"10000.00"}',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        }),
+      }));
     });
 
     it('handles null/undefined data by treating as empty', async () => {

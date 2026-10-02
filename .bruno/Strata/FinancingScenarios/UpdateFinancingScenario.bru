@@ -1,0 +1,36 @@
+meta {
+  name: UpdateFinancingScenario
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:3000/api/v1/financing-scenarios/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id: {{financing_scenario_id}}
+}
+
+body:json {
+  {
+    "name": "Compare car financing",
+    "purchasePrice": "12000.00",
+    "customDownPayment": "5000.00",
+    "emergencyReserve": "10000.00",
+    "monthlyAvailableAmount": "1000.00",
+    "loanRatePercent": "6",
+    "insuranceFeePercent": "0.5",
+    "loanDurationMonths": 60,
+    "loanSetupFee": "0.00",
+    "assets": [
+      {
+        "assetId": "{{asset_id}}",
+        "available": true,
+        "annualReturnPercent": "5"
+      }
+    ]
+  }
+}

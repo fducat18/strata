@@ -25,6 +25,15 @@ erDiagram
         datetime created_at
     }
 
+    FINANCING_SCENARIO {
+        uuid id PK
+        string name
+        string currency
+        string inputs_json
+        datetime created_at
+        datetime updated_at
+    }
+
     ASSET {
         uuid id PK
         uuid asset_type_id FK
@@ -84,6 +93,8 @@ erDiagram
 
 `PORTFOLIO_SNAPSHOT` is **standalone** — it has no foreign key to any other table. It records the total net worth at a moment in time, computed from asset snapshots.
 
+`FINANCING_SCENARIO` is also standalone. Its `inputs_json` stores a saved assumption snapshot, including asset names, balances, explicit availability, and individual return rates. It has no foreign keys to assets or accounting records. Projections are calculated from those inputs when requested and are not stored as PortfolioSnapshots.
+
 ## Conceptual Flow
 
 👉 Behavior-oriented
@@ -100,18 +111,19 @@ graph TD
 
 Each asset belongs to an `AssetType`, which has a `code`, a human-readable `label`, and a `group`.
 
-The `group` field organises the 13 type codes into 6 groups:
+The `group` field organises the 13 type codes into 7 groups:
 
 | Group | Type Codes |
 |-------|-----------|
-| `FINANCIAL` | CHECKING_ACCOUNT, SAVINGS_ACCOUNT, CASH, STOCKS, CRYPTO, BONDS |
+| `FINANCIAL` | CHECKING_ACCOUNT, CASH, STOCKS, CRYPTO, BONDS |
+| `SAVINGS` | SAVINGS_ACCOUNT and user-defined savings products |
 | `REAL_ESTATE` | REAL_ESTATE |
 | `PERSONAL_PROPERTY` | PERSONAL_PROPERTY, VEHICLE |
 | `PHYSICAL_COLLECTIONS` | COLLECTIBLES |
 | `LIABILITIES` | LOAN |
 | `OTHER` | BUSINESS, OTHER |
 
-The `group` field drives chart color-coding (LIABILITIES group = red bars below the zero axis) and the "By group" filter mode in the net worth history chart.
+The `group` field drives chart color-coding (LIABILITIES group = red bars below the zero axis) and the "By group" filter mode in the net worth history chart. Financing scenarios offer only active assets in the `SAVINGS` group as candidate funding sources; users still confirm each asset's availability per scenario.
 
 ## Transaction Types
 
@@ -147,3 +159,7 @@ Example:
   ─────────────────────────────
   Net Worth:          +€250,000
 ```
+
+### 5. Financing Scenarios are detached planning records
+
+Saving or recalculating a scenario does not write assets, liabilities, transactions, or PortfolioSnapshots. An edit-and-save refreshes source balances in the scenario's input snapshot; a recalculation reuses the saved snapshot.

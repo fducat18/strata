@@ -23,7 +23,7 @@ An intended acquisition whose price is significant enough that the user wants to
 _Avoid_: Expense (the purchase may create an asset), budget item
 
 **Emergency Reserve**:
-The minimum amount of liquid savings the user wants to keep available and exclude from money committed to a major purchase.
+The minimum liquid savings balance the user wants to preserve. Financing Scenarios warn when projected savings fall below this amount; it does not block comparison.
 _Avoid_: Available savings, disposable cash
 
 **Financing Horizon**:
@@ -35,7 +35,7 @@ The estimated return the user gives up when money is spent or used as a down pay
 _Avoid_: Loan cost, fee
 
 **Residual Value**:
-The estimated market or resale value of a Major Purchase at a future point in its Financing Horizon.
+The estimated market or resale value of a Major Purchase at a future point in its Financing Horizon. Residual Value is outside the first Financing Scenarios version.
 _Avoid_: Original price, book value (unless an accounting convention is explicitly being used)
 
 **Value Assumption**:
@@ -54,7 +54,7 @@ _Avoid_: Plans (too broad; a plan may contain several financing options)
 A Financing Option in which the full purchase price is paid immediately from savings and no new loan is taken.
 
 **Full Financing**:
-A Financing Option in which the full Purchase Price is borrowed, no Down Payment is made, and the Loan Setup Fee is paid from Starting Savings.
+A Financing Option in which the full Purchase Price is borrowed, no Down Payment is made, and the Loan Setup Fee plus Insurance Fee are paid from Starting Savings.
 
 **Custom Down Payment Financing**:
 A Financing Option in which the user chooses the Down Payment and borrows the remaining purchase price.
@@ -80,31 +80,39 @@ A point in a Financing Scenario where the Scenario Savings Balance falls below t
 _Avoid_: Insolvency (the scenario may still be financially possible, but violates the user's safety constraint)
 
 **Terminal Residual Value**:
-The user-provided Residual Value of the acquired asset at the end of the Financing Horizon, entered as a currency amount in the first version.
+The user-provided Residual Value of the acquired asset at the end of the Financing Horizon. It is not an input in the first Financing Scenarios version.
 _Avoid_: Predicted market value, automatic appraisal
 
 **Loan Setup Fee**:
 An upfront cost charged for arranging a Standard Loan, paid from Starting Savings and included in the Financing Scenario's loan cost and reserve calculation.
 _Avoid_: Ownership cost (such as insurance, maintenance, or fuel)
 
+**Insurance Fee Assumption**:
+A one-time financing fee for loan-based options, expressed as a percentage of Purchase Price, paid from Starting Savings at initial outlay. In the current version it applies to Custom Down Payment and Full Financing, not Cash Financing.
+_Avoid_: Ongoing ownership insurance, maintenance cost
+
 **Purchase Price**:
 The price of the acquired asset plus unavoidable acquisition costs that apply regardless of how it is financed. It is the same across Financing Options.
 _Avoid_: Total financing cost, initial outlay
 
 **Initial Outlay**:
-The amount paid from Starting Savings at the beginning of a Financing Option. It is the Purchase Price for Cash Financing, and the Down Payment plus Loan Setup Fee for a loan-based option.
+The amount paid from Starting Savings at the beginning of a Financing Option. It is the Purchase Price for Cash Financing, and the Down Payment plus Loan Setup Fee plus Insurance Fee for a loan-based option.
 _Avoid_: Purchase Price (the outlay may include financing-specific costs)
 
 **Financing Cost**:
-The interest and Loan Setup Fee caused by borrowing. Cash Financing has no Financing Cost.
+The interest, Loan Setup Fee, and Insurance Fee caused by borrowing. Cash Financing has no Financing Cost.
 _Avoid_: Purchase Price, ownership cost
 
+**Funding Shortfall**:
+The uncovered amount when required outflow exceeds available scenario savings, after proportional withdrawals are capped at zero balance.
+_Avoid_: Reserve Breach (a reserve breach can happen without shortfall, and vice versa)
+
 **Scenario Position**:
-The hypothetical financial position at the end of a Financing Horizon, calculated from the Scenario Savings Balance, Terminal Residual Value, and any remaining loan balance.
+The potential hypothetical financial position at the end of a Financing Horizon, calculated from the Scenario Savings Balance, Terminal Residual Value, and any remaining loan balance. The first Financing Scenarios version does not calculate it.
 _Avoid_: Net worth (reserved for the user's recorded portfolio), profit
 
 **Loan Offer**:
-The single set of Standard Loan terms used by a Financing Scenario, including its rate, duration, and Loan Setup Fee.
+The single set of Standard Loan terms used by a Financing Scenario, including its rate, duration, Loan Setup Fee, and Insurance Fee Assumption.
 _Avoid_: Loan product (the scenario does not yet represent a lender's full product rules)
 
 **Loan Rate Assumption**:
@@ -112,7 +120,7 @@ The user-provided constant annual percentage used to calculate a Standard Loan's
 _Avoid_: Guaranteed lender quote, variable rate
 
 **Starting Savings**:
-The combined current value of the user's savings assets that are confirmed as available to fund a Financing Scenario. Cash, checking accounts, and savings accounts may be eligible sources, but an asset's individual availability, balance, and Savings Return Assumption remain distinct during projections. Blocked or unavailable assets, such as a savings product the user cannot access for this purchase, are excluded from Starting Savings and are never reduced by the scenario. The scenario must define how a purchase or Down Payment is allocated across eligible assets.
+The combined current value of the user's assets in the `SAVINGS` asset-type group that are confirmed as available to fund a Financing Scenario. Group membership determines which assets are offered as candidates; it does not determine whether a particular balance is accessible for this purchase. The user confirms availability for each candidate. Unchecked assets are excluded from Starting Savings and are never reduced by the scenario. The scenario must define how a purchase or Down Payment is allocated across eligible assets.
 _Avoid_: Cash (too narrow), net worth (which includes non-liquid assets and liabilities)
 
 **Saved Financing Scenario**:
@@ -146,9 +154,11 @@ This simplified illustration ignores savings return, Loan Setup Fee, and loan in
 | Cash Financing | €20,000 | €21,000 | €22,000 | The full €1,000 monthly amount returns to savings |
 | Loan Financing | €50,000 | €50,400 | €50,800 | €1,000 available minus €600 loan payment = €400 added to savings |
 
-The complete Financing Scenario also applies the Savings Return Assumption, loan amortisation, Loan Setup Fee, Terminal Residual Value, and Reserve Breach rules.
+The first Financing Scenarios version also applies the Savings Return Assumption, loan amortisation, Loan Setup Fee, Insurance Fee Assumption, and Reserve Breach rules. Terminal Residual Value is deferred.
 
-### Scenario Position after five years
+### Future comparison concept: Scenario Position after five years
+
+This simplified illustration describes the deferred Scenario Position concept; the first Financing Scenarios version does not calculate Scenario Position or Terminal Residual Value.
 
 At the end of the Financing Horizon, Strata compares the hypothetical position left by each option:
 
@@ -163,10 +173,10 @@ The loan option has the higher Scenario Position in this simplified example. Thi
 
 The asset's Purchase Price stays the same. The Initial Outlay and Financing Cost depend on the selected Financing Option.
 
-| Option | Purchase Price | Initial Outlay from savings | Loan Setup Fee | Loan Principal |
-|---|---:|---:|---:|---:|
-| Cash Financing | €30,000 | €30,000 | €0 | €0 |
-| Full Financing | €30,000 | €300 | €300 | €30,000 |
-| Custom Down Payment Financing | €30,000 | €10,300 | €300 | €20,000 |
+| Option | Purchase Price | Initial Outlay from savings | Loan Setup Fee | Insurance Fee | Loan Principal |
+|---|---:|---:|---:|---:|---:|
+| Cash Financing | €30,000 | €30,000 | €0 | €0 | €0 |
+| Full Financing | €30,000 | €450 | €300 | €150 | €30,000 |
+| Custom Down Payment Financing | €30,000 | €10,450 | €300 | €150 | €20,000 |
 
-In the custom example, the user chooses a €10,000 Down Payment. The €300 Loan Setup Fee is paid from savings, and the remaining €20,000 is borrowed.
+In the custom example, the user chooses a €10,000 Down Payment. The €300 Loan Setup Fee and €150 Insurance Fee are paid from savings, and the remaining €20,000 is borrowed.

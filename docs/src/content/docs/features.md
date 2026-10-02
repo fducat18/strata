@@ -5,9 +5,10 @@ title: "✨ Features"
 
 ## Universal Asset Tracking
 
-Strata organizes assets into **6 groups** (enum field on AssetType):
+Strata organizes assets into **7 groups** (enum field on AssetType):
 
-- **FINANCIAL** — cash, checking, savings, stocks, bonds, crypto
+- **FINANCIAL** — cash, checking, stocks, bonds, crypto
+- **SAVINGS** — savings accounts and user-defined savings products
 - **REAL_ESTATE** — properties, rentals
 - **PHYSICAL_COLLECTIONS** — LEGO, books, art, collectibles
 - **PERSONAL_PROPERTY** — wardrobe, furniture, household items, electronics, vehicles
@@ -42,13 +43,17 @@ The chart shows your portfolio value over time and supports **4 filter modes**:
 | Mode | Description |
 |------|-------------|
 | **Total only** | Single bar per date — total portfolio value |
-| **By group** | Stacked bars by asset type **group** (FINANCIAL, REAL_ESTATE, PERSONAL_PROPERTY, PHYSICAL_COLLECTIONS, LIABILITIES, OTHER) |
+| **By group** | Stacked bars by asset type **group** (FINANCIAL, SAVINGS, REAL_ESTATE, PERSONAL_PROPERTY, PHYSICAL_COLLECTIONS, LIABILITIES, OTHER) |
 | **By asset type** | Stacked bars per individual asset type code |
 | **By category** | Stacked bars per user-defined category |
 
 **LIABILITIES group** assets always appear **below the zero axis** (red bars) — reflecting that loans reduce your net worth.
 
 Portfolio snapshots are **calculated automatically** every time you add or modify an asset snapshot — no manual action needed.
+
+## Major Purchase Planning
+
+[Financing Scenarios](./features/financing-scenarios-poc) let users compare Cash Financing, Custom Down Payment Financing, and Full Financing before a purchase. Each option reports loan cost, savings return retained or lost, final projected savings, and Emergency Reserve risk. Scenarios save detached input snapshots and never change actual assets, liabilities, transactions, or PortfolioSnapshots.
 
 ## 🔮 Planned (v2)
 

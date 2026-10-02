@@ -8,6 +8,7 @@ export type FilterMode = (typeof FILTER_MODES)[number];
 
 export const GROUP_COLORS: Record<string, string> = {
   FINANCIAL: '#3b82f6',
+  SAVINGS: '#10b981',
   REAL_ESTATE: '#22c55e',
   PERSONAL_PROPERTY: '#f97316',
   PHYSICAL_COLLECTIONS: '#a855f7',

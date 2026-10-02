@@ -10,6 +10,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('Categories')).toBeInTheDocument();
     expect(screen.getByText('Tags')).toBeInTheDocument();
     expect(screen.getByText('Asset Types')).toBeInTheDocument();
+    expect(screen.getByText('Financing')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
@@ -44,6 +45,11 @@ describe('Sidebar', () => {
     render(<Sidebar currentPath="/assets/abc-123" />);
     const assetsLink = screen.getByRole('link', { name: /Assets/i });
     expect(assetsLink).toHaveClass('bg-sidebar-accent');
+  });
+
+  it('marks the financing scenarios page as active', () => {
+    render(<Sidebar currentPath="/financing" />);
+    expect(screen.getByRole('link', { name: /Financing/i })).toHaveClass('bg-sidebar-accent');
   });
 
   it('marks active links when currentPath includes desktop /app prefix', () => {

@@ -9,7 +9,7 @@ export * from './portfolio-snapshots';
 export * from './assets';
 export * from './categories';
 export * from './tags';
+export * from './financing-scenarios';
 export * from './assetTypes';
 export * from './useNetWorthBreakdown';
 export * from './useResolvedAssetId';
-

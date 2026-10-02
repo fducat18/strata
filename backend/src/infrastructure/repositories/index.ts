@@ -5,3 +5,4 @@ export { PrismaAssetTypeRepository } from './prisma-asset-type.repository.js';
 export { PrismaAssetSnapshotRepository } from './prisma-asset-snapshot.repository.js';
 export { PrismaPortfolioSnapshotRepository } from './prisma-portfolio-snapshot.repository.js';
 export { PrismaTransactionRepository } from './prisma-transaction.repository.js';
+export { PrismaFinancingScenarioRepository } from './prisma-financing-scenario.repository.js';

@@ -116,3 +116,19 @@ export interface DisposeAssetRequest {
   disposalDate: string;
   disposalPrice: string;
 }
+
+export type {
+  FinancingOptionType,
+  FinancingCalculationStatus,
+  FinancingScenarioAssetRequest,
+  SaveFinancingScenarioRequest,
+  FinancingScenarioAssetInput,
+  FinancingScenarioInputs,
+  FinancingAssetAssumption,
+  FinancingAssetMonth,
+  FinancingScenarioMonth,
+  FinancingYearCheckpoint,
+  FinancingOptionResult,
+  FinancingScenarioCalculation,
+  FinancingScenario,
+} from './financing-scenario.js';

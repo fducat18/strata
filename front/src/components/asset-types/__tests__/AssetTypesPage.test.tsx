@@ -36,6 +36,7 @@ const mockMutation = {
 // (getByText requires a unique text match; REAL_ESTATE_ASSET code ≠ REAL_ESTATE group)
 const sampleTypes = [
   { id: 'at1', code: 'CHECKING_ACCOUNT', label: 'Checking Account', group: 'FINANCIAL' },
+  { id: 'at4', code: 'SAVINGS_ACCOUNT', label: 'Savings Account', group: 'SAVINGS' },
   { id: 'at2', code: 'REAL_ESTATE_ASSET', label: 'Real Estate', group: 'REAL_ESTATE' },
   { id: 'at3', code: 'VEHICLE', label: 'Vehicle', group: 'PERSONAL_PROPERTY' },
 ];
@@ -66,6 +67,7 @@ describe('AssetTypesPage', () => {
     expect(screen.getByText('CHECKING_ACCOUNT')).toBeInTheDocument();
     expect(screen.getByText('Checking Account')).toBeInTheDocument();
     expect(screen.getByText('FINANCIAL')).toBeInTheDocument();
+    expect(screen.getByText('SAVINGS')).toBeInTheDocument();
     expect(screen.getByText('REAL_ESTATE')).toBeInTheDocument();
     expect(screen.getByText('Real Estate')).toBeInTheDocument();
   });
@@ -87,12 +89,13 @@ describe('AssetTypesPage', () => {
 
   it('creates an asset type on valid submit', async () => {
     mockUseAssetTypes.mockReturnValue({ isLoading: false, isError: false, data: sampleTypes, refetch: vi.fn() } as any);
-    mockMutation.mutateAsync.mockResolvedValue({ id: 'at10', code: 'CRYPTO_ETF', label: 'Crypto ETF', group: 'FINANCIAL' });
+    mockMutation.mutateAsync.mockResolvedValue({ id: 'at10', code: 'LIVRET_A', label: 'Livret A', group: 'SAVINGS' });
     render(<AssetTypesPage />);
     fireEvent.click(screen.getByText('Add new type'));
 
-    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'CRYPTO_ETF' } });
-    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Crypto ETF' } });
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'LIVRET_A' } });
+    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Livret A' } });
+    fireEvent.change(screen.getByLabelText('Group'), { target: { value: 'SAVINGS' } });
 
     await waitFor(() => {
       const createBtn = screen.getByText('Create');
@@ -103,7 +106,7 @@ describe('AssetTypesPage', () => {
 
     await waitFor(() => {
       expect(mockMutation.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({ code: 'CRYPTO_ETF', label: 'Crypto ETF' })
+        expect.objectContaining({ code: 'LIVRET_A', label: 'Livret A', group: 'SAVINGS' })
       );
     });
   });

@@ -7,24 +7,25 @@ datasource db {
 }
 
 model Asset {
-  id          String               @id @default(uuid())
-  name        String
-  quantity    Decimal?
-  disposed    Boolean              @default(false)
-  assetTypeId String               @map("asset_type_id")
-  assetType   AssetType            @relation(fields: [assetTypeId], references: [id])
-  snapshots   AssetSnapshot[]
+  id           String               @id @default(uuid())
+  name         String
+  quantity     Decimal?
+  disposed     Boolean              @default(false)
+  assetTypeId  String               @map("asset_type_id")
+  assetType    AssetType            @relation(fields: [assetTypeId], references: [id])
+  snapshots    AssetSnapshot[]
   transactions Transaction[]
-  categories  CategoriesOnAssets[]
-  tags        TagsOnAssets[]
-  createdAt   DateTime             @default(now()) @map("created_at")
-  updatedAt   DateTime             @updatedAt @map("updated_at")
+  categories   CategoriesOnAssets[]
+  tags         TagsOnAssets[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
 
   @@map("assets")
 }
 
 enum AssetTypeGroup {
   FINANCIAL
+  SAVINGS
   REAL_ESTATE
   PERSONAL_PROPERTY
   PHYSICAL_COLLECTIONS
@@ -86,6 +87,20 @@ model PortfolioSnapshot {
 
   @@index([observedAt(sort: Desc)])
   @@map("portfolio_snapshots")
+}
+
+// Saved hypothetical inputs are deliberately detached from accounting records.
+// The JSON snapshot preserves asset assumptions at the time the scenario is saved.
+model FinancingScenario {
+  id         String   @id @default(uuid())
+  name       String
+  currency   String   @default("EUR")
+  inputsJson String   @map("inputs_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([updatedAt(sort: Desc)])
+  @@map("financing_scenarios")
 }
 
 enum TransactionType {

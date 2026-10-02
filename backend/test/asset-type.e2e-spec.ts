@@ -57,6 +57,18 @@ describe('AssetType CRUD with group enum (e2e)', () => {
         .expect(204);
     });
 
+    it('creates an asset type with SAVINGS group', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/api/v1/asset-types')
+        .send({ code: 'TEST_LIVRET', label: 'Test Livret', group: 'SAVINGS' })
+        .expect(201);
+
+      expect(res.body.group).toBe('SAVINGS');
+      await request(app.getHttpServer())
+        .delete(`/api/v1/asset-types/${res.body.id}`)
+        .expect(204);
+    });
+
     it('rejects an invalid group value', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/asset-types')

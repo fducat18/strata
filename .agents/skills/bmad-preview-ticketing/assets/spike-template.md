@@ -1,15 +1,12 @@
 ---
-id: ""   # set at publish
-remote: ""   # the store url, for a tracker
+id: [the entry's id in tickets.toml; the next unused one for a ticket with no entry]   # tracker_id and remote are written at publish on a tracker
 type: spike
 title: "[The question this answers]"
 parent: [folder name of the epic, or of the initiative when there are no epics; none for a standalone ticket in backlog/]
 covers: []
-blocked_by: []
-blocked_at: ""   # date, when waiting on a person or an answer
-blocked_reason: ""
-assignee: ""
-status: draft
+after: []   # prerequisites only: a sibling's id; "<epic id>.<entry id>" in another epic; epic-<slug> for that whole epic
+assignee: ""   # a tracker's assignee, mirrored by query; otherwise assignee, blocked_at, and blocked_reason live in the plan
+# status lives in the plan beside this file, not here; tracker_status by a tracker sync
 refined: false   # true once refined and approved
 hitl: true
 risk: [low|medium|high]
@@ -20,7 +17,7 @@ estimate: ""   # points, when estimation is on
 
 ## Description
 
-[Thin: one sentence, the question. Refined: the unknown this resolves — usually a placeholder left at design time — and which tickets wait on the answer, 2–4 sentences.]
+[One sentence, the question; reviewed with the user at refine. Approach below says how it is answered and which tickets wait on it.]
 
 ## Approach
 
@@ -50,17 +47,11 @@ estimate: ""   # points, when estimation is on
 
 ```markdown
 ---
-id: ""
-remote: ""
+id: 2
 type: spike
 title: "How do field devices merge conflicting observations after days offline?"
 parent: epic-field-sync
 covers: []
-blocked_by: []
-blocked_at: ""
-blocked_reason: ""
-assignee: ""
-status: draft
 refined: true
 hitl: true
 risk: low
