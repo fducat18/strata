@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.5.3](./v1-5-3) | Desktop Prisma CLI path resolution + strict production seed reliability, with stock/crypto additions to development demo seed |
 | [v1.5.2](./v1-5-2) | Desktop startup hotfix: robust Node binary resolution for Prisma migrate in Tauri runtime, better diagnostics, and docs parity |
 | [v1.5.1](./v1-5-1) | Seed profiles split (dev/prod), manual dev e2e-data cleanup command, 10-year demo snapshots, frontend dependency refresh |
 | [v1.5.0](./v1-5-0) | Financing scenario insurance-fee modeling, improved defaults, comparison matrix, and glossary clarifications |
