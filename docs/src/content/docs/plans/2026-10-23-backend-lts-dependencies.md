@@ -30,18 +30,20 @@ NestJS 12 requires TypeScript 5 or 6; `ts-jest` 29 supports TypeScript versions 
 
 ## Execution Summary
 
-**Commit**: Pending; no commit created.
+**Commit**: `d9e11ee6684642c90041a1132920a1c6f3659e5c`
+
+**Release**: v1.6.1 published at https://github.com/fducat18/strata/releases/tag/v1.6.1
 
 ### Actual changes
 
 - Upgraded backend to NestJS 12 and compatible stable dependencies, including TypeScript 6 configuration and Jest ESM support.
 - Set application manifests, lockfile package metadata, and Tauri versions to 1.6.1; added release notes.
-- Preserved the separately requested BMAD removal changes.
+- Removed BMAD tooling/configuration as requested.
 
 ### Deviations from plan
 
 - Backend `lint:ci` reports 464 formatting errors and one warning. The existing source also fails the repository's Prettier check at baseline, so unrelated bulk formatting was not applied.
-- Release metadata was prepared and dry-run verified, but no commit, tag, push, or GitHub release was created.
+- Release script could not be used after version metadata was committed at 1.6.1 because it would attempt an empty release commit. Pushed the committed `main`, created tag `v1.6.1`, and published the GitHub release directly.
 
 ### Test results
 
