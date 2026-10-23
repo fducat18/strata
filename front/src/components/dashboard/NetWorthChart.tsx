@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
@@ -26,10 +25,13 @@ const MODE_LABELS: Record<FilterMode, string> = {
 export function NetWorthChart() {
   const [mode, setMode] = useState<FilterMode>('total');
   const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
+  const [hiddenKeysByMode, setHiddenKeysByMode] = useState<Partial<Record<FilterMode, string[]>>>({});
   const locale = useLocale();
   const currency = useCurrency();
   const since = useMemo(() => getSinceDate(timeRange), [timeRange]);
   const { data, keys, keyColors } = useNetWorthBreakdown(mode, since);
+  const hiddenKeys = hiddenKeysByMode[mode] ?? [];
+  const visibleKeys = keys.filter((key) => !hiddenKeys.includes(key));
 
   const fmtOpts = { currency, locale };
 
@@ -45,15 +47,55 @@ export function NetWorthChart() {
     );
   }
 
-  const chartData = data.map((d) => ({
-    ...d,
-    date: formatDate(d.date as string, { locale }),
-  }));
+  const chartData = data.map((d) => {
+    const point: Record<string, number | string> = {
+      date: formatDate(d.date, { locale }),
+    };
+    for (const key of visibleKeys) {
+      const value = d[key];
+      if (typeof value === 'number') point[key] = value;
+    }
+    return point;
+  });
+
+  const toggleKey = (key: string) => {
+    setHiddenKeysByMode((current) => {
+      const hiddenKeys = current[mode] ?? [];
+      const nextHiddenKeys = hiddenKeys.includes(key)
+        ? hiddenKeys.filter((hiddenKey) => hiddenKey !== key)
+        : [...hiddenKeys, key];
+      return { ...current, [mode]: nextHiddenKeys };
+    });
+  };
 
   return (
     <div className="space-y-3">
       <TimeRangeToggle range={timeRange} onRangeChange={setTimeRange} />
       <FilterToggle mode={mode} onModeChange={setMode} />
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Chart series visibility">
+        {keys.map((key) => {
+          const visible = !hiddenKeys.includes(key);
+          const color = keyColors[key] ?? '#6b7280';
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={visible}
+              onClick={() => toggleKey(key)}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                visible ? 'border-border text-foreground' : 'border-border text-muted-foreground opacity-60'
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className="h-2.5 w-2.5 rounded-sm border"
+                style={{ backgroundColor: visible ? color : 'transparent', borderColor: color }}
+              />
+              {key}
+            </button>
+          );
+        })}
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={chartData} stackOffset={mode === 'total' ? 'none' : 'sign'}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -74,9 +116,8 @@ export function NetWorthChart() {
             labelStyle={{ color: 'var(--fg)' }}
             formatter={(value) => [formatMoney(value as number, fmtOpts), undefined]}
           />
-          <Legend />
           <ReferenceLine y={0} stroke="var(--muted-fg)" />
-          {keys.map((key) => (
+          {visibleKeys.map((key) => (
             <Area
               key={key}
               type="monotone"

@@ -18,8 +18,12 @@ vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => (
     <div data-testid="chart-container">{children}</div>
   ),
-  AreaChart: ({ children }: any) => <div>{children}</div>,
-  Area: () => null,
+  AreaChart: ({ children, data }: { children: ReactNode; data: Record<string, number | string>[] }) => (
+    <div data-testid="area-chart" data-chart-data={JSON.stringify(data)}>
+      {children}
+    </div>
+  ),
+  Area: ({ dataKey }: { dataKey: string }) => <div data-testid={`series-${dataKey}`} />,
   BarChart: ({ children }: any) => <div>{children}</div>,
   Bar: () => null,
   XAxis: () => null,
@@ -81,6 +85,51 @@ describe('NetWorthChart', () => {
     });
     render(<NetWorthChart />, { wrapper: createWrapper() });
     expect(screen.getByTestId('chart-container')).toBeInTheDocument();
+  });
+
+  it('toggles multiple category series and recalculates chart data from visible categories', () => {
+    mockUseNetWorthBreakdown.mockReturnValue({
+      data: [{
+        date: '2024-01-01T00:00:00Z',
+        Banking: 1000,
+        Financial: 25000,
+        Other: 1000000,
+      }],
+      keys: ['Banking', 'Financial', 'Other'],
+      keyColors: { Banking: '#3b82f6', Financial: '#22c55e', Other: '#f97316' },
+    });
+    render(<NetWorthChart />, { wrapper: createWrapper() });
+    fireEvent.click(screen.getByRole('button', { name: 'By Category' }));
+
+    const banking = screen.getByRole('button', { name: 'Banking' });
+    const financial = screen.getByRole('button', { name: 'Financial' });
+    const other = screen.getByRole('button', { name: 'Other' });
+    expect(banking).toHaveAttribute('aria-pressed', 'true');
+    expect(financial).toHaveAttribute('aria-pressed', 'true');
+    expect(other).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(other);
+    expect(other).toHaveAttribute('aria-pressed', 'false');
+    expect(banking).toHaveAttribute('aria-pressed', 'true');
+    expect(financial).toHaveAttribute('aria-pressed', 'true');
+
+    const chartData = JSON.parse(
+      screen.getByTestId('area-chart').getAttribute('data-chart-data') ?? '[]',
+    );
+    expect(chartData[0]).toMatchObject({ Banking: 1000, Financial: 25000 });
+    expect(chartData[0]).not.toHaveProperty('Other');
+    expect(screen.queryByTestId('series-Other')).not.toBeInTheDocument();
+
+    fireEvent.click(banking);
+    expect(banking).toHaveAttribute('aria-pressed', 'false');
+    expect(financial).toHaveAttribute('aria-pressed', 'true');
+
+    const narrowedChartData = JSON.parse(
+      screen.getByTestId('area-chart').getAttribute('data-chart-data') ?? '[]',
+    );
+    expect(narrowedChartData[0]).toMatchObject({ Financial: 25000 });
+    expect(narrowedChartData[0]).not.toHaveProperty('Banking');
+    expect(narrowedChartData[0]).not.toHaveProperty('Other');
   });
 
   it('calls useNetWorthBreakdown with mode when toggle clicked', () => {

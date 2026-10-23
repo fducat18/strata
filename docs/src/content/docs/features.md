@@ -47,6 +47,8 @@ The chart shows your portfolio value over time and supports **4 filter modes**:
 | **By asset type** | Stacked bars per individual asset type code |
 | **By category** | Stacked bars per user-defined category |
 
+Each chart series can be shown or hidden independently, with multiple series visible at once. Net Worth toggles the aggregate Assets and Liabilities series; Group, Type, and Category toggle their respective series. The chart rescales to the values of visible series.
+
 **LIABILITIES group** assets always appear **below the zero axis** (red bars) — reflecting that loans reduce your net worth.
 
 Portfolio snapshots are **calculated automatically** every time you add or modify an asset snapshot — no manual action needed.
