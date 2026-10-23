@@ -210,6 +210,11 @@ git tag --sort=-v:refname | head -5
 npm run release -- X.Y.Z
 ```
 
+The release script requires a clean worktree. It updates all six version manifests and the
+`strata-desktop` entry in `src-tauri/Cargo.lock`, then commits, pushes the current branch,
+creates and pushes the tag, and publishes a GitHub release. Commit feature changes first;
+do not include unrelated or user-owned changes without approval.
+
 ```
 # Step 3 — create the release notes doc (MANDATORY — plan is NOT closed without this)
 # File: docs/src/content/docs/releases/vX-Y-Z.md   (use dashes, e.g. v1-2-0.md)
@@ -221,6 +226,7 @@ npm run release -- X.Y.Z
 - Use a **major** release (`X.Y.Z → X+1.0.0`) for breaking changes.
 - `--dry-run` is available to preview without pushing.
 - **Never guess or remember the version** — always read it from `git tag` first.
+- Keep the `strata-desktop` version in `src-tauri/Cargo.lock` synchronized with `src-tauri/Cargo.toml`.
 
 **A plan is not closed until the release tag exists on the remote AND `vX-Y-Z.md` exists in the doc site.**
 

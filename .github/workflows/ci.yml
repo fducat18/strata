@@ -84,3 +84,15 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+
+  release-tooling:
+    name: Release tooling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - run: node --test scripts/release.test.mjs

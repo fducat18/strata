@@ -6,7 +6,8 @@ title: "Versioning"
 
 Strata uses **`git describe --tags --dirty --always`** as the runtime source of truth
 for the version string displayed in the app. On every release, all six version-carrying
-files are kept in sync by `npm run release -- X.Y.Z`.
+manifests and the `strata-desktop` package entry in `src-tauri/Cargo.lock` are kept in
+sync by `npm run release -- X.Y.Z`.
 
 ## Files updated on every release
 
@@ -18,6 +19,7 @@ files are kept in sync by `npm run release -- X.Y.Z`.
 | `docs/package.json` | `scripts/release.mjs` — bumped to `X.Y.Z` |
 | `src-tauri/Cargo.toml` | `scripts/release.mjs` — bumped to `X.Y.Z` |
 | `src-tauri/tauri.conf.json` | `scripts/release.mjs` — bumped to `X.Y.Z` |
+| `src-tauri/Cargo.lock` (`strata-desktop` entry) | `scripts/release.mjs` — synced to `X.Y.Z` |
 
 The runtime version displayed in the UI is still derived from `git describe` —
 so on a clean tag commit those always agree.
@@ -27,7 +29,7 @@ so on a clean tag commit those always agree.
 ```
 scripts/version.mjs       ← READS: shells out to git describe
 scripts/gen-version.mjs   ← WRITES: produces version.json and version.ts from version.mjs
-scripts/release.mjs       ← RELEASES: bumps 6 files, commits, tags, pushes
+scripts/release.mjs       ← RELEASES: bumps 6 manifests, syncs Cargo.lock, commits, tags, pushes
 ```
 
 ### `scripts/version.mjs`
@@ -79,7 +81,7 @@ The release workflow. Run: `npm run release -- X.Y.Z`
 Steps executed:
 1. Validate semver format (`X.Y.Z`)
 2. Check working tree is clean
-3. Bump version in all 6 files listed above
+3. Bump version in all 6 manifests and sync `src-tauri/Cargo.lock`
 4. `git commit -m "chore: release vX.Y.Z"`
 5. `git push origin HEAD`
 6. `git tag vX.Y.Z`
@@ -110,11 +112,13 @@ Release notes are auto-generated from conventional commit messages since the pre
 ## How to release
 
 ```bash
-# 1. Ensure tests pass
-npm test --prefix backend && npm run test:e2e --prefix backend
-npm test --prefix front
+# 1. Ensure all release gates pass
+(cd backend && npm run build && npm run test:cov && npm run test:e2e)
+(cd front && npm run build && npx vitest run --coverage && npm run test:e2e)
+(cd docs && npm run build)
 
-# 2. Tag and push (bumps 6 version files, commits, tags, creates GitHub Release)
+# 2. Commit feature changes; release script requires a clean worktree.
+#    Then bump 6 manifests + Cargo.lock, commit, tag, push, and create GitHub Release.
 npm run release -- 1.4.2
 
 # 3. Write the release notes doc
@@ -182,4 +186,3 @@ When working with an AI agent (GitHub Copilot, Claude, etc.), say "create versio
 | **PATCH** (X.Y.Z+1) | Bug fix, UI polish, perf tweak, docs — no DB schema change, no new API endpoints |
 | **MINOR** (X.Y+1.0) | New feature, new API endpoint, new UI page — backward-compatible DB migration |
 | **MAJOR** (X+1.0.0) | Breaking API change, destructive DB migration, Tauri major version bump |
-

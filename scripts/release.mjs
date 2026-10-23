@@ -11,10 +11,11 @@
 // What it does:
 //   1. Validates the version is a valid semver (X.Y.Z)
 //   2. Checks the git working tree is clean (no uncommitted changes)
-//   3. Bumps version to X.Y.Z in all 6 version files:
+//   3. Bumps version to X.Y.Z in all 6 version manifests and syncs Cargo.lock:
 //        package.json (root), backend/package.json, front/package.json,
-//        docs/package.json, src-tauri/Cargo.toml, src-tauri/tauri.conf.json
-//   4. git add those 6 files
+//        docs/package.json, src-tauri/Cargo.toml, src-tauri/tauri.conf.json,
+//        and the strata-desktop package entry in src-tauri/Cargo.lock
+//   4. git add those files
 //   5. git commit -m "chore: release vX.Y.Z"
 //   6. git push origin HEAD  (skipped with --no-push)
 //   7. git tag vX.Y.Z
@@ -76,7 +77,7 @@ if (!dryRun) {
   }
 }
 
-// ── Bump version in all 6 files ──────────────────────────────────────────────
+// ── Bump version in all manifests and sync Cargo.lock ─────────────────────────
 
 const packageJsonPaths = [
   resolve(repoRoot, 'package.json'),
@@ -87,14 +88,27 @@ const packageJsonPaths = [
 
 const cargoTomlPath = resolve(repoRoot, 'src-tauri', 'Cargo.toml');
 const tauriConfPath = resolve(repoRoot, 'src-tauri', 'tauri.conf.json');
+const cargoLockPath = resolve(repoRoot, 'src-tauri', 'Cargo.lock');
 
 if (dryRun) {
-  console.log(`\n[dry-run] Would bump version to ${version} in:`);
+  console.log(`\n[dry-run] Would bump version to ${version} in manifests and sync:`);
   for (const p of packageJsonPaths) console.log(`  - ${p.replace(repoRoot + '/', '')}`);
   console.log(`  - src-tauri/Cargo.toml`);
   console.log(`  - src-tauri/tauri.conf.json`);
+  console.log(`  - src-tauri/Cargo.lock (strata-desktop package)`);
 } else {
-  console.log(`\n▸ Bumping version to ${version} in all 6 files …`);
+  const cargoLock = readFileSync(cargoLockPath, 'utf8');
+  const cargoPackagePattern = /^(\[\[package\]\]\nname = "strata-desktop"\nversion = ")[^"]+(")$/gm;
+  const cargoPackageMatches = [...cargoLock.matchAll(cargoPackagePattern)];
+  if (cargoPackageMatches.length !== 1) {
+    console.error(
+      `❌  Expected one strata-desktop package entry in src-tauri/Cargo.lock, found ${cargoPackageMatches.length}.`,
+    );
+    process.exit(1);
+  }
+  const updatedCargoLock = cargoLock.replace(cargoPackagePattern, `$1${version}$2`);
+
+  console.log(`\n▸ Bumping version to ${version} in all manifests and syncing Cargo.lock …`);
 
   for (const p of packageJsonPaths) {
     const pkg = JSON.parse(readFileSync(p, 'utf8'));
@@ -114,6 +128,9 @@ if (dryRun) {
   tauriConf.version = version;
   writeFileSync(tauriConfPath, JSON.stringify(tauriConf, null, 2) + '\n');
   console.log(`  ✓ src-tauri/tauri.conf.json`);
+
+  writeFileSync(cargoLockPath, updatedCargoLock);
+  console.log(`  ✓ src-tauri/Cargo.lock`);
 }
 
 // ── Generate release notes from git log ──────────────────────────────────────
@@ -183,11 +200,15 @@ const filesToStage = [
   'docs/package.json',
   'src-tauri/Cargo.toml',
   'src-tauri/tauri.conf.json',
+  'src-tauri/Cargo.lock',
 ].join(' ');
 
 console.log('');
 run(`git add ${filesToStage}`, { stdio: 'inherit' });
-run(`git commit -m "chore: release ${tag}"`, { stdio: 'inherit' });
+run(
+  `git commit -m "chore: release ${tag}" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"`,
+  { stdio: 'inherit' },
+);
 if (!noPush) {
   run(`git push origin HEAD`, { stdio: 'inherit' });
 }
@@ -213,14 +234,14 @@ if (dryRun) {
   console.log('\n✅  Dry run complete. Run without --dry-run to execute.\n');
 } else if (noPush) {
   console.log(`\n✅  Tagged ${tag} locally (no push).`);
-  console.log(`   All 6 version files updated to ${version}.`);
+  console.log(`   All 6 version manifests and Cargo.lock updated to ${version}.`);
   console.log(`\n⚠️   --no-push mode: push manually when ready:`);
   console.log(`      git push origin HEAD`);
   console.log(`      git push origin ${tag}`);
   console.log(`      gh release create ${tag} --title "${tag}" --notes-file <notes.md>\n`);
 } else {
   console.log(`\n✅  Released ${tag}`);
-  console.log(`   All 6 version files updated to ${version}.`);
+  console.log(`   All 6 version manifests and Cargo.lock updated to ${version}.`);
   console.log(`   The app will report version ${version} (env: production) on a clean build.`);
   console.log(`   GitHub Release: https://github.com/fducat18/strata/releases/tag/${tag}`);
   console.log(`\n📝  Next: add the release notes doc to the docs site:`);
