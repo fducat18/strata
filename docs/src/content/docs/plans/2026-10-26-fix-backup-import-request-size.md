@@ -26,4 +26,44 @@ Run backend build and lint; all four required backend/frontend unit and e2e gate
 
 ## Execution Summary
 
-Pending implementation and required validation.
+**Commit**: `2be492dfb7d0ef82f9b7827ab7192349ef6e3c52`
+
+### Actual changes
+
+- Added shared Express body-parser configuration with a 10 MiB JSON cap and
+  unchanged URL-encoded options; disabled Nest's default parser in production
+  and e2e app setup.
+- Accepted optional ISO 8601 `exportedAt` metadata in the restore DTO and
+  documented its Swagger schema.
+- Added isolated e2e coverage for a backup larger than 164 KiB and invalid
+  timestamps, plus a unit test for parser registration.
+- Documented the size cap, HTTP 413 behavior, and optional export metadata.
+
+### Deviations from plan
+
+- The oversized e2e restores the previous `DATABASE_URL` after cleaning its
+  isolated app because the shared test helper mutates this process-wide value.
+- Ran the frontend version generator before the prescribed direct Vitest
+  command because `npx` bypasses the package's `pretest` hook.
+- Release was not published: the latest tag is `v1.6.1` (next patch would be
+  `v1.6.2`), but the release script pushes and publishes and no authorization
+  was given.
+
+### Test results
+
+| Gate | Result |
+|---|---|
+| Backend build | ✅ Passed |
+| Backend unit | ✅ 351 tests passed; coverage thresholds passed |
+| Backend e2e | ✅ 77 tests passed |
+| Frontend unit | ✅ 449 tests passed; 95.70% statements, 84.46% branches, 97.41% functions, 97.06% lines |
+| Frontend e2e | ✅ 14 passed; 22 skipped because backend was unavailable at `localhost:3000` |
+| Docs build | ✅ Passed; existing Astro warnings remain |
+| Backend lint | ⚠️ 467 errors and 1 warning across 52 files; new helper, spec, DTO, and e2e helper pass targeted lint, remaining touched-file findings are on unchanged lines |
+
+### Key discoveries
+
+- Raising the parser limit exposed a second import blocker: global whitelist
+  validation rejected the exporter's `exportedAt` field.
+- `createIsolatedE2EApp` changes process-wide `DATABASE_URL`; the new test
+  restores it so later tests keep using their own database.
