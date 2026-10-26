@@ -200,19 +200,31 @@ A doc that documents the wrong path is worse than no doc at all.
 
 **Every completed plan must be followed by a semver release AND release notes.**
 
-**3-step release process — all 3 steps are mandatory:**
+**4-step process — all steps are mandatory:**
 
 ```bash
+# Step 0 — land the change FIRST (never release from a local branch)
+# 1. All local gates green (backend build + test:cov + test:e2e, frontend
+#    build + `npx vitest run --coverage`, docs build, release tooling tests)
+# 2. Merge the feature branch to `main` and push. CI re-runs every gate on
+#    `main` — wait for it to go green before touching versions.
+
 # Step 1 — check current version (NEVER guess or remember)
 git tag --sort=-v:refname | head -5
 
-# Step 2 — compute next version and release
+# Step 2 — compute next version and release (on main, clean worktree, CI green)
 npm run release -- X.Y.Z
 ```
 
+**Only bump the version once all guardrails are green** — merge + push to `main`
+first, wait for the CI run, and only then release. The release script does not
+run the test gates itself; releasing from a local branch (or with CI red) can
+tag a `main` that never passed CI.
+
 The release script requires a clean worktree. It updates all six version manifests and the
 `strata-desktop` entry in `src-tauri/Cargo.lock`, then commits, pushes the current branch,
-creates and pushes the tag, and publishes a GitHub release. Commit feature changes first;
+creates and pushes the tag, and publishes a GitHub release. Run it on `main` after the
+feature merge — never on a local feature branch. Commit feature changes first;
 do not include unrelated or user-owned changes without approval.
 
 ```

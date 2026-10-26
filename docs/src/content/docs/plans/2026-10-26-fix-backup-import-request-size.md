@@ -26,7 +26,7 @@ Run backend build and lint; all four required backend/frontend unit and e2e gate
 
 ## Execution Summary
 
-**Commit**: `2be492dfb7d0ef82f9b7827ab7192349ef6e3c52`
+**Commits**: `2be492dfb7d0ef82f9b7827ab7192349ef6e3c52` (fix), `d8b91a78fdaddcac4e2ed679823e8bf8c75d24e1` (docs), merged to `main` and pushed as `d8b91a7`
 
 ### Actual changes
 
@@ -45,9 +45,9 @@ Run backend build and lint; all four required backend/frontend unit and e2e gate
   isolated app because the shared test helper mutates this process-wide value.
 - Ran the frontend version generator before the prescribed direct Vitest
   command because `npx` bypasses the package's `pretest` hook.
-- Release was not published: the latest tag is `v1.6.1` (next patch would be
-  `v1.6.2`), but the release script pushes and publishes and no authorization
-  was given.
+- Release was not published from the branch: per the corrected process, the fix
+  first lands on `main` (authorized push) and the version is bumped only after
+  CI reports all guardrails green on `main`.
 
 ### Test results
 

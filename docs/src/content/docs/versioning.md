@@ -109,6 +109,16 @@ npm run release -- 1.2.3 --no-gh-release
 
 Release notes are auto-generated from conventional commit messages since the previous tag, grouped by type (features, bug fixes, docs, other). The `chore: release` commit itself is excluded.
 
+### When to release
+
+Land the change on `main` **first** — merge the feature branch and push; CI
+re-runs every gate on `main` (backend build/test:cov/test:e2e, frontend
+build/coverage, docs build, release tooling tests). Wait for CI green, then run
+the release from a clean `main` worktree — never from a local feature branch.
+The script does not run the test gates itself, and a dirty or unmerged local
+branch can produce a tag whose `main` never passed CI (the script's push step
+would publish that state anyway).
+
 ## How to release
 
 ```bash
