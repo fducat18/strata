@@ -45,10 +45,8 @@ Run backend build and lint; all four required backend/frontend unit and e2e gate
   isolated app because the shared test helper mutates this process-wide value.
 - Ran the frontend version generator before the prescribed direct Vitest
   command because `npx` bypasses the package's `pretest` hook.
-^- The semver release was deferred until CI went green on `main`, per the
+- The semver release was deferred until CI went green on `main`, per the
   corrected land-on-main process; `v1.6.2` was then released with notes.
-  first lands on `main` (authorized push) and the version is bumped only after
-  CI reports all guardrails green on `main`.
 
 ### Test results
 
