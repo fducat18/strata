@@ -102,12 +102,68 @@ describe('Admin backup/restore (e2e)', () => {
     );
   }, 30_000);
 
+  it('restores an exported JSON backup larger than 164 KiB', async () => {
+    const previousDatabaseUrl = process.env.DATABASE_URL;
+    let isolated: E2ETestContext | undefined;
+    try {
+      isolated = await createIsolatedE2EApp({ seed: false });
+      const http = isolated.app.getHttpServer() as unknown as App;
+      const exportRes = await request(http)
+        .get('/api/v1/admin/backup')
+        .expect(200);
+      const payload = {
+        schemaVersion: exportRes.body.schemaVersion,
+        exportedAt: exportRes.body.exportedAt,
+        data: {
+          ...exportRes.body.data,
+          padding: 'x'.repeat(164 * 1024),
+        },
+      };
+
+      expect(Buffer.byteLength(JSON.stringify(payload))).toBeGreaterThan(
+        164 * 1024,
+      );
+
+      const restore = await request(http)
+        .post('/api/v1/admin/restore')
+        .send(payload)
+        .expect(201);
+      expect(restore.body.mode).toBe('replace');
+      expect(restore.body.counts.assets).toBe(0);
+    } finally {
+      try {
+        if (isolated) await isolated.cleanup();
+      } finally {
+        if (previousDatabaseUrl === undefined) {
+          delete process.env.DATABASE_URL;
+        } else {
+          process.env.DATABASE_URL = previousDatabaseUrl;
+        }
+      }
+    }
+  }, 30_000);
+
   it('rejects unsupported schemaVersion → 400', async () => {
     const http = ctx.app.getHttpServer() as unknown as App;
     await request(http)
       .post('/api/v1/admin/restore')
       .send({ schemaVersion: '99', data: {} })
       .expect(400);
+  });
+
+  it('rejects malformed exportedAt metadata as an invalid date string', async () => {
+    const http = ctx.app.getHttpServer() as unknown as App;
+    const response = await request(http)
+      .post('/api/v1/admin/restore')
+      .send({
+        schemaVersion: '1',
+        data: {},
+        exportedAt: 'not-a-date',
+      })
+      .expect(400);
+    expect(response.body.message).toContain(
+      'exportedAt must be a valid ISO 8601 date string',
+    );
   });
 
   it('GET /admin/backup/sqlite returns 200 with sqlite content-type', async () => {

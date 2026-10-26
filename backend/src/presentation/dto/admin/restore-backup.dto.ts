@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsIn,
   IsNotEmpty,
+  IsDateString,
 } from 'class-validator';
 
 /** Modes for /admin/restore: replace wipes existing data, merge upserts. */
@@ -15,6 +16,14 @@ export class RestoreBackupDto {
   @IsString()
   @IsNotEmpty()
   schemaVersion!: string;
+
+  @ApiPropertyOptional({
+    description: 'ISO 8601 timestamp when the backup was exported.',
+    format: 'date-time',
+  })
+  @IsOptional()
+  @IsDateString()
+  exportedAt?: string;
 
   @ApiProperty({
     description: 'Entity tables. See GET /admin/backup for the shape.',

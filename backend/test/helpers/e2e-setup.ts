@@ -4,8 +4,10 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from '../../src/app.module.js';
+import { configureBodyParsers } from '../../src/http-body-parser.js';
 
 export interface E2ETestContext {
   app: INestApplication;
@@ -57,7 +59,10 @@ export async function createIsolatedE2EApp(opts?: {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication<NestExpressApplication>({
+    bodyParser: false,
+  });
+  configureBodyParsers(app);
   app.use(helmet());
   app.useGlobalPipes(
     new ValidationPipe({

@@ -92,8 +92,11 @@ Minimal example:
 - **`Decimal` values** (monetary amounts, quantities) are emitted as **strings**
   in plain decimal notation (no scientific notation). This avoids any
   floating-point loss.
-- **Timestamps** (any field ending in `At`) are ISO 8601 strings; they are
-  parsed back to `Date` on import.
+- **`exportedAt`** is optional ISO 8601 metadata describing when a backup was
+  created. Current exports include it; restore accepts but ignores it. Older
+  backups without it remain valid.
+- **Entity timestamps** (fields ending in `At` inside `data`) are ISO 8601
+  strings; they are parsed back to `Date` on import.
 - Saved financing scenarios are exported with their `inputsJson` snapshots and
   timestamps. Projections are derived from those assumptions, not accounting
   records.
@@ -140,6 +143,9 @@ The restore endpoint accepts the same payload shape, plus an optional `mode`:
 
 Both modes run inside a single Prisma transaction — if any row fails, the
 entire restore is rolled back (all-or-nothing).
+
+JSON request bodies are limited to **10 MiB** across the API. Requests above
+this limit, including restore payloads, are rejected with HTTP 413.
 
 ### Replace (clean restore)
 
@@ -314,13 +320,19 @@ and bump `schemaVersion` only if the release notes say it's safe.
 ### `400 Bad Request` on restore
 
 `RestoreBackupDto` validates that `schemaVersion` is a non-empty string and
-`data` is an object. The most common causes:
+`data` is an object, and validates `exportedAt` when present as an ISO 8601
+date string. The most common causes:
 
 - The file is wrapped in something extra (e.g. an `axios` response with
   `{ data: { schemaVersion, ... } }`). Send the inner object only.
 - `Content-Type` is not `application/json`.
 - The file was edited by hand and is no longer valid JSON (`jq . file.json`
   to verify).
+
+### `413 Payload Too Large` on restore
+
+JSON request bodies have a global **10 MiB** limit. Reduce the backup size or
+use the [raw SQLite workflow](#raw-sqlite-alternative) for a larger database.
 
 ### Partial restore? (no — it's all-or-nothing)
 

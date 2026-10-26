@@ -1,11 +1,13 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { execFileSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import * as path from 'path';
 import { AppModule } from './app.module.js';
+import { configureBodyParsers } from './http-body-parser.js';
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:6543',    // Astro dev frontend
@@ -108,7 +110,13 @@ async function bootstrap() {
   }
 
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    {
+      bodyParser: false,
+    },
+  );
+  configureBodyParsers(app);
 
   const allowedOrigins = parseAllowedOrigins();
   // In dev (Tauri dev server), the port is dynamic (1430, 1431, …) — allow any 127.0.0.1 origin
