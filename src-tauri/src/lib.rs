@@ -214,6 +214,58 @@ fn ensure_prisma_cli_js(backend_path: &Path) -> Result<PathBuf, String> {
     ))
 }
 
+fn tsx_package_dir(backend_path: &Path) -> PathBuf {
+    backend_path.join("node_modules").join("tsx")
+}
+
+fn tsx_package_json_path(backend_path: &Path) -> PathBuf {
+    tsx_package_dir(backend_path).join("package.json")
+}
+
+fn tsx_cli_js_candidates(backend_path: &Path) -> Vec<PathBuf> {
+    let tsx_dir = tsx_package_dir(backend_path);
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    let package_json_path = tsx_package_json_path(backend_path);
+    if let Ok(package_json_raw) = fs::read_to_string(&package_json_path) {
+        if let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&package_json_raw) {
+            // tsx declares a single bin entry (string form), e.g. "./dist/cli.mjs".
+            if let Some(bin_rel) = package_json
+                .get("bin")
+                .and_then(|bin| bin.as_str())
+                .map(str::to_string)
+            {
+                let rel = bin_rel.trim_start_matches("./");
+                add_candidate(&mut candidates, tsx_dir.join(rel));
+            }
+        }
+    }
+
+    for fallback in ["dist/cli.mjs", "dist/cli.js"] {
+        add_candidate(&mut candidates, tsx_dir.join(fallback));
+    }
+
+    candidates
+}
+
+fn ensure_tsx_cli_js(backend_path: &Path) -> Result<PathBuf, String> {
+    let candidates = tsx_cli_js_candidates(backend_path);
+    if let Some(found) = candidates.into_iter().find(|candidate| candidate.exists()) {
+        return Ok(found);
+    }
+
+    let checked_paths = tsx_cli_js_candidates(backend_path)
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    Err(format!(
+        "tsx CLI not found. Checked: [{}] — run `npm run tauri:install` from repo root (or `cd backend && npm ci`)",
+        checked_paths
+    ))
+}
+
 /// Resolve the repo root directory.
 /// Bundling Node + sources into the .app is tracked in
 /// `issues/bundle-node-runtime.md`; until then we use the repo layout.
@@ -256,33 +308,47 @@ fn run_prisma_seed(
     seed_profile: &str,
 ) -> Result<(), String> {
     let node = find_node();
-    let prisma_js = ensure_prisma_cli_js(backend_path)?;
-    let prisma_js_arg = prisma_js.to_string_lossy().into_owned();
-    log::info!("Running prisma db seed with {} profile …", seed_profile);
+    // `prisma db seed` re-spawns the configured seed command
+    // (`tsx prisma/seed.ts` from backend/prisma.config.ts) via PATH lookup,
+    // which fails with `spawn tsx ENOENT` when the app is launched by
+    // LaunchServices with a stripped PATH. Invoke tsx's CLI entry directly
+    // with the resolved node binary instead — every path is absolute, so no
+    // PATH lookup happens anywhere in this chain.
+    let tsx_js = ensure_tsx_cli_js(backend_path)?;
+    let seed_ts = backend_path.join("prisma").join("seed.ts");
+    if !seed_ts.exists() {
+        return Err(format!(
+            "seed script not found at {} — run `cd backend && npm ci`",
+            seed_ts.display()
+        ));
+    }
+    let tsx_js_arg = tsx_js.to_string_lossy().into_owned();
+    let seed_ts_arg = seed_ts.to_string_lossy().into_owned();
+    log::info!("Running seed script with {} profile …", seed_profile);
     let output = Command::new(&node)
-        .args([prisma_js_arg.as_str(), "db", "seed"])
+        .args([tsx_js_arg.as_str(), seed_ts_arg.as_str()])
         .current_dir(backend_path)
         .env("DATABASE_URL", database_url)
         .env("STRATA_SEED_PROFILE", seed_profile)
         .output()
-        .map_err(|e| format!("could not run prisma seed with node '{}': {}", node, e))?;
+        .map_err(|e| format!("could not run seed script with node '{}': {}", node, e))?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
 
     if output.status.success() {
         if !stdout.is_empty() {
-            log::info!("Prisma seed output:\n{}", stdout);
+            log::info!("Seed script output:\n{}", stdout);
         }
         if !stderr.is_empty() {
-            log::warn!("Prisma seed warnings:\n{}", stderr);
+            log::warn!("Seed script warnings:\n{}", stderr);
         }
         log::info!("Prisma seed succeeded");
         return Ok(());
     }
 
     Err(format!(
-        "prisma db seed exited with {}\nstdout:\n{}\nstderr:\n{}",
+        "seed script exited with {}\nstdout:\n{}\nstderr:\n{}",
         output.status,
         if stdout.is_empty() { "<empty>" } else { &stdout },
         if stderr.is_empty() { "<empty>" } else { &stderr }
@@ -522,7 +588,10 @@ fn window_title() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_prisma_cli_js, resolve_node_binary_with, should_seed_reference_data};
+    use super::{
+        ensure_prisma_cli_js, ensure_tsx_cli_js, resolve_node_binary_with,
+        should_seed_reference_data,
+    };
     use std::collections::HashSet;
     use std::fs;
     use std::path::{Path, PathBuf};
@@ -611,6 +680,47 @@ mod tests {
 
         let resolved = ensure_prisma_cli_js(&backend_path).expect("prisma path should resolve");
         assert_eq!(resolved, prisma_js);
+
+        fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
+    }
+
+    #[test]
+    fn ensure_tsx_cli_js_returns_error_when_missing() {
+        let backend_path = temp_test_dir("missing-tsx");
+        let err = ensure_tsx_cli_js(&backend_path).expect_err("missing tsx path should fail");
+        assert!(err.contains("tsx CLI not found"));
+    }
+
+    #[test]
+    fn ensure_tsx_cli_js_returns_path_when_present() {
+        let backend_path = temp_test_dir("present-tsx");
+        let tsx_dir = backend_path.join("node_modules").join("tsx").join("dist");
+        fs::create_dir_all(&tsx_dir).expect("create tsx dist dir");
+        let cli_mjs = tsx_dir.join("cli.mjs");
+        fs::write(&cli_mjs, "export {};\n").expect("write tsx cli stub");
+
+        let resolved = ensure_tsx_cli_js(&backend_path).expect("tsx path should resolve");
+        assert_eq!(resolved, cli_mjs);
+
+        fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
+    }
+
+    #[test]
+    fn ensure_tsx_cli_js_prefers_package_json_bin() {
+        let backend_path = temp_test_dir("tsx-package-json-bin");
+        let tsx_dir = backend_path.join("node_modules").join("tsx");
+        let bin_dir = tsx_dir.join("dist");
+        fs::create_dir_all(&bin_dir).expect("create tsx dist dir");
+        let cli_mjs = bin_dir.join("cli.mjs");
+        fs::write(&cli_mjs, "export {};\n").expect("write tsx bin stub");
+        fs::write(
+            tsx_dir.join("package.json"),
+            r#"{"name":"tsx","bin":"./dist/cli.mjs"}"#,
+        )
+        .expect("write tsx package json");
+
+        let resolved = ensure_tsx_cli_js(&backend_path).expect("tsx path should resolve");
+        assert_eq!(resolved, cli_mjs);
 
         fs::remove_dir_all(&backend_path).expect("cleanup temp test dir");
     }
