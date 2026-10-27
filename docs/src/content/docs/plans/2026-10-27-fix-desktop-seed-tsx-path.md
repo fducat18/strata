@@ -79,7 +79,10 @@ Invoke the seed script directly, mirroring the migrate hardening:
   - `cargo test` (src-tauri): **12 passed** (baseline 9 → 12).
   - `cargo build --release` (src-tauri): **success**.
   - End-to-end reproduction (scratch DB, `PATH=/usr/bin:/bin:/usr/sbin:/sbin` + absolute node): `prisma db seed` fails with `Command failed with ENOENT: tsx prisma/seed.ts / spawn tsx ENOENT` — byte-identical to the reported popup. Direct `node <tsx-cli> prisma/seed.ts` under the same stripped PATH: **exit 0, 13 asset types seeded**. Scratch DB cleaned up.
-  - Full backend/frontend suites not run — change is confined to `src-tauri/src/lib.rs` (no backend/frontend source touched).
-- **Commit SHA(s)**: none — change not committed yet (awaiting user go-ahead; repo policy requires explicit approval to commit).
+  - Backend build + `test:cov` (351 passed, 97.34% coverage) + `test:e2e` (77 passed): green, run under nvm node v26.12.1 — `backend/node_modules/better-sqlite3` native module is built for ABI 147 (node 26), so the suite must run with a node-26 runtime on this machine (nvm node 24 → `ERR_DLOPEN_FAILED`, an environment artifact, not a code regression). Frontend build + `vitest coverage` (95.7% stmts): green. Docs build + release tooling tests: green. All local gates passed before release; CI on `main` ran green.
+- **Commit SHA(s)**:
+  - `0831359` — fix + plan doc + root lockfile version sync (`fix(desktop): run startup seed via local tsx CLI instead of prisma db seed`)
+  - `c99dfec` — `chore: release v1.6.3`
+- **Release**: tag `v1.6.3` pushed to `origin` (CI green before release), GitHub release published, `docs/src/content/docs/releases/v1-6-3.md` + index row added. Plan closed per Convention 14.
 - **Key discoveries**: `v1-2-5` release notes claimed "the same fix applies to `prisma db seed` on first launch" — but hardening only covered the *outer* invocation (`node <prisma-cli> db seed`). `prisma db seed` re-spawns the configured seed command `tsx prisma/seed.ts` (`backend/prisma.config.ts`, `migrations.seed`) via PATH lookup, which stays broken under LaunchServices' stripped PATH. The direct-tsx invocation removes the last PATH dependency in the startup chain.
 

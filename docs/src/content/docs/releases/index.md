@@ -9,6 +9,7 @@ All Strata release notes, newest first.
 
 | Version | Highlights |
 |---|---|
+| [v1.6.3](./v1-6-3) | Desktop startup seed PATH-independent: fixes "spawn tsx ENOENT" upgrade failure when launched from Finder/LaunchServices |
 | [v1.6.2](./v1-6-2) | Large JSON backups restore: 10 MiB request limit + exportedAt metadata accepted |
 | [v1.6.1](./v1-6-1) | NestJS 12 upgrade and stable backend dependency refresh |
 | [v1.6.0](./v1-6-0) | Net Worth History series toggles with auto-rescaling; Cargo.lock version sync |
